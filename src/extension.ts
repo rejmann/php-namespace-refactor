@@ -1,6 +1,8 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import { COMPOSER_FILE, PHP_EXTENSION, WORKSPACE_ROOT } from './infra/utils/constants';
 import { ConfigKeys } from './infra/workspace/configTypes';
+import { Container } from '@infra/di/Container';
 import { importMissingClasses } from './app/namespace/update/import/importMissingClasses';
 import { isConfigEnabled } from './infra/workspace/vscodeConfig';
 import { removeUnusedImports } from './app/namespace/remove/removeUnusedImports';
@@ -12,6 +14,8 @@ export function activate() {
   if (!files.includes(COMPOSER_FILE)) {
     return;
   }
+
+  new Container().loadServicesFrom(path.join(WORKSPACE_ROOT, "src"));
 
   workspace.onDidRenameFiles((event) => {
     event.files.forEach(async (file) => {
