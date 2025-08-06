@@ -1,4 +1,4 @@
-import { generateNamespace } from '@domain/namespace/generateNamespace';
+import { CreateNamespaceService } from './../../../domain/namespace/CreateNamespaceService';
 import { updateInCurrentFile } from './updateInCurrentFile';
 import { updateReferencesInFiles } from './updateReferencesInFiles';
 import { Uri } from 'vscode';
@@ -12,10 +12,12 @@ export async function updateReferences({
   newUri,
   oldUri,
 }: Props) {
+  const createNamespaceService = new CreateNamespaceService();
+
   const {
     namespace: newNamespace,
     fullNamespace: useNewNamespace,
-  } = await generateNamespace({
+  } = createNamespaceService.execute({
     uri: newUri.fsPath,
   });
 
@@ -23,7 +25,7 @@ export async function updateReferences({
     return;
   }
 
-  const { fullNamespace: useOldNamespace } = await generateNamespace({
+  const { fullNamespace: useOldNamespace } = createNamespaceService.execute({
     uri: oldUri.fsPath,
   });
 

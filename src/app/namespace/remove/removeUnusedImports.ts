@@ -1,7 +1,7 @@
 import { extractClassNameFromPath, extractDirectoryFromPath } from '@infra/utils/filePathUtils';
 import { RelativePattern, Uri, workspace } from 'vscode';
 import { ConfigKeys } from '@infra/workspace/configTypes';
-import { generateNamespace } from '@domain/namespace/generateNamespace';
+import { CreateNamespaceService } from '@domain/namespace/CreateNamespaceService';
 import { isConfigEnabled } from '@infra/workspace/vscodeConfig';
 import { openTextDocument } from '../openTextDocument';
 import { removeImports } from './removeImports';
@@ -15,7 +15,9 @@ export async function removeUnusedImports({ uri }: Props) {
     return;
   }
 
-  const { className } = await generateNamespace({
+  const createNamespaceService = new CreateNamespaceService();
+
+  const { className } = createNamespaceService.execute({
     uri: uri.fsPath,
   });
 
@@ -34,7 +36,7 @@ export async function removeUnusedImports({ uri }: Props) {
 
   for (const file of [uri, ...phpFiles]) {
     const { document } = await openTextDocument({ uri: file });
-  
+
     await removeImports({
       document,
       fileNames: file === uri ? fileNames : [className],
