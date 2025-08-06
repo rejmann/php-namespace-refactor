@@ -10,8 +10,8 @@ interface Props {
 export function mapAutoloadNamespaces({
   uri,
 }: Props) {
-  const psr4LoaderService = new Psr4LoaderService({ workspacePath: WORKSPACE_PATH });
-  const { autoload, autoloadDev } = psr4LoaderService.getAllNamespaces();
+  const psr4LoaderService = new Psr4LoaderService();
+  const { autoload, autoloadDev } = psr4LoaderService.getAllNamespaces({ workspacePath: WORKSPACE_PATH });
 
   if (!autoload && !autoloadDev) {
     return {

@@ -8,6 +8,8 @@ suite('Psr4LoaderService Test Suite', () => {
   let tempDir: string;
   let composerPath: string;
 
+  const service = new Psr4LoaderService();
+
   // Helper to create temporary directory
   const createTempDir = (): string => {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'psr4-test-'));
@@ -29,10 +31,8 @@ suite('Psr4LoaderService Test Suite', () => {
     tempDir = createTempDir();
     // Don't create composer.json, so the file doesn't exist
 
-    const service = new Psr4LoaderService({ workspacePath: tempDir });
-
     assert.throws(() => {
-      service.getAllNamespaces();
+      service.getAllNamespaces({ workspacePath: tempDir });
     }, /ENOENT/);
 
     cleanup();
@@ -45,10 +45,8 @@ suite('Psr4LoaderService Test Suite', () => {
     // Create invalid JSON
     fs.writeFileSync(composerPath, '{ invalid json content }');
 
-    const service = new Psr4LoaderService({ workspacePath: tempDir });
-
     assert.throws(() => {
-      service.getAllNamespaces();
+      service.getAllNamespaces({ workspacePath: tempDir });
     }, /SyntaxError|Unexpected token/);
 
     cleanup();
@@ -68,8 +66,7 @@ suite('Psr4LoaderService Test Suite', () => {
 
     createComposerFile(composerContent);
 
-    const service = new Psr4LoaderService({ workspacePath: tempDir });
-    const result = service.getAllNamespaces();
+    const result = service.getAllNamespaces({ workspacePath: tempDir });
 
     assert.deepStrictEqual(result.autoload, {});
     assert.deepStrictEqual(result.autoloadDev, {});
@@ -98,8 +95,7 @@ suite('Psr4LoaderService Test Suite', () => {
 
     createComposerFile(composerContent);
 
-    const service = new Psr4LoaderService({ workspacePath: tempDir });
-    const result = service.getAllNamespaces();
+    const result = service.getAllNamespaces({ workspacePath: tempDir });
 
     assert.deepStrictEqual(result.autoload, {
       "App\\": "src/",
@@ -133,8 +129,7 @@ suite('Psr4LoaderService Test Suite', () => {
 
     createComposerFile(composerContent);
 
-    const service = new Psr4LoaderService({ workspacePath: tempDir });
-    const result = service.getAllNamespaces();
+    const result = service.getAllNamespaces({ workspacePath: tempDir });
 
     assert.deepStrictEqual(result.autoload, {
       "App\\Domain\\": "src/App/Domain/",
@@ -169,8 +164,7 @@ suite('Psr4LoaderService Test Suite', () => {
 
     createComposerFile(composerContent);
 
-    const service = new Psr4LoaderService({ workspacePath: tempDir });
-    const result = service.getAllNamespaces();
+    const result = service.getAllNamespaces({ workspacePath: tempDir });
 
     // Verify that paths ending with slash are preserved
     assert.strictEqual(result.autoload["App\\"], "src/");
@@ -205,9 +199,7 @@ suite('Psr4LoaderService Test Suite', () => {
 
     createComposerFile(composerContent);
 
-    const service = new Psr4LoaderService({ workspacePath: tempDir });
-    const result = service.getAllNamespaces();
-
+    const result = service.getAllNamespaces({ workspacePath: tempDir });
     // Verify that paths without trailing slash are preserved as is
     assert.strictEqual(result.autoload["App\\"], "src");
     assert.strictEqual(result.autoload["Services\\"], "src/Services");
@@ -241,9 +233,7 @@ suite('Psr4LoaderService Test Suite', () => {
 
     createComposerFile(composerContent);
 
-    const service = new Psr4LoaderService({ workspacePath: tempDir });
-    const result = service.getAllNamespaces();
-
+    const result = service.getAllNamespaces({ workspacePath: tempDir });
     // Test some specific namespaces
     assert.strictEqual(result.autoload["ApiBundle\\"], "src/ApiBundle");
     assert.strictEqual(result.autoloadDev["ClassesTest\\"], "tests/ClassesTest");
