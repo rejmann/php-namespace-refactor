@@ -1,6 +1,6 @@
 import { createNamespace, Namespace } from './createNamespace';
 import { extractClassNameFromPath } from '@infra/utils/filePathUtils';
-import { mapAutoloadNamespaces } from '@infra/autoload/mapAutoloadNamespaces';
+import { NamespaceMapperService } from './../../infra/composer/NamespaceMapperService';
 
 interface Props {
   uri: string
@@ -9,9 +9,8 @@ interface Props {
 export async function generateNamespace({
   uri,
 }: Props): Promise<Namespace> {
-  const { autoload, autoloadDev } = await mapAutoloadNamespaces({
-    uri
-  });
+  const namespaceMapperService = new NamespaceMapperService();
+  const { autoload, autoloadDev } = namespaceMapperService.execute(uri);
 
   const className = extractClassNameFromPath(uri);
 
