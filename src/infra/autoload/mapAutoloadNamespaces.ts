@@ -1,6 +1,6 @@
+import { PathToNamespaceService } from '../composer/PathToNamespaceService';
 import { Psr4LoaderService } from '../composer/Psr4LoaderService';
 import { removeWorkspaceRoot } from '@infra/utils/filePathUtils';
-import { resolvePathFromPrefix } from './resolvePathFromPrefix';
 import { WORKSPACE_PATH } from '@infra/utils/constants';
 
 interface Props {
@@ -22,14 +22,16 @@ export function mapAutoloadNamespaces({
 
   const newDir = removeWorkspaceRoot(uri);
 
+  const pathToNamespaceService = new PathToNamespaceService();
+
   return {
-    autoload: resolvePathFromPrefix({
+    autoload: pathToNamespaceService.resolve({
       autoload,
-      workspaceRoot: newDir,
+      pathFull: newDir,
     }),
-    autoloadDev: resolvePathFromPrefix({
+    autoloadDev: pathToNamespaceService.resolve({
       autoload: autoloadDev,
-      workspaceRoot: newDir,
+      pathFull: newDir,
     })
   };
 }

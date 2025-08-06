@@ -4,6 +4,15 @@ interface Props {
   workspacePath: string;
 }
 
+export type AutoloadType = {
+  [key: string]: string
+}
+
+type AllNamespaceType = {
+  autoload: AutoloadType,
+  autoloadDev: AutoloadType,
+}
+
 export class Psr4LoaderService {
   private workspacePath: string;
 
@@ -11,7 +20,7 @@ export class Psr4LoaderService {
     this.workspacePath = workspacePath;
   }
 
-  public getAllNamespaces() {
+  public getAllNamespaces(): AllNamespaceType {
     const config = this.readConfig();
     return {
       autoload: config.autoload?.['psr-4'] || {},
