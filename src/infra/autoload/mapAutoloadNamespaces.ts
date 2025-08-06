@@ -1,18 +1,17 @@
-import { fetchComposerAutoload } from './fetchComposerAutoload';
+import { Psr4LoaderService } from '../composer/Psr4LoaderService';
 import { removeWorkspaceRoot } from '@infra/utils/filePathUtils';
 import { resolvePathFromPrefix } from './resolvePathFromPrefix';
-import { WORKSPACE_ROOT } from '@infra/utils/constants';
+import { WORKSPACE_PATH } from '@infra/utils/constants';
 
 interface Props {
   uri: string
 }
 
-export async function mapAutoloadNamespaces({
+export function mapAutoloadNamespaces({
   uri,
 }: Props) {
-  const { autoload, autoloadDev } = await fetchComposerAutoload({
-    workspaceRoot: WORKSPACE_ROOT,
-  });
+  const psr4LoaderService = new Psr4LoaderService({ workspacePath: WORKSPACE_PATH });
+  const { autoload, autoloadDev } = psr4LoaderService.getAllNamespaces();
 
   if (!autoload && !autoloadDev) {
     return {

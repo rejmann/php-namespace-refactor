@@ -15,7 +15,8 @@ export class Container {
 
   async addSingleton<T>(service: Constructor<T>): Promise<T> {
     const paramTypes: Constructor[] = Reflect.getMetadata("design:paramtypes", service) || [];
-    const instance = new service(...paramTypes.map(dep => this.get(dep)));
+    const dependencies = paramTypes.map(dep => this.get(dep));
+    const instance = new service(...dependencies);
     this.singletons.set(service.name, instance);
     return instance;
   }

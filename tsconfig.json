@@ -18,9 +18,10 @@
       ],
       "@infra/*": [
         "./src/infra/*"
-      ],
+      ]
     },
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true
   }
 }

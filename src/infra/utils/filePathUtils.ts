@@ -1,12 +1,14 @@
 import { basename, dirname } from 'path';
-import { WORKSPACE_ROOT } from './constants';
+import { WORKSPACE_PATH } from './constants';
 
 type AbsolutePath = string | null | undefined
 
+const LEADING_SLASH_OR_BACKSLASH_REGEX = /^\/|\\/g;
+
 export const removeWorkspaceRoot = (filePath: AbsolutePath) =>
   filePath
-    ?.replace(WORKSPACE_ROOT, '')
-    .replace(/^\/|\\/g, '') || '';
+    ?.replace(WORKSPACE_PATH, '')
+    .replace(LEADING_SLASH_OR_BACKSLASH_REGEX, '') || '';
 
 export const extractDirectoryFromPath = (filePath: AbsolutePath) =>
   dirname(filePath || '');
