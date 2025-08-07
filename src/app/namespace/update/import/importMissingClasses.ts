@@ -1,10 +1,10 @@
 import { Uri, WorkspaceEdit } from 'vscode';
+import { ApplyUseStatementService } from '@domain/namespace/ApplyUseStatementService';
 import { CreateNamespaceService } from '@domain/namespace/CreateNamespaceService';
 import { CreateUseStatementService } from '@domain/namespace/CreateUseStatementService';
 import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
 import { findUnimportedClasses } from './findUnimportedClasses';
 import { getClassesNamesInDirectory } from './getClassesNamesInDirectory';
-import { insertUseStatement } from '@domain/namespace/import/insertUseStatement';
 import { openTextDocument } from '@app/namespace/openTextDocument';
 import { UseStatementAnalyzerService } from '@domain/namespace/UseStatementAnalyzerService';
 
@@ -52,12 +52,13 @@ export async function importMissingClasses({
   }
 
   const edit = new WorkspaceEdit();
+  const applyUseStatementService = new ApplyUseStatementService();
 
   const total = imports.length;
   let row = 1;
 
   for (const use of imports) {
-    await insertUseStatement({
+    applyUseStatementService.execute({
       document,
       workspaceEdit: edit,
       uri: newUri,

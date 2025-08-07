@@ -1,7 +1,7 @@
-import { Uri, WorkspaceEdit } from 'vscode';
+import { ApplyUseStatementService } from '@domain/namespace/ApplyUseStatementService';
 import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
-import { insertUseStatement } from '@domain/namespace/import/insertUseStatement';
 import { openTextDocument } from '../openTextDocument';
+import { Uri } from 'vscode';
 import { UseStatementAnalyzerService } from '@domain/namespace/UseStatementAnalyzerService';
 
 interface Props {
@@ -31,11 +31,9 @@ export async function updateInFile({
   const useStatementAnalyzerService = new UseStatementAnalyzerService();
   const lastUseEndIndex = useStatementAnalyzerService.execute({ document });
 
-  const edit = new WorkspaceEdit();
-
-  await insertUseStatement({
+  const applyUseStatementService = new ApplyUseStatementService();
+  applyUseStatementService.execute({
     document,
-    workspaceEdit: edit,
     uri: file,
     lastUseEndIndex,
     useNamespace: useImport,
