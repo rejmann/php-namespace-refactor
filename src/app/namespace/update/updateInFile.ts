@@ -1,8 +1,8 @@
 import { Uri, WorkspaceEdit } from 'vscode';
 import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
-import { findLastUseEndIndex } from '@domain/namespace/findLastUseEndIndex';
 import { insertUseStatement } from '@domain/namespace/import/insertUseStatement';
 import { openTextDocument } from '../openTextDocument';
+import { UseStatementAnalyzerService } from '@domain/namespace/UseStatementAnalyzerService';
 
 interface Props {
   file: Uri
@@ -24,11 +24,12 @@ export async function updateInFile({
 
   const { document, text } = await openTextDocument({ uri: file });
 
-  if (! text.includes(className)) {
+  if (!text.includes(className)) {
     return;
   }
 
-  const lastUseEndIndex = findLastUseEndIndex({ document });
+  const useStatementAnalyzerService = new UseStatementAnalyzerService();
+  const lastUseEndIndex = useStatementAnalyzerService.execute({ document });
 
   const edit = new WorkspaceEdit();
 

@@ -1,11 +1,11 @@
 import { Uri, WorkspaceEdit } from 'vscode';
 import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
-import { findLastUseEndIndex } from '@domain/namespace/findLastUseEndIndex';
 import { findUnimportedClasses } from './findUnimportedClasses';
 import { generateUseStatementsForClasses } from '@domain/namespace/generateUseStatementsForClasses';
 import { getClassesNamesInDirectory } from './getClassesNamesInDirectory';
 import { insertUseStatement } from '@domain/namespace/import/insertUseStatement';
 import { openTextDocument } from '@app/namespace/openTextDocument';
+import { UseStatementAnalyzerService } from '@domain/namespace/UseStatementAnalyzerService';
 
 interface Props {
   oldFileName: string
@@ -39,7 +39,8 @@ export async function importMissingClasses({
     return;
   }
 
-  const lastUseEndIndex = findLastUseEndIndex({ document });
+  const useStatementAnalyzerService = new UseStatementAnalyzerService();
+  const lastUseEndIndex = useStatementAnalyzerService.execute({ document });
   if (0 === lastUseEndIndex) {
     return;
   }
