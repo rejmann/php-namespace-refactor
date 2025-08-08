@@ -2,9 +2,9 @@ import { Uri, workspace } from 'vscode';
 import { CreateNamespaceService } from '@domain/namespace/CreateNamespaceService';
 import { CreateUseStatementService } from '@domain/namespace/CreateUseStatementService';
 import { FilePathUtils } from '@infra/utils/FilePathUtils';
-import { findPhpFilesInWorkspace } from '../../workespace/findPhpFilesInWorkspace';
 import { removeUnusedImports } from '../remove/removeUnusedImports';
 import { updateInFile } from './updateInFile';
+import { WorkspaceFileSearcherService } from '@app/workespace/WorkspaceFileSearcherService';
 
 interface Props {
   useOldNamespace: string
@@ -33,7 +33,7 @@ export async function updateReferencesInFiles({
 
   const ignoreFile = newUri.fsPath;
 
-  const files = await findPhpFilesInWorkspace();
+  const files = await new WorkspaceFileSearcherService().execute();
 
   for (const file of files) {
     if (ignoreFile === file.fsPath) {
