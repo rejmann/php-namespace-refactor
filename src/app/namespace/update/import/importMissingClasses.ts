@@ -2,10 +2,10 @@ import { Uri, WorkspaceEdit } from 'vscode';
 import { ApplyUseStatementService } from '@domain/namespace/ApplyUseStatementService';
 import { CreateNamespaceService } from '@domain/namespace/CreateNamespaceService';
 import { CreateUseStatementService } from '@domain/namespace/CreateUseStatementService';
+import { DocumentReaderService } from '@app/file/DocumentReaderService';
 import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { findUnimportedClasses } from './findUnimportedClasses';
 import { getClassesNamesInDirectory } from './getClassesNamesInDirectory';
-import { openTextDocument } from '@app/namespace/openTextDocument';
 import { UseStatementAnalyzerService } from '@domain/namespace/UseStatementAnalyzerService';
 
 interface Props {
@@ -26,7 +26,7 @@ export async function importMissingClasses({
     return;
   }
 
-  const { document, text } = await openTextDocument({ uri: newUri });
+  const { document, text } = await new DocumentReaderService().execute({ uri: newUri });
 
   const classesUsed = findUnimportedClasses({
     text,

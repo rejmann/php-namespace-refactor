@@ -1,7 +1,6 @@
 import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
+import { DocumentReaderService } from '@app/file/DocumentReaderService';
 import { injectable } from 'tsyringe';
-import { openTextDocument } from '../openTextDocument';
-
 
 interface Props {
   newNamespace: string,
@@ -10,8 +9,13 @@ interface Props {
 
 @injectable()
 export class UpdateNamespaceForMovedFileService {
+  constructor(
+    private readonly documentReaderService: DocumentReaderService
+  ) {
+  }
+
   public async execute({ newNamespace, newUri }: Props) {
-    const { document, text } = await openTextDocument({ uri: newUri });
+    const { document, text } = await this.documentReaderService.execute({ uri: newUri });
 
     const namespaceRegex = /^\s*namespace\s+[\w\\]+;/m;
     const match = text.match(namespaceRegex);

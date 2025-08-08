@@ -4,7 +4,7 @@ import { ConfigKeys } from '@infra/workspace/configTypes';
 import { container } from 'tsyringe';
 import { importMissingClasses } from '@app/namespace/update/import/importMissingClasses';
 import { isConfigEnabled } from '@infra/workspace/vscodeConfig';
-import { removeUnusedImports } from '@app/namespace/remove/removeUnusedImports';
+import { RemoveUnusedImportsFeature } from '@app/namespace/remove/RemoveUnusedImportsFeature';
 import { UpdateUserStatementFeature } from '@app/namespace/update/UpdateUseStatementFeature';
 import { workspace } from 'vscode';
 
@@ -15,6 +15,7 @@ export function activate() {
   }
 
   const updateUserStatementFeature = container.resolve(UpdateUserStatementFeature);
+  const removeUnusedImportsFeature = container.resolve(RemoveUnusedImportsFeature);
 
   workspace.onDidRenameFiles((event) => {
     event.files.forEach(async (file) => {
@@ -34,7 +35,7 @@ export function activate() {
         });
       }
 
-      await removeUnusedImports({ uri: newUri });
+      removeUnusedImportsFeature.execute({ uri: newUri });
     });
   });
 }

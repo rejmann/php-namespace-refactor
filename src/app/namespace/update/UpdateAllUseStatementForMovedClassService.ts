@@ -1,10 +1,10 @@
 import { Uri, workspace } from 'vscode';
 import { ApplyUseStatementService } from '@domain/namespace/ApplyUseStatementService';
 import { CreateUseStatementService } from '@domain/namespace/CreateUseStatementService';
+import { DocumentReaderService } from '@app/file/DocumentReaderService';
 import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { injectable } from 'tsyringe';
-import { openTextDocument } from '../openTextDocument';
-import { removeUnusedImports } from '../remove/removeUnusedImports';
+import { RemoveUnusedImportsService } from './../remove/RemoveUnusedImportsService';
 import { UseStatementAnalyzerService } from '@domain/namespace/UseStatementAnalyzerService';
 import { WorkspaceFileSearcherService } from '@app/workespace/WorkspaceFileSearcherService';
 
@@ -28,7 +28,9 @@ export class UpdateAllUseStatementForMovedClassService {
     private readonly createUseStatementService: CreateUseStatementService,
     private readonly workspaceFileSearcherService: WorkspaceFileSearcherService,
     private readonly useStatementAnalyzerService: UseStatementAnalyzerService,
-    private readonly applyUseStatementService: ApplyUseStatementService
+    private readonly applyUseStatementService: ApplyUseStatementService,
+    private readonly temoveUnusedImportsService: RemoveUnusedImportsService,
+    private readonly documentReaderService: DocumentReaderService,
   ) {
   }
 
@@ -76,7 +78,7 @@ export class UpdateAllUseStatementForMovedClassService {
       await fileStream.writeFile(file, Buffer.from(text));
     }
 
-    await removeUnusedImports({ uri: newUri });
+    await this.temoveUnusedImportsService.execute({ uri: newUri });
   }
 
   private async updateUseStatementForMovedClass({
@@ -91,7 +93,7 @@ export class UpdateAllUseStatementForMovedClassService {
       return;
     }
 
-    const { document, text } = await openTextDocument({ uri: file });
+    const { document, text } = await this.documentReaderService.execute({ uri: file });
 
     if (!text.includes(className)) {
       return;
