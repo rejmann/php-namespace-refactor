@@ -1,6 +1,6 @@
+import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { PathToNamespaceService } from './PathToNamespaceService';
 import { Psr4LoaderService } from './Psr4LoaderService';
-import { removeWorkspaceRoot } from '@infra/utils/filePathUtils';
 import { WORKSPACE_PATH } from '@infra/utils/constants';
 
 interface NamespaceMapping {
@@ -20,8 +20,8 @@ export class NamespaceMapperService {
       };
     }
 
-    const pathFull = removeWorkspaceRoot(uri);
     const pathToNamespaceService = new PathToNamespaceService();
+    const pathFull = FilePathUtils.removeWorkspaceRoot(uri);
 
     return {
       autoload: pathToNamespaceService.resolve({ autoload, pathFull }),

@@ -1,7 +1,7 @@
-import { extractClassNameFromPath, extractDirectoryFromPath } from '@infra/utils/filePathUtils';
 import { Uri, workspace } from 'vscode';
 import { CreateNamespaceService } from '@domain/namespace/CreateNamespaceService';
 import { CreateUseStatementService } from '@domain/namespace/CreateUseStatementService';
+import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { findPhpFilesInWorkspace } from '../../workespace/findPhpFilesInWorkspace';
 import { removeUnusedImports } from '../remove/removeUnusedImports';
 import { updateInFile } from './updateInFile';
@@ -19,16 +19,16 @@ export async function updateReferencesInFiles({
   newUri,
   oldUri,
 }: Props) {
-  const directoryPath = extractDirectoryFromPath(oldUri.fsPath);
-  const className = extractClassNameFromPath(oldUri.fsPath);
+  const directoryPath = FilePathUtils.extractDirectoryFromPath(oldUri.fsPath);
+  const className = FilePathUtils.extractClassNameFromPath(oldUri.fsPath);
 
   const createUseStatementService = new CreateUseStatementService(
     new CreateNamespaceService()
   );
 
   const useImport = createUseStatementService.execute({
-    className: extractClassNameFromPath(newUri.fsPath),
-    directoryPath: extractDirectoryFromPath(newUri.fsPath),
+    className: FilePathUtils.extractClassNameFromPath(newUri.fsPath),
+    directoryPath: FilePathUtils.extractDirectoryFromPath(newUri.fsPath),
   });
 
   const ignoreFile = newUri.fsPath;

@@ -1,4 +1,4 @@
-import { extractClassNameFromPath } from '@infra/utils/filePathUtils';
+import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { NamespaceMapperService } from '@infra/composer/NamespaceMapperService';
 
 interface Props {
@@ -15,7 +15,7 @@ export class CreateNamespaceService {
     const namespaceMapperService = new NamespaceMapperService();
     const { autoload, autoloadDev } = namespaceMapperService.execute(uri);
 
-    const className = extractClassNameFromPath(uri);
+    const className = FilePathUtils.extractClassNameFromPath(uri);
 
     for (const currentAutoload of [autoload, autoloadDev]) {
       if (null === currentAutoload) {

@@ -1,5 +1,5 @@
 import { ApplyUseStatementService } from '@domain/namespace/ApplyUseStatementService';
-import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
+import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { openTextDocument } from '../openTextDocument';
 import { Uri } from 'vscode';
 import { UseStatementAnalyzerService } from '@domain/namespace/UseStatementAnalyzerService';
@@ -17,7 +17,7 @@ export async function updateInFile({
   useImport,
   className,
 }: Props) {
-  const currentDir = extractDirectoryFromPath(file.fsPath);
+  const currentDir = FilePathUtils.extractDirectoryFromPath(file.fsPath);
   if (oldDirectoryPath !== currentDir) {
     return;
   }

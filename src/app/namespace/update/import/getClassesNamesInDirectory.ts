@@ -1,4 +1,4 @@
-import { extractClassNameFromPath } from '@infra/utils/filePathUtils';
+import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { readdirSync } from 'fs';
 
 interface Props {
@@ -6,7 +6,7 @@ interface Props {
 }
 
 export async function getClassesNamesInDirectory({ directory }: Props) {
-    const files = await readdirSync(directory);
-    return files.filter(file => file.endsWith('.php'))
-      .map(file => extractClassNameFromPath(file));
+  const files = await readdirSync(directory);
+  return files.filter(file => file.endsWith('.php'))
+    .map(file => FilePathUtils.extractClassNameFromPath(file));
 }

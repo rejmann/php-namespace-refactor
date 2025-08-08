@@ -1,7 +1,7 @@
-import { extractClassNameFromPath, extractDirectoryFromPath } from '@infra/utils/filePathUtils';
 import { RelativePattern, Uri, workspace } from 'vscode';
 import { ConfigKeys } from '@infra/workspace/configTypes';
 import { CreateNamespaceService } from '@domain/namespace/CreateNamespaceService';
+import { FilePathUtils } from './../../../infra/utils/FilePathUtils';
 import { isConfigEnabled } from '@infra/workspace/vscodeConfig';
 import { openTextDocument } from '../openTextDocument';
 import { removeImports } from './removeImports';
@@ -21,12 +21,12 @@ export async function removeUnusedImports({ uri }: Props) {
     uri: uri.fsPath,
   });
 
-  const directoryPath = extractDirectoryFromPath(uri.fsPath);
+  const directoryPath = FilePathUtils.extractDirectoryFromPath(uri.fsPath);
 
   const pattern = new RelativePattern(Uri.parse(`file://${directoryPath}`), '*.php');
   const phpFiles: Uri[] = await workspace.findFiles(pattern);
 
-  const fileNames: string[] = phpFiles.map(uri => extractClassNameFromPath(uri.fsPath))
+  const fileNames: string[] = phpFiles.map(uri => FilePathUtils.extractClassNameFromPath(uri.fsPath))
     .filter(Boolean)
     .filter(name => name !== className);
 

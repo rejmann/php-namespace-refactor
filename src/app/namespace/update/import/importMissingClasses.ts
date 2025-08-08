@@ -2,7 +2,7 @@ import { Uri, WorkspaceEdit } from 'vscode';
 import { ApplyUseStatementService } from '@domain/namespace/ApplyUseStatementService';
 import { CreateNamespaceService } from '@domain/namespace/CreateNamespaceService';
 import { CreateUseStatementService } from '@domain/namespace/CreateUseStatementService';
-import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
+import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { findUnimportedClasses } from './findUnimportedClasses';
 import { getClassesNamesInDirectory } from './getClassesNamesInDirectory';
 import { openTextDocument } from '@app/namespace/openTextDocument';
@@ -17,7 +17,7 @@ export async function importMissingClasses({
   oldFileName,
   newUri,
 }: Props) {
-  const directoryPath = extractDirectoryFromPath(oldFileName);
+  const directoryPath = FilePathUtils.extractDirectoryFromPath(oldFileName);
   const classes: string[] = await getClassesNamesInDirectory({
     directory: directoryPath,
   });
@@ -41,7 +41,7 @@ export async function importMissingClasses({
     .map((className) => createUseStatementService.execute({ className, directoryPath }))
     .join('');
 
-  if (!imports || (directoryPath === extractDirectoryFromPath(newUri.fsPath))) {
+  if (!imports || (directoryPath === FilePathUtils.extractDirectoryFromPath(newUri.fsPath))) {
     return;
   }
 
