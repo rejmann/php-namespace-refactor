@@ -1,4 +1,5 @@
 import { FilePathUtils } from '@infra/utils/FilePathUtils';
+import { injectable } from 'tsyringe';
 import { PathToNamespaceService } from './PathToNamespaceService';
 import { Psr4LoaderService } from './Psr4LoaderService';
 import { WORKSPACE_PATH } from '@infra/utils/constants';
@@ -8,6 +9,7 @@ interface NamespaceMapping {
   autoloadDev: string | null;
 }
 
+@injectable()
 export class NamespaceMapperService {
   public execute(uri: string): NamespaceMapping {
     const psr4LoaderService = new Psr4LoaderService();

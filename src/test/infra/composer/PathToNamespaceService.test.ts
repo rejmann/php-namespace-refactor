@@ -1,5 +1,6 @@
+import 'reflect-metadata';
 import * as assert from 'assert';
-import { PathToNamespaceService } from '../../../infra/composer/PathToNamespaceService';
+import { PathToNamespaceService } from '@infra/composer/PathToNamespaceService';
 
 suite('PathToNamespaceService Test Suite', () => {
   const service = new PathToNamespaceService();

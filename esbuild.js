@@ -1,7 +1,9 @@
-const esbuild = require("esbuild"); // eslint-disable-line
+const esbuild = require("esbuild");  
+const pathAlias = require("esbuild-plugin-path-alias");  
+const path = require("path");  
 
-const production = process.argv.includes('--production'); // eslint-disable-line
-const watch = process.argv.includes('--watch'); // eslint-disable-line
+const production = process.argv.includes('--production');  
+const watch = process.argv.includes('--watch');  
 
 /**
  * @type {import('esbuild').Plugin}
@@ -11,14 +13,14 @@ const esbuildProblemMatcherPlugin = {
 
 	setup(build) {
 		build.onStart(() => {
-			console.log('[watch] build started'); // eslint-disable-line
+			console.log('[watch] build started');  
 		});
 		build.onEnd((result) => {
 			result.errors.forEach(({ text, location }) => {
-				console.error(`✘ [ERROR] ${text}`); // eslint-disable-line
-				console.error(`    ${location.file}:${location.line}:${location.column}:`); // eslint-disable-line
+				console.error(`✘ [ERROR] ${text}`);  
+				console.error(`    ${location.file}:${location.line}:${location.column}:`);  
 			});
-			console.log('[watch] build finished'); // eslint-disable-line
+			console.log('[watch] build finished');  
 		});
 	},
 };
@@ -38,6 +40,11 @@ async function main() {
 		external: ['vscode'],
 		logLevel: 'silent',
 		plugins: [
+			pathAlias({
+				"@app": path.resolve(__dirname, "src/app"),
+				"@domain": path.resolve(__dirname, "src/domain"),
+				"@infra": path.resolve(__dirname, "src/infra"),
+			}),
 			/* add to the end of plugins array */
 			esbuildProblemMatcherPlugin,
 		],
@@ -51,6 +58,6 @@ async function main() {
 }
 
 main().catch(e => {
-	console.error(e); // eslint-disable-line
-	process.exit(1); // eslint-disable-line
+	console.error(e);  
+	process.exit(1);  
 });

@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as os from 'os';

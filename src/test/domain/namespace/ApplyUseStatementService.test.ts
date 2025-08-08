@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import * as assert from 'assert';
 import { Position, Range, TextDocument, Uri, WorkspaceEdit } from 'vscode';
 import { ApplyUseStatementService } from '../../../domain/namespace/ApplyUseStatementService';

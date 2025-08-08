@@ -1,4 +1,5 @@
 import { Range, TextDocument, Uri, workspace, WorkspaceEdit } from 'vscode';
+import { injectable } from 'tsyringe';
 
 interface Props {
   document: TextDocument
@@ -9,6 +10,7 @@ interface Props {
   flush: boolean
 }
 
+@injectable()
 export class ApplyUseStatementService {
   public async execute({
     document,

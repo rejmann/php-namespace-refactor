@@ -7,6 +7,20 @@ export default [
   // Configurações recomendadas do ESLint
   eslintJS.configs.recommended,
   {
+    files: ['**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: {
+        __dirname: 'readonly',
+        process: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        console: 'readonly',
+      },
+    },
+  },
+  {
     files: ['**/*.ts'],
     plugins: {
       '@typescript-eslint': typescriptEslint,

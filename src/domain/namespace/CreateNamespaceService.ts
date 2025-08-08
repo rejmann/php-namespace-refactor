@@ -1,4 +1,5 @@
 import { FilePathUtils } from '@infra/utils/FilePathUtils';
+import { injectable } from 'tsyringe';
 import { NamespaceMapperService } from '@infra/composer/NamespaceMapperService';
 
 interface Props {
@@ -10,6 +11,7 @@ interface CreateNamespaceProps {
   className: string;
 }
 
+@injectable()
 export class CreateNamespaceService {
   public execute({ uri }: Props) {
     const namespaceMapperService = new NamespaceMapperService();

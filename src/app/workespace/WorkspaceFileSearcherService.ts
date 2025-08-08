@@ -1,9 +1,11 @@
 import { Uri, workspace } from 'vscode';
 import { ConfigKeys } from '@infra/workspace/configTypes';
 import { getWorkspaceConfig } from '@infra/workspace/vscodeConfig';
+import { injectable } from 'tsyringe';
 
 const DEFAULT_DIRECTORIES = ['/vendor/', '/var/', '/cache/'];
 
+@injectable()
 export class WorkspaceFileSearcherService {
   public async execute(): Promise<Uri[]> {
     const files = await this.getFileByExtensions();

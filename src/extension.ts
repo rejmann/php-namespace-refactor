@@ -1,12 +1,11 @@
 import * as fs from 'fs';
-import * as path from 'path';
-import { COMPOSER_FILE, PHP_EXTENSION, WORKSPACE_PATH } from './infra/utils/constants';
-import { ConfigKeys } from './infra/workspace/configTypes';
-import { Container } from '@infra/di/Container';
-import { importMissingClasses } from './app/namespace/update/import/importMissingClasses';
-import { isConfigEnabled } from './infra/workspace/vscodeConfig';
-import { removeUnusedImports } from './app/namespace/remove/removeUnusedImports';
-import { updateReferences } from './app/namespace/update/updateReferences';
+import { COMPOSER_FILE, PHP_EXTENSION, WORKSPACE_PATH } from '@infra/utils/constants';
+import { ConfigKeys } from '@infra/workspace/configTypes';
+import { container } from 'tsyringe';
+import { importMissingClasses } from '@app/namespace/update/import/importMissingClasses';
+import { isConfigEnabled } from '@infra/workspace/vscodeConfig';
+import { removeUnusedImports } from '@app/namespace/remove/removeUnusedImports';
+import { UpdateUserStatementFeature } from '@app/namespace/update/UpdateUseStatementFeature';
 import { workspace } from 'vscode';
 
 export function activate() {
@@ -15,7 +14,7 @@ export function activate() {
     return;
   }
 
-  new Container().loadServicesFrom(path.join(WORKSPACE_PATH, "src"));
+  const updateUserStatementFeature = container.resolve(UpdateUserStatementFeature);
 
   workspace.onDidRenameFiles((event) => {
     event.files.forEach(async (file) => {
@@ -26,7 +25,7 @@ export function activate() {
         return;
       }
 
-      await updateReferences({ newUri, oldUri });
+      updateUserStatementFeature.execute({ newUri, oldUri });
 
       if (isConfigEnabled({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
         await importMissingClasses({

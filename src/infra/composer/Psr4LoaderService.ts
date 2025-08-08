@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import { readFileSync } from 'fs';
 
 interface Props {
@@ -13,6 +14,7 @@ type AllNamespaceType = {
   autoloadDev: AutoloadType,
 }
 
+@injectable()
 export class Psr4LoaderService {
   public getAllNamespaces(props: Props): AllNamespaceType {
     const config = this.readConfig(props);

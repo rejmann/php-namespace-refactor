@@ -1,9 +1,11 @@
+import { injectable } from 'tsyringe';
 import { TextDocument } from 'vscode';
 
 interface Props {
   document: TextDocument;
 }
 
+@injectable()
 export class UseStatementAnalyzerService {
   private static readonly USE_STATEMENT_REGEX = /^use\s+[^\n]+;/gm;
 

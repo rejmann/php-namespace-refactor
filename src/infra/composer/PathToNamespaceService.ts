@@ -1,10 +1,12 @@
 import { AutoloadType } from './Psr4LoaderService';
+import { injectable } from 'tsyringe';
 
 interface Props {
   autoload: AutoloadType,
   pathFull: string,
 }
 
+@injectable()
 export class PathToNamespaceService {
   private static readonly NAMESPACE_DIVIDER = '\\":';
   private static readonly REGEX_FORWARD_SLASH_PATTERN = /\//g;
