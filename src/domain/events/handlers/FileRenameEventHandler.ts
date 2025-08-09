@@ -1,9 +1,11 @@
 import { FileRenameEvent, Uri } from 'vscode';
 import { ImportMissingClassesFeature } from '@app/namespace/ImportMissingClassesFeature';
+import { injectable } from 'tsyringe';
 import { PHP_EXTENSION } from '@shared/constants';
 import { RemoveUnusedImportsFeature } from '@app/namespace/RemoveUnusedImportsFeature';
 import { UpdateUserStatementFeature } from '@app/namespace/UpdateUseStatementFeature';
 
+@injectable()
 export class FileRenameEventHandler {
   constructor(
     private readonly updateUserStatementFeature: UpdateUserStatementFeature,
@@ -14,7 +16,6 @@ export class FileRenameEventHandler {
 
   public async handle(event: FileRenameEvent) {
     const promises = event.files.map(async ({ oldUri, newUri }) => {
-
       if (!this.isPhpFile(oldUri) || !this.isPhpFile(newUri)) {
         return;
       }
