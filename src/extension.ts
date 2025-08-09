@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import * as fs from 'fs';
 import { COMPOSER_FILE, WORKSPACE_PATH } from '@shared/constants';
 import { container } from 'tsyringe';
