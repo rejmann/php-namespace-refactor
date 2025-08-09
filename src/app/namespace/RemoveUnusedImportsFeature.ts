@@ -1,6 +1,6 @@
 import { Config, ConfigurationService } from '@infra/workspace/ConfigurationService';
 import { injectable } from 'tsyringe';
-import { RemoveUnusedImportsService } from './RemoveUnusedImportsService';
+import { RemoveUnusedImportsService } from './remove/RemoveUnusedImportsService';
 import { Uri } from 'vscode';
 
 interface Props {

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
-import { COMPOSER_FILE, WORKSPACE_PATH } from '@infra/utils/constants';
+import { COMPOSER_FILE, WORKSPACE_PATH } from '@shared/constants';
 import { container } from 'tsyringe';
-import { FileRenameEventHandler } from '@app/events/FileRenameEventHandler';
+import { FileRenameEventHandler } from '@domain/events/handlers/FileRenameEventHandler';
 import { workspace } from 'vscode';
 
 export function activate() {

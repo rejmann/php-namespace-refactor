@@ -18,6 +18,9 @@
       ],
       "@infra/*": [
         "./src/infra/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
       ]
     },
     "experimentalDecorators": true,

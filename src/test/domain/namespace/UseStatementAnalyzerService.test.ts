@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import * as assert from 'assert';
 import { TextDocument } from 'vscode';
-import { UseStatementAnalyzerService } from '../../../domain/namespace/UseStatementAnalyzerService';
+import { UseStatementAnalyzerService } from '@domain/namespace/UseStatementAnalyzerService';
 
 function createMockTextDocument(content: string): TextDocument {
   return {

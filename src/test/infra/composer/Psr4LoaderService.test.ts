@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { Psr4LoaderService } from '../../../infra/composer/Psr4LoaderService';
+import { Psr4LoaderService } from '@infra/composer/Psr4LoaderService';
 
 suite('Psr4LoaderService Test Suite', () => {
   let tempDir: string;

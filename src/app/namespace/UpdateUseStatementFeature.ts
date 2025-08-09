@@ -1,7 +1,7 @@
 import { CreateNamespaceService } from '@domain/namespace/CreateNamespaceService';
 import { injectable } from 'tsyringe';
-import { UpdateAllUseStatementForMovedClassService } from './UpdateAllUseStatementForMovedClassService';
-import { UpdateNamespaceForMovedFileService } from './UpdateNamespaceForMovedFileService';
+import { UpdateAllUseStatementForMovedClassService } from './update/UpdateAllUseStatementForMovedClassService';
+import { UpdateNamespaceForMovedFileService } from './update/UpdateNamespaceForMovedFileService';
 import { Uri } from 'vscode';
 
 interface Props {

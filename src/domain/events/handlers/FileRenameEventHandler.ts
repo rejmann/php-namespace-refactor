@@ -1,8 +1,8 @@
 import { FileRenameEvent, Uri } from 'vscode';
-import { ImportMissingClassesFeature } from '@app/services/namespace/update/import/ImportMissingClassesFeature';
-import { PHP_EXTENSION } from '@infra/utils/constants';
-import { RemoveUnusedImportsFeature } from '@app/services/namespace/remove/RemoveUnusedImportsFeature';
-import { UpdateUserStatementFeature } from '@app/services/namespace/update/UpdateUseStatementFeature';
+import { ImportMissingClassesFeature } from '@app/namespace/ImportMissingClassesFeature';
+import { PHP_EXTENSION } from '@shared/constants';
+import { RemoveUnusedImportsFeature } from '@app/namespace/RemoveUnusedImportsFeature';
+import { UpdateUserStatementFeature } from '@app/namespace/UpdateUseStatementFeature';
 
 export class FileRenameEventHandler {
   constructor(

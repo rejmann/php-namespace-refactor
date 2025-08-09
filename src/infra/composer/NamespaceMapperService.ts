@@ -2,7 +2,7 @@ import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { injectable } from 'tsyringe';
 import { PathToNamespaceService } from './PathToNamespaceService';
 import { Psr4LoaderService } from './Psr4LoaderService';
-import { WORKSPACE_PATH } from '@infra/utils/constants';
+import { WORKSPACE_PATH } from '@shared/constants';
 
 interface NamespaceMapping {
   autoload: string | null;

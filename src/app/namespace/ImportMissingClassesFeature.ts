@@ -1,5 +1,5 @@
 import { Config, ConfigurationService } from '@infra/workspace/ConfigurationService';
-import { ImportMissingClassesService } from './ImportMissingClassesService';
+import { ImportMissingClassesService } from './import/ImportMissingClassesService';
 import { injectable } from 'tsyringe';
 import { Uri } from 'vscode';
 

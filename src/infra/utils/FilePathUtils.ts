@@ -1,5 +1,5 @@
 import { basename, dirname } from 'path';
-import { WORKSPACE_PATH } from './constants';
+import { WORKSPACE_PATH } from '../../shared/constants';
 
 type AbsolutePath = string | null | undefined;
 
