@@ -1,9 +1,7 @@
 import * as fs from 'fs';
 import { COMPOSER_FILE, PHP_EXTENSION, WORKSPACE_PATH } from '@infra/utils/constants';
-import { ConfigKeys } from '@infra/workspace/configTypes';
 import { container } from 'tsyringe';
-import { importMissingClasses } from '@app/namespace/update/import/importMissingClasses';
-import { isConfigEnabled } from '@infra/workspace/vscodeConfig';
+import { ImportMissingClassesFeature } from '@app/namespace/update/import/ImportMissingClassesFeature';
 import { RemoveUnusedImportsFeature } from '@app/namespace/remove/RemoveUnusedImportsFeature';
 import { UpdateUserStatementFeature } from '@app/namespace/update/UpdateUseStatementFeature';
 import { workspace } from 'vscode';
@@ -16,6 +14,7 @@ export function activate() {
 
   const updateUserStatementFeature = container.resolve(UpdateUserStatementFeature);
   const removeUnusedImportsFeature = container.resolve(RemoveUnusedImportsFeature);
+  const importMissingClassesFeature = container.resolve(ImportMissingClassesFeature);
 
   workspace.onDidRenameFiles((event) => {
     event.files.forEach(async (file) => {
@@ -28,12 +27,7 @@ export function activate() {
 
       updateUserStatementFeature.execute({ newUri, oldUri });
 
-      if (isConfigEnabled({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
-        await importMissingClasses({
-          oldFileName: oldUri.fsPath,
-          newUri,
-        });
-      }
+      importMissingClassesFeature.execute({ oldUri, newUri });
 
       removeUnusedImportsFeature.execute({ uri: newUri });
     });
