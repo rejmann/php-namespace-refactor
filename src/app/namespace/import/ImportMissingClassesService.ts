@@ -67,7 +67,7 @@ export class ImportMissingClassesService {
     }
   }
 
-  private getClassesNamesInDirectory(directory: string): string[] {
+  public getClassesNamesInDirectory(directory: string): string[] {
     const files = readdirSync(directory);
     return files.filter(file => file.endsWith('.php'))
       .map(file => FilePathUtils.extractClassNameFromPath(file));
