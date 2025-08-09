@@ -1,7 +1,7 @@
 import { Uri, workspace } from 'vscode';
 import { ApplyUseStatementService } from '@domain/namespace/ApplyUseStatementService';
 import { CreateUseStatementService } from '@domain/namespace/CreateUseStatementService';
-import { DocumentReaderService } from '@app/file/DocumentReaderService';
+import { DocumentReaderService } from '@app/workespace/DocumentReaderService';
 import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { injectable } from 'tsyringe';
 import { RemoveUnusedImportsService } from './../remove/RemoveUnusedImportsService';

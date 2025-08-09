@@ -1,6 +1,6 @@
 import { Range, RelativePattern, TextDocument, Uri, workspace, WorkspaceEdit } from 'vscode';
 import { CreateNamespaceService } from '@domain/namespace/CreateNamespaceService';
-import { DocumentReaderService } from '@app/file/DocumentReaderService';
+import { DocumentReaderService } from '@app/workespace/DocumentReaderService';
 import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { injectable } from 'tsyringe';
 
