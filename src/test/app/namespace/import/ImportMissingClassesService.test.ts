@@ -71,7 +71,6 @@ function createMockApplyUseStatement() {
   } as ApplyUseStatementService & { wasModified: () => boolean; getModifications: () => string[] };
 }
 
-// Mock simples para ImportMissingClassesService com override do método getClassesNamesInDirectory
 class TestableImportMissingClassesService extends ImportMissingClassesService {
   private mockFiles: string[] = [];
 
@@ -111,18 +110,15 @@ class MyClass {
       mockApplyUseStatement
     );
 
-    // Configurar mock para não retornar arquivos
     service.setMockFiles([]);
 
     const oldFileName = '/old/path/MyClass.php';
     const newUri = Uri.file('/new/path/MyClass.php');
 
-    // Estado antes da execução
     assert.strictEqual(mockApplyUseStatement.wasModified(), false);
 
     await service.execute({ oldFileName, newUri });
 
-    // Verificar que o arquivo NÃO foi modificado
     assert.strictEqual(mockApplyUseStatement.wasModified(), false);
     assert.strictEqual(mockApplyUseStatement.getModifications().length, 0);
   });
