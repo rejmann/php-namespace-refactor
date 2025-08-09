@@ -1,12 +1,12 @@
 import { Uri, workspace } from 'vscode';
 import { ApplyUseStatementService } from '@domain/namespace/ApplyUseStatementService';
 import { CreateUseStatementService } from '@domain/namespace/CreateUseStatementService';
-import { DocumentReaderService } from '@app/workespace/DocumentReaderService';
+import { DocumentReaderService } from '@app/services/workespace/DocumentReaderService';
 import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { injectable } from 'tsyringe';
-import { RemoveUnusedImportsService } from './../remove/RemoveUnusedImportsService';
+import { RemoveUnusedImportsService } from '../remove/RemoveUnusedImportsService';
 import { UseStatementAnalyzerService } from '@domain/namespace/UseStatementAnalyzerService';
-import { WorkspaceFileSearcherService } from '@app/workespace/WorkspaceFileSearcherService';
+import { WorkspaceFileSearcherService } from '@app/services/workespace/WorkspaceFileSearcherService';
 
 interface Props {
   useOldNamespace: string

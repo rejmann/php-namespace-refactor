@@ -1,7 +1,7 @@
 import { Uri, WorkspaceEdit } from 'vscode';
 import { ApplyUseStatementService } from '@domain/namespace/ApplyUseStatementService';
 import { CreateUseStatementService } from '@domain/namespace/CreateUseStatementService';
-import { DocumentReaderService } from '@app/workespace/DocumentReaderService';
+import { DocumentReaderService } from '@app/services/workespace/DocumentReaderService';
 import { FilePathUtils } from '@infra/utils/FilePathUtils';
 import { injectable } from 'tsyringe';
 import { readdirSync } from 'fs';

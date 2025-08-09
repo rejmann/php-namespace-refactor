@@ -1,5 +1,5 @@
 import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
-import { DocumentReaderService } from '@app/workespace/DocumentReaderService';
+import { DocumentReaderService } from '@app/services/workespace/DocumentReaderService';
 import { injectable } from 'tsyringe';
 
 interface Props {
