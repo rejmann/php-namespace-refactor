@@ -11,9 +11,14 @@ interface NamespaceMapping {
 
 @injectable()
 export class NamespaceMapperService {
+  constructor(
+    private readonly psr4LoaderService: Psr4LoaderService,
+    private readonly pathToNamespaceService: PathToNamespaceService
+  ) {
+  }
+
   public execute(uri: string): NamespaceMapping {
-    const psr4LoaderService = new Psr4LoaderService();
-    const { autoload, autoloadDev } = psr4LoaderService.getAllNamespaces({ workspacePath: WORKSPACE_PATH });
+    const { autoload, autoloadDev } = this.psr4LoaderService.getAllNamespaces({ workspacePath: WORKSPACE_PATH });
 
     if (!autoload && !autoloadDev) {
       return {
@@ -22,12 +27,11 @@ export class NamespaceMapperService {
       };
     }
 
-    const pathToNamespaceService = new PathToNamespaceService();
     const pathFull = FilePathUtils.removeWorkspaceRoot(uri);
 
     return {
-      autoload: pathToNamespaceService.resolve({ autoload, pathFull }),
-      autoloadDev: pathToNamespaceService.resolve({ autoload: autoloadDev, pathFull })
+      autoload: this.pathToNamespaceService.resolve({ autoload, pathFull }),
+      autoloadDev: this.pathToNamespaceService.resolve({ autoload: autoloadDev, pathFull })
     };
   }
 }

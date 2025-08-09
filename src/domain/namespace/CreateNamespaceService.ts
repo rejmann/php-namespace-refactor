@@ -13,9 +13,13 @@ interface CreateNamespaceProps {
 
 @injectable()
 export class CreateNamespaceService {
+  constructor(
+    private readonly namespaceMapperService: NamespaceMapperService
+  ) {
+  }
+
   public execute({ uri }: Props) {
-    const namespaceMapperService = new NamespaceMapperService();
-    const { autoload, autoloadDev } = namespaceMapperService.execute(uri);
+    const { autoload, autoloadDev } = this.namespaceMapperService.execute(uri);
 
     const className = FilePathUtils.extractClassNameFromPath(uri);
 
