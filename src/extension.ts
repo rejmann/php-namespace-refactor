@@ -11,9 +11,7 @@ export function activate() {
     return;
   }
 
-  const fileRenameEventHandler = container.resolve(FileRenameEventHandler);
+  const handler = container.resolve(FileRenameEventHandler);
 
-  workspace.onDidRenameFiles((event) => {
-    fileRenameEventHandler.handle(event);
-  });
+  workspace.onDidRenameFiles((event) => handler.handle(event));
 }

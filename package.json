@@ -37,7 +37,7 @@
   "activationEvents": [
     "onLanguage:php"
   ],
-  "main": "./dist/extension.js",
+  "main": "./out/extension.js",
   "contributes": {
     "configuration": {
       "languages": [
@@ -90,11 +90,11 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "compile": "npm run check-types && npm run lint && tsc -p . --outDir out && tsc-alias -p tsconfig.json --outDir out",
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "watch:tsc": "tsc -p . -w --outDir out",
+    "package": "npm run check-types && npm run lint && tsc -p . --outDir out && tsc-alias -p tsconfig.json --outDir out",
     "compile-tests": "tsc -p . --outDir out && tsc-alias -p tsconfig.json --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
