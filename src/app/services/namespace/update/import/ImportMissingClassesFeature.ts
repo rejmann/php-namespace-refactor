@@ -1,7 +1,6 @@
-import { ConfigKeys } from '@infra/workspace/configTypes';
+import { Config, ConfigurationService } from '@infra/workspace/ConfigurationService';
 import { ImportMissingClassesService } from './ImportMissingClassesService';
 import { injectable } from 'tsyringe';
-import { isConfigEnabled } from '@infra/workspace/vscodeConfig';
 import { Uri } from 'vscode';
 
 interface Props {
@@ -12,12 +11,13 @@ interface Props {
 @injectable()
 export class ImportMissingClassesFeature {
   constructor(
-    private readonly importMissingClassesService: ImportMissingClassesService
+    private readonly importMissingClassesService: ImportMissingClassesService,
+    private readonly configurationService: ConfigurationService,
   ) {
   }
 
   async execute({ oldUri, newUri }: Props): Promise<void> {
-    if (!isConfigEnabled({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
+    if (!this.configurationService.isConfigEnabled({ key: Config.AUTO_IMPORT_NAMESPACE })) {
       return;
     }
 

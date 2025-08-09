@@ -1,12 +1,16 @@
+import { Config, ConfigurationService } from '@infra/workspace/ConfigurationService';
 import { Uri, workspace } from 'vscode';
-import { ConfigKeys } from '@infra/workspace/configTypes';
-import { getWorkspaceConfig } from '@infra/workspace/vscodeConfig';
 import { injectable } from 'tsyringe';
 
 const DEFAULT_DIRECTORIES = ['/vendor/', '/var/', '/cache/'];
 
 @injectable()
 export class WorkspaceFileSearcherService {
+  constructor(
+    private readonly configurationService: ConfigurationService,
+  ) {
+  }
+
   public async execute(): Promise<Uri[]> {
     const files = await this.getFileByExtensions();
 
@@ -21,8 +25,8 @@ export class WorkspaceFileSearcherService {
   private async getFileByExtensions(): Promise<Uri[]> {
     const DEFAULT_EXTENSION_PHP = 'php';
 
-    const extensions = getWorkspaceConfig<string[]>({
-      key: ConfigKeys.ADDITIONAL_EXTENSIONS,
+    const extensions = this.configurationService.getWorkspaceConfig<string[]>({
+      key: Config.ADDITIONAL_EXTENSIONS,
       defaultValue: [DEFAULT_EXTENSION_PHP],
     });
 
@@ -32,8 +36,8 @@ export class WorkspaceFileSearcherService {
   }
 
   private getIgnoredDirectories(): string[] {
-    return getWorkspaceConfig<string[]>({
-      key: ConfigKeys.IGNORED_DIRECTORIES,
+    return this.configurationService.getWorkspaceConfig<string[]>({
+      key: Config.IGNORED_DIRECTORIES,
       defaultValue: DEFAULT_DIRECTORIES,
     });
   }

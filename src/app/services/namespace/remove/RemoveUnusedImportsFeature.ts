@@ -1,6 +1,5 @@
-import { ConfigKeys } from '@infra/workspace/configTypes';
+import { Config, ConfigurationService } from '@infra/workspace/ConfigurationService';
 import { injectable } from 'tsyringe';
-import { isConfigEnabled } from '@infra/workspace/vscodeConfig';
 import { RemoveUnusedImportsService } from './RemoveUnusedImportsService';
 import { Uri } from 'vscode';
 
@@ -11,12 +10,13 @@ interface Props {
 @injectable()
 export class RemoveUnusedImportsFeature {
   constructor(
-    private readonly removeUnusedImportsService: RemoveUnusedImportsService
+    private readonly removeUnusedImportsService: RemoveUnusedImportsService,
+    private readonly configurationService: ConfigurationService
   ) {
   }
 
   async execute({ uri }: Props) {
-    if (!isConfigEnabled({ key: ConfigKeys.REMOVE_UNUSED_IMPORTS })) {
+    if (!this.configurationService.isConfigEnabled({ key: Config.REMOVE_UNUSED_IMPORTS })) {
       return;
     }
 
