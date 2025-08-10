@@ -1,7 +1,6 @@
 import { Uri, WorkspaceEdit } from 'vscode';
 import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
-import { findLastUseEndIndex } from '@domain/namespace/findLastUseEndIndex';
-import { findNamespaceEndIndex } from '@domain/namespace/findNamespaceEndIndex';
+import { findUseInsertionIndex } from '@domain/namespace/findUseInsertionIndex';
 import { insertUseStatement } from '@domain/namespace/import/insertUseStatement';
 import { openTextDocument } from '../openTextDocument';
 
@@ -29,15 +28,9 @@ export async function updateInFile({
     return;
   }
 
-  const lastUseEndIndex = findLastUseEndIndex({ document });
-
-  // Se não há use statements existentes, insere após o namespace
-  let insertionIndex = lastUseEndIndex;
+  const insertionIndex = findUseInsertionIndex({ document });
   if (insertionIndex === 0) {
-    insertionIndex = findNamespaceEndIndex({ document });
-    if (insertionIndex === 0) {
-      return; // Não há namespace, não podemos inserir use statements
-    }
+    return;
   }
 
   const edit = new WorkspaceEdit();
