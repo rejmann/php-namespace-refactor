@@ -1,6 +1,7 @@
 import { Uri, WorkspaceEdit } from 'vscode';
 import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
 import { findLastUseEndIndex } from '@domain/namespace/findLastUseEndIndex';
+import { findNamespaceEndIndex } from '@domain/namespace/findNamespaceEndIndex';
 import { findUnimportedClasses } from './findUnimportedClasses';
 import { generateUseStatementsForClasses } from '@domain/namespace/generateUseStatementsForClasses';
 import { getClassesNamesInDirectory } from './getClassesNamesInDirectory';
@@ -40,8 +41,14 @@ export async function importMissingClasses({
   }
 
   const lastUseEndIndex = findLastUseEndIndex({ document });
-  if (0 === lastUseEndIndex) {
-    return;
+
+  // Se não há use statements existentes, insere após o namespace
+  let insertionIndex = lastUseEndIndex;
+  if (insertionIndex === 0) {
+    insertionIndex = findNamespaceEndIndex({ document });
+    if (insertionIndex === 0) {
+      return; // Não há namespace, não podemos inserir use statements
+    }
   }
 
   const edit = new WorkspaceEdit();
@@ -54,7 +61,7 @@ export async function importMissingClasses({
       document,
       workspaceEdit: edit,
       uri: newUri,
-      lastUseEndIndex,
+      lastUseEndIndex: insertionIndex,
       useNamespace: use,
       flush: total === row,
     });
