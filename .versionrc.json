@@ -17,21 +17,22 @@
       "hidden": true
     },
     {
-      "type": "merge",
+      "type": "docs",
       "hidden": true
     },
     {
-      "type": "docs",
-      "hidden": false
+      "type": "merge",
+      "hidden": true
     }
   ],
   "skip": {
     "commit": [
       "^Merge",
       "^chore\\(release\\)",
-      "^Revert"
+      "^Revert",
+      "^docs",
+      "readme",
+      "README"
     ]
-  },
-  "commitUrlFormat": "https://github.com/rejmann/php-namespace-refactor/commit/{{hash}}",
-  "compareUrlFormat": "https://github.com/rejmann/php-namespace-refactor/compare/{{previousTag}}...{{currentTag}}"
+  }
 }
