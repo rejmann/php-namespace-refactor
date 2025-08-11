@@ -1,0 +1,34 @@
+{
+  "types": [
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "refactor",
+      "section": "Refactor"
+    },
+    {
+      "type": "chore",
+      "hidden": true
+    },
+    {
+      "type": "merge",
+      "hidden": true
+    },
+    {
+      "type": "docs",
+      "hidden": false
+    }
+  ],
+  "skip": {
+    "commit": [
+      "^Merge",
+      "^chore\\(release\\)"
+    ]
+  }
+}
