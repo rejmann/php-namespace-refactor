@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/rejmann/php-namespace-refactor/compare/v0.0.8...v1.2.0) (2025-08-11)
+
+
+### Features
+
+* allow specifying additional extensions for namespace refactor ([24d035c](https://github.com/rejmann/php-namespace-refactor/commit/24d035c623d6d59d7f26fe5019681879a2911f9a))
+
+
+### Bug Fixes
+
+* auto import from the same directory ([75a4324](https://github.com/rejmann/php-namespace-refactor/commit/75a4324376a29456629e20336a58b33d3bccbe4c))
+* consider compound namespace ([f80eabf](https://github.com/rejmann/php-namespace-refactor/commit/f80eabfd6ce528235cbdc12e6d7419d65f908a7e))
+* when there is no use statement ([4f4c2c2](https://github.com/rejmann/php-namespace-refactor/commit/4f4c2c24900f851504682c149a3bb44ca75817fa))
+
 ### [1.1.12](https://github.com/rejmann/php-namespace-refactor/compare/v1.1.11...v1.1.12) (2025-03-13)
 
 
