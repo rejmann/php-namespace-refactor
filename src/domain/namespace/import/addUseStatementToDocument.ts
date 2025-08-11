@@ -9,7 +9,7 @@ interface Props {
   flush: boolean
 }
 
-export async function insertUseStatement({
+export async function addUseStatementToDocument({
   document,
   workspaceEdit,
   lastUseEndIndex,
@@ -24,7 +24,7 @@ export async function insertUseStatement({
     useNamespace,
   );
 
-  if (! flush) {
+  if (!flush) {
     return;
   }
 

@@ -1,12 +1,12 @@
 import { Uri, workspace } from 'vscode';
 import { ConfigKeys } from '@infra/workspace/configTypes';
-import { getWorkspaceConfig } from '@infra/workspace/vscodeConfig';
+import { getExtensionConfigValue } from '@infra/workspace/vscodeConfig';
 
 const DEFAULT_DIRECTORIES = ['/vendor/', '/var/', '/cache/'];
 const DEFAULT_EXTENSION_PHP = 'php';
 
-export async function findPhpFilesInWorkspace(): Promise<Uri[]> {
-  const extensions = getWorkspaceConfig<string[]>({
+export async function getAllPhpFilesExcludingIgnoredDirs(): Promise<Uri[]> {
+  const extensions = getExtensionConfigValue<string[]>({
     key: ConfigKeys.ADDITIONAL_EXTENSIONS,
     defaultValue: [DEFAULT_EXTENSION_PHP],
   });
@@ -14,7 +14,7 @@ export async function findPhpFilesInWorkspace(): Promise<Uri[]> {
   const pattern = `**/*.{${[DEFAULT_EXTENSION_PHP, ...extensions].join(',')}}`;
   const phpFiles: Uri[] = await workspace.findFiles(pattern);
 
-  const ignoredDirectories = getWorkspaceConfig<string[]>({
+  const ignoredDirectories = getExtensionConfigValue<string[]>({
     key: ConfigKeys.IGNORED_DIRECTORIES,
     defaultValue: DEFAULT_DIRECTORIES,
   });

@@ -5,7 +5,7 @@ interface Props {
   fileNames: string[]
 }
 
-export async function removeImports({
+export async function removeSpecificImportStatements({
   document,
   fileNames,
 }: Props) {

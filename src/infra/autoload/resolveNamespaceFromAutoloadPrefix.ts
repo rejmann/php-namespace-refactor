@@ -12,7 +12,7 @@ const NAMESPACE_DIVIDER = '\\":';
 const REGEX_FORWARD_SLASH_PATTERN = /\//g;
 const REGEX_FINAL_BACKSLASH_SEGMENT = /\\[^\\]+$/;
 
-export function resolvePathFromPrefix({
+export function resolveNamespaceFromAutoloadPrefix({
   autoload,
   workspaceRoot,
 }: Props) {

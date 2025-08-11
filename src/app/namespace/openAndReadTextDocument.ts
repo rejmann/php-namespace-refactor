@@ -9,7 +9,7 @@ type OpenTextDocument = {
   text: string
 }
 
-export async function openTextDocument({
+export async function openAndReadTextDocument({
   uri,
 }: Props): Promise<OpenTextDocument> {
   const document = await workspace.openTextDocument(uri.fsPath);

@@ -9,7 +9,7 @@ export interface Namespace {
   fullNamespace: string
 }
 
-export function createNamespace({
+export function createNamespaceObject({
   namespace,
   className,
 }: Props): Namespace {

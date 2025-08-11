@@ -4,7 +4,7 @@ interface Props {
   document: TextDocument
 }
 
-export function findNamespaceEndIndex({
+export function findEndOfNamespaceDeclaration({
   document,
 }: Props): number {
   const text = document.getText();

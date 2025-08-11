@@ -15,7 +15,7 @@ const DEFAULT = {
   autoloadDev: {}
 };
 
-export async function fetchComposerAutoload({
+export async function readComposerAutoloadConfig({
   workspaceRoot,
 }: Props): Promise<ComposerAutoload> {
   if (!workspaceRoot) {

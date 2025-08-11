@@ -3,14 +3,14 @@ import { workspace } from 'vscode';
 
 const userConfig = workspace.getConfiguration('phpNamespaceRefactor');
 
-export const isConfigEnabled = ({
+export const isFeatureEnabled = ({
   key,
   defaultValue = true,
 }: IsConfigEnabledProps): boolean => {
   return userConfig.get<boolean>(key, defaultValue);
 };
 
-export const getWorkspaceConfig = <T>({
+export const getExtensionConfigValue = <T>({
   key,
   defaultValue,
 }: GetWorkspaceConfigProps<T>) => {

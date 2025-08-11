@@ -6,7 +6,7 @@ interface Props {
 
 const REGEX = /^use\s+[^\n]+;/gm;
 
-export function findLastUseEndIndex({
+export function findEndOfLastUseStatement({
   document,
 }: Props): number {
   const text = document.getText();

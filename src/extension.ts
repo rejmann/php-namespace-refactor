@@ -1,11 +1,13 @@
 import * as fs from 'fs';
-import { COMPOSER_FILE, PHP_EXTENSION, WORKSPACE_ROOT } from './infra/utils/constants';
+import { autoImportClassesFromOldDirectory } from './app/namespace/update/import/autoImportClassesFromOldDirectory';
+import { cleanupUnusedImportsAfterMove } from './app/namespace/remove/cleanupUnusedImportsAfterMove';
+import { COMPOSER_FILE } from './infra/utils/constants';
 import { ConfigKeys } from './infra/workspace/configTypes';
-import { importMissingClasses } from './app/namespace/update/import/importMissingClasses';
-import { isConfigEnabled } from './infra/workspace/vscodeConfig';
-import { removeUnusedImports } from './app/namespace/remove/removeUnusedImports';
-import { updateReferences } from './app/namespace/update/updateReferences';
+import { isFeatureEnabled } from './infra/workspace/vscodeConfig';
+import { PHP_EXTENSION } from './infra/utils/constants';
+import { refactorNamespaceReferences } from './app/namespace/update/refactorNamespaceReferences';
 import { workspace } from 'vscode';
+import { WORKSPACE_ROOT } from './infra/utils/constants';
 
 export function activate() {
   const files: string[] = fs.readdirSync(WORKSPACE_ROOT);
@@ -22,16 +24,16 @@ export function activate() {
         return;
       }
 
-      await updateReferences({ newUri, oldUri });
+      await refactorNamespaceReferences({ newUri, oldUri });
 
-      if (isConfigEnabled({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
-        await importMissingClasses({
+      if (isFeatureEnabled({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
+        await autoImportClassesFromOldDirectory({
           oldFileName: oldUri.fsPath,
           newUri,
         });
       }
 
-      await removeUnusedImports({ uri: newUri });
+      await cleanupUnusedImportsAfterMove({ uri: newUri });
     });
   });
 }

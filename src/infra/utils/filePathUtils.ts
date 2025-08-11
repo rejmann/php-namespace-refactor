@@ -3,13 +3,13 @@ import { WORKSPACE_ROOT } from './constants';
 
 type AbsolutePath = string | null | undefined
 
-export const removeWorkspaceRoot = (filePath: AbsolutePath) =>
+export const getRelativePathFromWorkspace = (filePath: AbsolutePath) =>
   filePath
     ?.replace(WORKSPACE_ROOT, '')
     .replace(/^\/|\\/g, '') || '';
 
-export const extractDirectoryFromPath = (filePath: AbsolutePath) =>
+export const getDirectoryPathFromFilePath = (filePath: AbsolutePath) =>
   dirname(filePath || '');
 
-export const extractClassNameFromPath = (filePath: AbsolutePath) =>
+export const getClassNameFromFilePath = (filePath: AbsolutePath) =>
   basename(filePath || '', '.php') || '';

@@ -1,16 +1,16 @@
 import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
-import { openTextDocument } from '../openTextDocument';
+import { openAndReadTextDocument } from '../openAndReadTextDocument';
 
 interface Props {
   newNamespace: string,
   newUri: Uri,
 }
 
-export async function updateInCurrentFile({
+export async function updateNamespaceInMovedFile({
   newNamespace,
   newUri,
 }: Props) {
-  const { document, text } = await openTextDocument({ uri: newUri });
+  const { document, text } = await openAndReadTextDocument({ uri: newUri });
 
   const namespaceRegex = /^\s*namespace\s+[\w\\]+;/m;
   const match = text.match(namespaceRegex);
