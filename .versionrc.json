@@ -2,15 +2,15 @@
   "types": [
     {
       "type": "feat",
-      "section": "Features"
+      "section": "✨ Features"
     },
     {
       "type": "fix",
-      "section": "Bug Fixes"
+      "section": "🐛 Bug Fixes"
     },
     {
       "type": "refactor",
-      "section": "Refactor"
+      "section": "♻️ Refactor"
     },
     {
       "type": "chore",
@@ -28,7 +28,10 @@
   "skip": {
     "commit": [
       "^Merge",
-      "^chore\\(release\\)"
+      "^chore\\(release\\)",
+      "^Revert"
     ]
-  }
+  },
+  "commitUrlFormat": "https://github.com/rejmann/php-namespace-refactor/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/rejmann/php-namespace-refactor/compare/{{previousTag}}...{{currentTag}}"
 }
