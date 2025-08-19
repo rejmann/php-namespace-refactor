@@ -32,6 +32,7 @@ export function activate() {
 
         await removeUnusedImports({ uri: newUri });
       } catch (error) {
+        // eslint-disable-next-line no-undef
         console.error('Error processing file rename:', error);
         throw error;
       }
