@@ -38,23 +38,23 @@ export async function removeUnusedImports({ uri }: Props) {
       document,
       fileNames,
     });
-  } catch (_) {
+  } catch (error) {
     // Main file might not exist, skip processing
   }
 
-  for (const file of phpFiles) {
-    if (file.fsPath === uri.fsPath) {
-      continue;
-    }
+  // Process other files in parallel for better performance
+  const otherFiles = phpFiles.filter(file => file.fsPath !== uri.fsPath);
 
+  await Promise.all(otherFiles.map(async (file) => {
     try {
       const { document } = await openTextDocument({ uri: file });
       await removeImports({
         document,
         fileNames: [className],
       });
-    } catch (_) {
-      continue;
+    } catch (error) {
+      // File might not exist, skip it
+      return;
     }
-  }
+  }));
 }

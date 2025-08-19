@@ -29,7 +29,7 @@ export async function updateReferencesInFiles({
 
   const filesToProcess = files.filter(file => ignoreFile !== file.fsPath);
 
-  for (const file of filesToProcess) {
+  await Promise.all(filesToProcess.map(async (file) => {
     try {
       const fileStream = workspace.fs;
 
@@ -46,7 +46,7 @@ export async function updateReferencesInFiles({
           className,
         });
 
-        continue;
+        return;
       }
 
       text = text.replace(useOldNamespace, useNewNamespace);
@@ -59,9 +59,9 @@ export async function updateReferencesInFiles({
         className,
       });
     } catch (_) {
-      continue;
+      return;
     }
-  }
+  }));
 
   await removeUnusedImports({ uri: newUri });
 }
