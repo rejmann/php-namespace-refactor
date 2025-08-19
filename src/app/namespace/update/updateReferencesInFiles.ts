@@ -30,30 +30,37 @@ export async function updateReferencesInFiles({
   const filesToProcess = files.filter(file => ignoreFile !== file.fsPath);
 
   for (const file of filesToProcess) {
-    const fileStream = workspace.fs;
+    try {
+      const fileStream = workspace.fs;
 
-    const fileContent = await fileStream.readFile(file);
-    let text = Buffer.from(fileContent).toString();
+      await fileStream.stat(file);
 
-    if (!text.includes(useOldNamespace)) {
+      const fileContent = await fileStream.readFile(file);
+      let text = Buffer.from(fileContent).toString();
+
+      if (!text.includes(useOldNamespace)) {
+        await updateInFile({
+          file,
+          oldDirectoryPath: directoryPath,
+          useImport,
+          className,
+        });
+
+        continue;
+      }
+
+      text = text.replace(useOldNamespace, useNewNamespace);
+      await fileStream.writeFile(file, Buffer.from(text));
+
       await updateInFile({
         file,
         oldDirectoryPath: directoryPath,
         useImport,
         className,
       });
+    } catch (_) {
       continue;
     }
-
-    text = text.replace(useOldNamespace, useNewNamespace);
-    await fileStream.writeFile(file, Buffer.from(text));
-
-    await updateInFile({
-      file,
-      oldDirectoryPath: directoryPath,
-      useImport,
-      className,
-    });
   }
 
   await removeUnusedImports({ uri: newUri });

@@ -32,21 +32,29 @@ export async function removeUnusedImports({ uri }: Props) {
     return;
   }
 
-  const { document } = await openTextDocument({ uri });
-  await removeImports({
-    document,
-    fileNames,
-  });
+  try {
+    const { document } = await openTextDocument({ uri });
+    await removeImports({
+      document,
+      fileNames,
+    });
+  } catch (_) {
+    // Main file might not exist, skip processing
+  }
 
   for (const file of phpFiles) {
     if (file.fsPath === uri.fsPath) {
       continue;
     }
 
-    const { document } = await openTextDocument({ uri: file });
-    await removeImports({
-      document,
-      fileNames: [className],
-    });
+    try {
+      const { document } = await openTextDocument({ uri: file });
+      await removeImports({
+        document,
+        fileNames: [className],
+      });
+    } catch (_) {
+      continue;
+    }
   }
 }
