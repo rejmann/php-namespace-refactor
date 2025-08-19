@@ -38,11 +38,10 @@ export async function removeUnusedImports({ uri }: Props) {
       document,
       fileNames,
     });
-  } catch (error) {
+  } catch (_) {
     // Main file might not exist, skip processing
   }
 
-  // Process other files in parallel for better performance
   const otherFiles = phpFiles.filter(file => file.fsPath !== uri.fsPath);
 
   await Promise.all(otherFiles.map(async (file) => {
@@ -52,8 +51,7 @@ export async function removeUnusedImports({ uri }: Props) {
         document,
         fileNames: [className],
       });
-    } catch (error) {
-      // File might not exist, skip it
+    } catch (_) {
       return;
     }
   }));
