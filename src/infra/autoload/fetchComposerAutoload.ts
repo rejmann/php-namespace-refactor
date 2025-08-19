@@ -17,6 +17,7 @@ const DEFAULT = {
 
 let composerCache: ComposerAutoload | null = null;
 let cacheWorkspaceRoot: string | null = null;
+let cacheModifiedTime: number | null = null;
 
 export async function fetchComposerAutoload({
   workspaceRoot,
@@ -25,12 +26,18 @@ export async function fetchComposerAutoload({
     return DEFAULT;
   }
 
-  if (composerCache && cacheWorkspaceRoot === workspaceRoot) {
-    return composerCache;
-  }
+  const composerPath = `${workspaceRoot}/${COMPOSER_FILE}`;
 
   try {
-    const composerPath = `${workspaceRoot}/${COMPOSER_FILE}`;
+    const stats = await fs.stat(composerPath);
+    const currentModifiedTime = stats.mtimeMs;
+
+    if (composerCache &&
+      cacheWorkspaceRoot === workspaceRoot &&
+      cacheModifiedTime === currentModifiedTime) {
+      return composerCache;
+    }
+
     const composerJson = await fs.readFile(composerPath, 'utf8');
     const composerConfig = JSON.parse(composerJson);
 
@@ -41,6 +48,7 @@ export async function fetchComposerAutoload({
 
     composerCache = result;
     cacheWorkspaceRoot = workspaceRoot;
+    cacheModifiedTime = currentModifiedTime;
 
     return result;
   } catch (error) {
