@@ -18,40 +18,43 @@ export async function updateReferencesInFiles({
   newUri,
   oldUri,
 }: Props) {
-    const directoryPath = extractDirectoryFromPath(oldUri.fsPath);
-    const className = extractClassNameFromPath(oldUri.fsPath);
-  
-    const useImport = generateUseStatement({ fullNamespace: useNewNamespace });
-  
-    const ignoreFile = newUri.fsPath;
+  const directoryPath = extractDirectoryFromPath(oldUri.fsPath);
+  const className = extractClassNameFromPath(oldUri.fsPath);
 
-    const files = await findPhpFilesInWorkspace();
+  const useImport = generateUseStatement({ fullNamespace: useNewNamespace });
 
-    for (const file of files) {
-      if (ignoreFile === file.fsPath) {
-        continue;
-      }
-  
-      const fileStream = workspace.fs;
-  
-      const fileContent = await fileStream.readFile(file);
-      let text = Buffer.from(fileContent).toString();
-  
+  const ignoreFile = newUri.fsPath;
+
+  const files = await findPhpFilesInWorkspace();
+
+  const filesToProcess = files.filter(file => ignoreFile !== file.fsPath);
+
+  for (const file of filesToProcess) {
+    const fileStream = workspace.fs;
+
+    const fileContent = await fileStream.readFile(file);
+    let text = Buffer.from(fileContent).toString();
+
+    if (!text.includes(useOldNamespace)) {
       await updateInFile({
         file,
         oldDirectoryPath: directoryPath,
         useImport,
         className,
       });
-  
-      if (!text.includes(useOldNamespace)) {
-        continue;
-      }
-  
-      text = text.replace(useOldNamespace, useNewNamespace);
-  
-      await fileStream.writeFile(file, Buffer.from(text));
+      continue;
     }
-  
-    await removeUnusedImports({ uri: newUri });
+
+    text = text.replace(useOldNamespace, useNewNamespace);
+    await fileStream.writeFile(file, Buffer.from(text));
+
+    await updateInFile({
+      file,
+      oldDirectoryPath: directoryPath,
+      useImport,
+      className,
+    });
+  }
+
+  await removeUnusedImports({ uri: newUri });
 }

@@ -1,4 +1,4 @@
-import { Uri, WorkspaceEdit } from 'vscode';
+import { Uri, workspace, WorkspaceEdit } from 'vscode';
 import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
 import { findUnimportedClasses } from './findUnimportedClasses';
 import { findUseInsertionIndex } from '@domain/namespace/findUseInsertionIndex';
@@ -46,9 +46,6 @@ export async function importMissingClasses({
 
   const edit = new WorkspaceEdit();
 
-  const total = imports.length;
-  let row = 1;
-
   for (const use of imports) {
     await insertUseStatement({
       document,
@@ -56,9 +53,11 @@ export async function importMissingClasses({
       uri: newUri,
       lastUseEndIndex: insertionIndex,
       useNamespace: use,
-      flush: total === row,
+      flush: false,
     });
+  }
 
-    row++;
+  if (imports.length > 0) {
+    await workspace.applyEdit(edit);
   }
 }
