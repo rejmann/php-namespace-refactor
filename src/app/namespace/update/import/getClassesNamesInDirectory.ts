@@ -1,12 +1,18 @@
 import { extractClassNameFromPath } from '@infra/utils/filePathUtils';
-import { readdirSync } from 'fs';
+import { promises as fs } from 'fs';
+import { PHP_EXTENSION } from '@infra/utils/constants';
 
 interface Props {
   directory: string
 }
 
 export async function getClassesNamesInDirectory({ directory }: Props) {
-    const files = await readdirSync(directory);
-    return files.filter(file => file.endsWith('.php'))
-      .map(file => extractClassNameFromPath(file));
+  try {
+    const files = await fs.readdir(directory);
+    return files.filter(file => file.endsWith(PHP_EXTENSION))
+      .map(file => extractClassNameFromPath(file))
+      .filter(Boolean);
+  } catch (error) {
+    return [];
+  }
 }

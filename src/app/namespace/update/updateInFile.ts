@@ -22,25 +22,29 @@ export async function updateInFile({
     return;
   }
 
-  const { document, text } = await openTextDocument({ uri: file });
+  try {
+    const { document, text } = await openTextDocument({ uri: file });
 
-  if (!text.includes(className)) {
+    if (!text.includes(className)) {
+      return;
+    }
+
+    const insertionIndex = findUseInsertionIndex({ document });
+    if (insertionIndex === 0) {
+      return;
+    }
+
+    const edit = new WorkspaceEdit();
+
+    await insertUseStatement({
+      document,
+      workspaceEdit: edit,
+      uri: file,
+      lastUseEndIndex: insertionIndex,
+      useNamespace: useImport,
+      flush: true,
+    });
+  } catch (_) {
     return;
   }
-
-  const insertionIndex = findUseInsertionIndex({ document });
-  if (insertionIndex === 0) {
-    return;
-  }
-
-  const edit = new WorkspaceEdit();
-
-  await insertUseStatement({
-    document,
-    workspaceEdit: edit,
-    uri: file,
-    lastUseEndIndex: insertionIndex,
-    useNamespace: useImport,
-    flush: true,
-  });
 }

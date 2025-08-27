@@ -22,9 +22,9 @@ export async function removeUnusedImports({ uri }: Props) {
   const directoryPath = extractDirectoryFromPath(uri.fsPath);
 
   const pattern = new RelativePattern(Uri.parse(`file://${directoryPath}`), '*.php');
-  const phpFiles: Uri[] = await workspace.findFiles(pattern);
+  const phpFiles = await workspace.findFiles(pattern);
 
-  const fileNames: string[] = phpFiles.map(uri => extractClassNameFromPath(uri.fsPath))
+  const fileNames = phpFiles.map(uri => extractClassNameFromPath(uri.fsPath))
     .filter(Boolean)
     .filter(name => name !== className);
 
@@ -32,12 +32,27 @@ export async function removeUnusedImports({ uri }: Props) {
     return;
   }
 
-  for (const file of [uri, ...phpFiles]) {
-    const { document } = await openTextDocument({ uri: file });
-  
+  try {
+    const { document } = await openTextDocument({ uri });
     await removeImports({
       document,
-      fileNames: file === uri ? fileNames : [className],
+      fileNames,
     });
+  } catch (_) {
+    // Main file might not exist, skip processing
   }
+
+  const otherFiles = phpFiles.filter(file => file.fsPath !== uri.fsPath);
+
+  await Promise.all(otherFiles.map(async (file) => {
+    try {
+      const { document } = await openTextDocument({ uri: file });
+      await removeImports({
+        document,
+        fileNames: [className],
+      });
+    } catch (_) {
+      return;
+    }
+  }));
 }

@@ -24,9 +24,7 @@ export async function insertUseStatement({
     useNamespace,
   );
 
-  if (! flush) {
-    return;
+  if (flush) {
+    await workspace.applyEdit(workspaceEdit);
   }
-
-  await workspace.applyEdit(workspaceEdit);
 }
