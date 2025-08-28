@@ -7,6 +7,8 @@
       "package-name": "php-namespace-refactor",
       "initial-version": "1.2.1",
       "release-type": "node",
+      "pull-request-title-pattern": "🤖 chore: release ${version} [bot]",
+      "pull-request-header": "## 🤖 Automated Release\n\n*This PR was automatically generated and should not appear in the changelog.*",
       "changelog-sections": [
         {
           "type": "feat",
