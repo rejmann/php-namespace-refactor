@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 1.0.0 (2025-08-28)
+
+
+### Features
+
+* allow disable/enable features ([efd1214](https://github.com/rejmann/php-namespace-refactor/commit/efd12149b3c7263bb8bbee1c7feb4ec374d7386d))
+* allow specifying additional extensions for namespace refactor ([24d035c](https://github.com/rejmann/php-namespace-refactor/commit/24d035c623d6d59d7f26fe5019681879a2911f9a))
+* auto import classes from current object when changing its directory ([442cc7d](https://github.com/rejmann/php-namespace-refactor/commit/442cc7d910fec706dfc589ab0569fa6ed0f0e643))
+* remove unused imports ([69e18ea](https://github.com/rejmann/php-namespace-refactor/commit/69e18ea03fd7c5bbd95e3406de109036ea8b45ff))
+* update namespace in files ([b0c6269](https://github.com/rejmann/php-namespace-refactor/commit/b0c62695cdbfb8bb28056a5bee16e7bbc6b46de4))
+
+
+### Bug Fixes
+
+* auto import from the same directory ([75a4324](https://github.com/rejmann/php-namespace-refactor/commit/75a4324376a29456629e20336a58b33d3bccbe4c))
+* consider compound namespace ([f80eabf](https://github.com/rejmann/php-namespace-refactor/commit/f80eabfd6ce528235cbdc12e6d7419d65f908a7e))
+* do not auto import the class itself ([301ccf8](https://github.com/rejmann/php-namespace-refactor/commit/301ccf8154fe15907cd5764fdf6ce54c1ed752b7))
+* generate namespace ([e8c3622](https://github.com/rejmann/php-namespace-refactor/commit/e8c3622f39844344a00dfc3c642d28841ef3e8f4))
+* handle file not found errors and improve performance ([96122da](https://github.com/rejmann/php-namespace-refactor/commit/96122da31c5c4db2e68acecf4174bfb05503c8b4))
+* ignore own file ([08822d0](https://github.com/rejmann/php-namespace-refactor/commit/08822d07e60249b3c6fa71025543baf947e09a94))
+* refactor just if is project with php ([4ee277c](https://github.com/rejmann/php-namespace-refactor/commit/4ee277c5146332f04d286dda634e665d5a563ff7))
+* replace entire namespace line to avoid half replacement ([8dc0ee1](https://github.com/rejmann/php-namespace-refactor/commit/8dc0ee19bce1290f6fe953b11d08edeeeab19791))
+* when there is no use statement ([4f4c2c2](https://github.com/rejmann/php-namespace-refactor/commit/4f4c2c24900f851504682c149a3bb44ca75817fa))
+
+
+### Performance Improvements
+
+* activate extension on PHP & configUtils.ts ([f95b286](https://github.com/rejmann/php-namespace-refactor/commit/f95b286c8e84f2e0f59c92b85de59fa92050a6e0))
+* add time to cache ([a8acee8](https://github.com/rejmann/php-namespace-refactor/commit/a8acee86e4fb212a9d634d138231afd5c7f1c3a2))
+* implement parallel processing for better performance ([946efed](https://github.com/rejmann/php-namespace-refactor/commit/946efed1c05d658aed324d67958b7194bc229798))
+* replace loops with more efficient operations & cache ([5ed5926](https://github.com/rejmann/php-namespace-refactor/commit/5ed592642c0cb3011b6e57da94ee875be3439383))
+
 ### [1.2.1](https://github.com/rejmann/php-namespace-refactor/compare/v1.2.0...v1.2.1) (2025-08-27)
 
 ## 1.2.0 (2025-08-11)
