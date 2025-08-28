@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.3.0...php-namespace-refactor-v1.3.1) (2025-08-28)
+
+
+### 🔧 Chores
+
+* section perf ([2f30e8f](https://github.com/rejmann/php-namespace-refactor/commit/2f30e8f965250dec62091c5dbfd43cec06d7297f))
+* type node ([6cc8b1b](https://github.com/rejmann/php-namespace-refactor/commit/6cc8b1bf6d495017c94d4240c2e10cc94a4c7224))
+
 ## [1.3.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.2.1...php-namespace-refactor-v1.3.0) (2025-08-28)
 
 
