@@ -6,6 +6,7 @@
       "changelog-path": "CHANGELOG.md",
       "package-name": "php-namespace-refactor",
       "initial-version": "1.2.1",
+      "release-type": "node",
       "changelog-sections": [
         {
           "type": "feat",
