@@ -17,6 +17,10 @@
           "section": "🐛 Bug Fixes"
         },
         {
+          "type": "perf",
+          "section": "⚡ Performance Improvements"
+        },
+        {
           "type": "docs",
           "section": "📚 Documentation"
         },
