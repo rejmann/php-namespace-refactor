@@ -1,8 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "include-v-in-tag": true,
-  "include-component-in-tag": true,
-  "separate-pull-requests": true,
   "packages": {
     ".": {
       "changelog-path": "CHANGELOG.md",
@@ -11,35 +9,35 @@
       "changelog-sections": [
         {
           "type": "feat",
-          "section": "🚀 Novas Funcionalidades"
+          "section": "🚀 New Features"
         },
         {
           "type": "fix",
-          "section": "🐛 Correções de Bugs"
+          "section": "🐛 Bug Fixes"
         },
         {
           "type": "docs",
-          "section": "📚 Documentação"
+          "section": "📚 Documentation"
         },
         {
           "type": "style",
-          "section": "💄 Estilo"
+          "section": "💄 Styles"
         },
         {
           "type": "refactor",
-          "section": "♻️ Refatoração"
+          "section": "♻️ Code Refactoring"
         },
         {
           "type": "test",
-          "section": "🧪 Testes"
+          "section": "🧪 Tests"
         },
         {
           "type": "chore",
-          "section": "🔧 Configurações"
+          "section": "🔧 Chores"
         },
         {
           "type": "ci",
-          "section": "⚙️ CI/CD"
+          "section": "⚙️ Continuous Integration"
         }
       ],
       "extra-files": [

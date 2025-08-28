@@ -1,0 +1,45 @@
+name: release-please
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  release-please:
+    if: |
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.user.login != 'github-actions[bot]'
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Configure Git User
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Release Please
+        id: release
+        uses: google-github-actions/release-please-action@v3
+        timeout-minutes: 5
+        with:
+          command: manifest
+          config-file: 'release-please-config.json'
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Debug Output
+        if: always()
+        run: |
+          echo "Release created: ${{ steps.release.outputs.release_created }}"
+          echo "Tag: ${{ steps.release.outputs.tag_name }}"
+          echo "Error: ${{ steps.release.outputs.error || 'None' }}"
