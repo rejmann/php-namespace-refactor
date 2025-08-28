@@ -6,6 +6,7 @@
       "changelog-path": "CHANGELOG.md",
       "package-name": "php-namespace-refactor",
       "initial-version": "1.2.1",
+      "release-type": "node",
       "changelog-sections": [
         {
           "type": "feat",
@@ -14,6 +15,10 @@
         {
           "type": "fix",
           "section": "🐛 Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "⚡ Performance Improvements"
         },
         {
           "type": "docs",
