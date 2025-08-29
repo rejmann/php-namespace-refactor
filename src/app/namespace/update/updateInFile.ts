@@ -2,7 +2,7 @@ import { Uri, WorkspaceEdit } from 'vscode';
 import { extractDirectoryFromPath } from '@infra/utils/filePathUtils';
 import { findUseInsertionIndex } from '@domain/namespace/findUseInsertionIndex';
 import { insertUseStatement } from '@domain/namespace/import/insertUseStatement';
-import { openTextDocument } from '../openTextDocument';
+import { OpenTextDocumentService } from '@app/services/OpenTextDocumentService';
 
 interface Props {
   file: Uri
@@ -23,7 +23,7 @@ export async function updateInFile({
   }
 
   try {
-    const { document, text } = await openTextDocument({ uri: file });
+    const { document, text } = await new OpenTextDocumentService().execute({ uri: file });
 
     if (!text.includes(className)) {
       return;

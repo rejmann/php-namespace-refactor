@@ -3,7 +3,7 @@ import { RelativePattern, Uri, workspace } from 'vscode';
 import { ConfigKeys } from '@infra/workspace/configTypes';
 import { generateNamespace } from '@domain/namespace/generateNamespace';
 import { isConfigEnabled } from '@infra/workspace/vscodeConfig';
-import { openTextDocument } from '../openTextDocument';
+import { OpenTextDocumentService } from '@app/services/OpenTextDocumentService';
 import { removeImports } from './removeImports';
 
 interface Props {
@@ -32,8 +32,10 @@ export async function removeUnusedImports({ uri }: Props) {
     return;
   }
 
+  const openTextDocumentService = new OpenTextDocumentService();
+
   try {
-    const { document } = await openTextDocument({ uri });
+    const { document } = await openTextDocumentService.execute({ uri });
     await removeImports({
       document,
       fileNames,
@@ -46,7 +48,7 @@ export async function removeUnusedImports({ uri }: Props) {
 
   await Promise.all(otherFiles.map(async (file) => {
     try {
-      const { document } = await openTextDocument({ uri: file });
+      const { document } = await openTextDocumentService.execute({ uri: file });
       await removeImports({
         document,
         fileNames: [className],

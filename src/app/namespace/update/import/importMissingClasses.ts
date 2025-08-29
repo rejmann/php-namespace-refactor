@@ -5,7 +5,7 @@ import { findUseInsertionIndex } from '@domain/namespace/findUseInsertionIndex';
 import { generateUseStatementsForClasses } from '@domain/namespace/generateUseStatementsForClasses';
 import { getClassesNamesInDirectory } from './getClassesNamesInDirectory';
 import { insertUseStatement } from '@domain/namespace/import/insertUseStatement';
-import { openTextDocument } from '@app/namespace/openTextDocument';
+import { OpenTextDocumentService } from '@app/services/OpenTextDocumentService';
 
 interface Props {
   oldFileName: string
@@ -26,7 +26,7 @@ export async function importMissingClasses({
   }
 
   try {
-    const { document, text } = await openTextDocument({ uri: newUri });
+    const { document, text } = await new OpenTextDocumentService().execute({ uri: newUri });
 
     const imports = await generateUseStatementsForClasses({
       classesUsed: findUnimportedClasses({
