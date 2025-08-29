@@ -2,7 +2,7 @@ import { extractClassNameFromPath, extractDirectoryFromPath } from '@infra/utils
 import { Uri, workspace } from 'vscode';
 import { findPhpFilesInWorkspace } from '../../workespace/findPhpFilesInWorkspace';
 import { generateUseStatement } from '@domain/namespace/generateUseStatement';
-import { removeUnusedImports } from '../remove/removeUnusedImports';
+import { ImportRemoverService } from '@app/services/ImportRemoverService';
 import { updateInFile } from './updateInFile';
 
 interface Props {
@@ -63,5 +63,5 @@ export async function updateReferencesInFiles({
     }
   }));
 
-  await removeUnusedImports({ uri: newUri });
+  await new ImportRemoverService().execute({ uri: newUri });
 }
