@@ -1,19 +1,25 @@
 import * as fs from 'fs';
-import { COMPOSER_FILE, PHP_EXTENSION, WORKSPACE_ROOT } from '@infra/utils/constants';
-import { ConfigKeys } from '@infra/workspace/configTypes';
-import { importMissingClasses } from '@app/namespace/update/import/importMissingClasses';
-import { isConfigEnabled } from '@infra/workspace/vscodeConfig';
-import { removeUnusedImports } from '@app/namespace/remove/removeUnusedImports';
-import { updateReferences } from '@app/namespace/update/updateReferences';
+import { COMPOSER_FILE, PHP_EXTENSION } from '@infra/utils/constants';
+import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
+import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
+import { ImportRemover } from '@app/services/remove/ImportRemover';
+import { MissingClassImporter } from '@app/services/MissingClassImporter';
+import { NamespaceBatchUpdater } from '@app/services/NamespaceBatchUpdater';
 import { workspace } from 'vscode';
+import { WorkspacePathResolver } from './domain/workspace/WorkspacePathResolver';
 
 export function activate() {
-  const files: string[] = fs.readdirSync(WORKSPACE_ROOT);
+  const files: string[] = fs.readdirSync(new WorkspacePathResolver().getRootPath());
   if (!files.includes(COMPOSER_FILE)) {
     return;
   }
 
   workspace.onDidRenameFiles(async (event) => {
+    const importRemover = new ImportRemover();
+    const missingClassImporter = new MissingClassImporter();
+    const namespaceBatchUpdater = new NamespaceBatchUpdater();
+    const featureFlagManager = new FeatureFlagManager();
+
     for (const { oldUri, newUri } of event.files) {
       if (!oldUri.fsPath.endsWith(PHP_EXTENSION)
         || !newUri.fsPath.endsWith(PHP_EXTENSION)) {
@@ -21,16 +27,16 @@ export function activate() {
       }
 
       try {
-        await updateReferences({ newUri, oldUri });
+        await namespaceBatchUpdater.execute({ newUri, oldUri });
 
-        if (isConfigEnabled({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
-          await importMissingClasses({
-            oldFileName: oldUri.fsPath,
+        if (featureFlagManager.isActive({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
+          await missingClassImporter.execute({
+            oldUri,
             newUri,
           });
         }
 
-        await removeUnusedImports({ uri: newUri });
+        await importRemover.execute({ uri: newUri });
       } catch (error) {
         // eslint-disable-next-line no-undef
         console.error('Error processing file rename:', error);
