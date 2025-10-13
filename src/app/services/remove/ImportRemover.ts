@@ -1,3 +1,4 @@
+import { inject, injectable } from "tsyringe";
 import { Range, RelativePattern, TextDocument, Uri, workspace, WorkspaceEdit } from 'vscode';
 import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
@@ -14,23 +15,28 @@ interface RemoveImportsProps {
   fileNames: string[]
 }
 
+@injectable()
 export class ImportRemover {
-  public async execute({ uri }: Props) {
-    const featureFlagManager = new FeatureFlagManager();
+  constructor(
+    @inject(FeatureFlagManager) private featureFlagManager: FeatureFlagManager,
+    @inject(NamespaceCreator) private namespaceCreator: NamespaceCreator,
+    @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
+    @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
+  ) {}
 
-    if (!featureFlagManager.isActive({ key: ConfigKeys.REMOVE_UNUSED_IMPORTS })) {
+  public async execute({ uri }: Props) {
+    if (!this.featureFlagManager.isActive({ key: ConfigKeys.REMOVE_UNUSED_IMPORTS })) {
       return;
     }
 
-    const { className } = await new NamespaceCreator().execute({ uri });
+    const { className } = await this.namespaceCreator.execute({ uri });
 
-    const workspacePathService = new WorkspacePathResolver();
-    const directoryPath = workspacePathService.extractDirectoryFromPath(uri.fsPath);
+    const directoryPath = this.workspacePathResolver.extractDirectoryFromPath(uri.fsPath);
 
     const pattern = new RelativePattern(Uri.parse(`file://${directoryPath}`), '*.php');
     const phpFiles = await workspace.findFiles(pattern);
 
-    const fileNames = phpFiles.map(uri => workspacePathService.extractClassNameFromPath(uri.fsPath))
+    const fileNames = phpFiles.map(uri => this.workspacePathResolver.extractClassNameFromPath(uri.fsPath))
       .filter(Boolean)
       .filter(name => name !== className);
 
@@ -38,10 +44,8 @@ export class ImportRemover {
       return;
     }
 
-    const textDocumentOpener = new TextDocumentOpener();
-
     try {
-      const { document } = await textDocumentOpener.execute({ uri });
+      const { document } = await this.textDocumentOpener.execute({ uri });
       await this.removeImports({
         document,
         fileNames,
@@ -54,7 +58,7 @@ export class ImportRemover {
 
     await Promise.all(otherFiles.map(async (file) => {
       try {
-        const { document } = await textDocumentOpener.execute({ uri: file });
+        const { document } = await this.textDocumentOpener.execute({ uri: file });
         await this.removeImports({
           document,
           fileNames: [className],

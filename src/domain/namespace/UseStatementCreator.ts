@@ -1,3 +1,4 @@
+import { inject, injectable } from "tsyringe";
 import { NamespaceCreator } from './NamespaceCreator';
 import { Uri } from 'vscode';
 
@@ -10,13 +11,16 @@ interface SingleProps {
   fullNamespace: string
 }
 
+@injectable()
 export class UseStatementCreator {
-  public async multiple({ classesUsed, directoryPath }: MultipleProps): Promise<string> {
-    const namespaceCreator = new NamespaceCreator();
+  constructor (
+    @inject(NamespaceCreator) private namespaceCreator: NamespaceCreator
+  ) {}
 
+  public async multiple({ classesUsed, directoryPath }: MultipleProps): Promise<string> {
     const useStatements = await Promise.all(
       classesUsed.map(async (className) => {
-        const { fullNamespace } = await namespaceCreator.execute({
+        const { fullNamespace } = await this.namespaceCreator.execute({
           uri: Uri.file(`${directoryPath}/${className}.php`)
         });
 

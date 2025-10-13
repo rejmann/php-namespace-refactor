@@ -1,9 +1,11 @@
+import { injectable } from "tsyringe";
 import { TextDocument } from 'vscode';
 
 interface Props {
   document: TextDocument
 }
 
+@injectable()
 export class UseStatementLocator {
   public execute({ document }: Props) {
     const text = document.getText();

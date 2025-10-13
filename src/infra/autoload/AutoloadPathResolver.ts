@@ -1,3 +1,5 @@
+import { injectable } from "tsyringe";
+
 type AutoloadType = {
   [key: string]: string
 }
@@ -7,6 +9,7 @@ interface Props {
   workspaceRoot: string,
 }
 
+@injectable()
 export class AutoloadPathResolver {
   public async execute({ autoload, workspaceRoot }: Props) {
     for (const prefix in autoload) {

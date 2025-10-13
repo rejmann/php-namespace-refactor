@@ -1,3 +1,4 @@
+import { inject, injectable } from "tsyringe";
 import { Uri, WorkspaceEdit } from 'vscode';
 import { promises as fs } from 'fs';
 import { PHP_EXTENSION } from '@infra/utils/constants';
@@ -13,11 +14,16 @@ interface Props {
   newUri: Uri
 }
 
+@injectable()
 export class MissingClassImporter {
-  private workspacePathResolver: WorkspacePathResolver;
-
-  constructor() {
-    this.workspacePathResolver = new WorkspacePathResolver();
+  constructor(
+    @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
+    @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
+    @inject(UseStatementCreator) private useStatementCreator: UseStatementCreator,
+    @inject(UnusedImportDetector) private unusedImportDetector: UnusedImportDetector,
+    @inject(UseStatementLocator) private useStatementLocator: UseStatementLocator,
+    @inject(UseStatementInjector) private useStatementInjector: UseStatementInjector,
+  ) {
   }
 
   public async execute({ oldUri, newUri }: Props) {
@@ -29,10 +35,10 @@ export class MissingClassImporter {
     }
 
     try {
-      const { document, text } = await new TextDocumentOpener().execute({ uri: newUri });
+      const { document, text } = await this.textDocumentOpener.execute({ uri: newUri });
 
-      const imports = await new UseStatementCreator().multiple({
-        classesUsed: new UnusedImportDetector().execute({
+      const imports = await this.useStatementCreator.multiple({
+        classesUsed: this.unusedImportDetector.execute({
           contentDocument: text,
           classes,
         }),
@@ -43,16 +49,15 @@ export class MissingClassImporter {
         return;
       }
 
-      const insertionIndex = new UseStatementLocator().execute({ document });
+      const insertionIndex = this.useStatementLocator.execute({ document });
       if (insertionIndex === 0) {
         return;
       }
 
       const edit = new WorkspaceEdit();
 
-      const useStatementInjector = new UseStatementInjector();
       for (const use of imports) {
-        await useStatementInjector.save({
+        await this.useStatementInjector.save({
           document,
           workspaceEdit: edit,
           uri: newUri,
@@ -63,7 +68,7 @@ export class MissingClassImporter {
       }
 
       if (imports.length > 0) {
-        await useStatementInjector.flush(edit);
+        await this.useStatementInjector.flush(edit);
       }
     } catch (_) {
       return;

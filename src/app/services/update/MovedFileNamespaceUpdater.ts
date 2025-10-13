@@ -1,3 +1,4 @@
+import { inject, injectable } from "tsyringe";
 import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
 import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
 
@@ -6,9 +7,14 @@ interface Props {
   newUri: Uri,
 }
 
+@injectable()
 export class MovedFileNamespaceUpdater {
+  constructor(
+    @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener
+  ) {}
+
   public async execute({ newNamespace, newUri }: Props) {
-    const { document, text } = await new TextDocumentOpener().execute({ uri: newUri });
+    const { document, text } = await this.textDocumentOpener.execute({ uri: newUri });
 
     const namespaceRegex = /^\s*namespace\s+[\w\\]+;/m;
     const match = text.match(namespaceRegex);

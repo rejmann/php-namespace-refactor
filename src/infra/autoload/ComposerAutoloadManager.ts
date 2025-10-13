@@ -1,3 +1,4 @@
+import { inject, injectable } from "tsyringe";
 import { COMPOSER_FILE } from '@infra/utils/constants';
 import { promises as fs } from 'fs';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
@@ -16,9 +17,14 @@ let composerCache: ComposerAutoload | null = null;
 let cacheWorkspaceRoot: string | null = null;
 let cacheModifiedTime: number | null = null;
 
+@injectable()
 export class ComposerAutoloadManager {
+  constructor(
+    @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
+  ) {}
+
   public async execute() {
-    const workspaceRoot = new WorkspacePathResolver().getRootPath();
+    const workspaceRoot = this.workspacePathResolver.getRootPath();
 
     if (!workspaceRoot) {
       return DEFAULT;

@@ -1,8 +1,11 @@
+import { injectable } from "tsyringe";
+
 interface Props {
   contentDocument: string,
   classes: string[],
 }
 
+@injectable()
 export class UnusedImportDetector {
   public execute({ contentDocument, classes }: Props): string[] {
     const classesUsed: string[] = [];

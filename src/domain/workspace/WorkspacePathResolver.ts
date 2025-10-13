@@ -1,8 +1,10 @@
 import { basename, dirname } from 'path';
+import { injectable } from "tsyringe";
 import { workspace } from 'vscode';
 
 type AbsolutePath = string | null | undefined
 
+@injectable()
 export class WorkspacePathResolver {
   public removeWorkspaceRoot(filePath: AbsolutePath) {
     return filePath

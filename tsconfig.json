@@ -10,9 +10,17 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["./src/app/*"],
-      "@domain/*": ["./src/domain/*"],
-      "@infra/*": ["./src/infra/*"],
-    }
+      "@app/*": [
+        "./src/app/*"
+      ],
+      "@domain/*": [
+        "./src/domain/*"
+      ],
+      "@infra/*": [
+        "./src/infra/*"
+      ],
+    },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }

@@ -1,3 +1,4 @@
+import { inject, injectable } from "tsyringe";
 import { MovedFileNamespaceUpdater } from './update/MovedFileNamespaceUpdater';
 import { MultiFileReferenceUpdater } from './update/MultiFileReferenceUpdater';
 import { NamespaceCreator } from '@domain/namespace/NamespaceCreator';
@@ -8,13 +9,19 @@ interface Props {
   oldUri: Uri,
 }
 
+@injectable()
 export class NamespaceBatchUpdater {
+  constructor(
+    @inject(MovedFileNamespaceUpdater) private movedFileNamespaceUpdater: MovedFileNamespaceUpdater,
+    @inject(MultiFileReferenceUpdater) private multiFileReferenceUpdater: MultiFileReferenceUpdater,
+    @inject(NamespaceCreator) private namespaceCreator: NamespaceCreator,
+  ) {}
+
   public async execute({ newUri, oldUri }: Props) {
-    const namespaceCreator = new NamespaceCreator();
     const {
       namespace: newNamespace,
       fullNamespace: useNewNamespace,
-    } = await namespaceCreator.execute({
+    } = await this.namespaceCreator.execute({
       uri: newUri,
     });
 
@@ -22,11 +29,11 @@ export class NamespaceBatchUpdater {
       return;
     }
 
-    const { fullNamespace: useOldNamespace } = await namespaceCreator.execute({
+    const { fullNamespace: useOldNamespace } = await this.namespaceCreator.execute({
       uri: oldUri,
     });
 
-    const updated = await new MovedFileNamespaceUpdater().execute({
+    const updated = await this.movedFileNamespaceUpdater.execute({
       newNamespace,
       newUri,
     });
@@ -35,7 +42,7 @@ export class NamespaceBatchUpdater {
       return;
     }
 
-    await new MultiFileReferenceUpdater().execute({
+    await this.multiFileReferenceUpdater.execute({
       useOldNamespace,
       useNewNamespace,
       newUri,

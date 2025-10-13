@@ -1,6 +1,8 @@
+import "reflect-metadata";
 import * as fs from 'fs';
 import { COMPOSER_FILE, PHP_EXTENSION } from '@infra/utils/constants';
 import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
+import { container } from "tsyringe";
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
 import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { MissingClassImporter } from '@app/services/MissingClassImporter';
@@ -15,10 +17,10 @@ export function activate() {
   }
 
   workspace.onDidRenameFiles(async (event) => {
-    const importRemover = new ImportRemover();
-    const missingClassImporter = new MissingClassImporter();
-    const namespaceBatchUpdater = new NamespaceBatchUpdater();
-    const featureFlagManager = new FeatureFlagManager();
+    const importRemover = container.resolve(ImportRemover);
+    const missingClassImporter = container.resolve(MissingClassImporter);
+    const namespaceBatchUpdater = container.resolve(NamespaceBatchUpdater);
+    const featureFlagManager = container.resolve(FeatureFlagManager);
 
     for (const { oldUri, newUri } of event.files) {
       if (!oldUri.fsPath.endsWith(PHP_EXTENSION)

@@ -1,27 +1,30 @@
 import { ConfigKeys, ConfigurationLocator } from '@domain/workspace/ConfigurationLocator';
+import { inject, injectable } from "tsyringe";
 import { Uri, workspace } from 'vscode';
 
 const DEFAULT_DIRECTORIES = ['/vendor/', '/var/', '/cache/'];
 const DEFAULT_EXTENSION_PHP = 'php';
 
+const SECONDS_IN_AN_HOUR = 60 * 60;
+
+@injectable()
 export class WorkspaceFileFinder {
   private cachedFiles: Uri[] | null = null;
   private cacheTimestamp: number = 0;
-  private readonly cacheDuration: number;
+  private cacheDuration: number = 0;
 
-  constructor(cacheDuration: number = 4) {
-    this.cacheDuration = 60 * 60 * cacheDuration;
+  constructor(
+    @inject(ConfigurationLocator) private configurationLocator: ConfigurationLocator,
+  ) {
   }
 
-  async execute(): Promise<Uri[]> {
+  async execute(duration: number = 4): Promise<Uri[]> {
     const now = Date.now();
     if (this.cachedFiles && (now - this.cacheTimestamp) < this.cacheDuration) {
       return this.cachedFiles;
     }
 
-    const configurationLocator = new ConfigurationLocator();
-
-    const extensions = configurationLocator.get<string[]>({
+    const extensions = this.configurationLocator.get<string[]>({
       key: ConfigKeys.ADDITIONAL_EXTENSIONS,
       defaultValue: [DEFAULT_EXTENSION_PHP],
     });
@@ -29,7 +32,7 @@ export class WorkspaceFileFinder {
     const pattern = `**/*.{${[DEFAULT_EXTENSION_PHP, ...extensions].join(',')}}`;
     const files = await workspace.findFiles(pattern);
 
-    const ignoredDirectories = configurationLocator.get<string[]>({
+    const ignoredDirectories = this.configurationLocator.get<string[]>({
       key: ConfigKeys.IGNORED_DIRECTORIES,
       defaultValue: DEFAULT_DIRECTORIES,
     });
@@ -41,6 +44,7 @@ export class WorkspaceFileFinder {
 
     this.cachedFiles = filteredFiles;
     this.cacheTimestamp = now;
+    this.cacheDuration = SECONDS_IN_AN_HOUR * duration;
 
     return filteredFiles;
   }

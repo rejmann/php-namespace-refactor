@@ -1,10 +1,12 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
+import { injectable } from "tsyringe";
 
 export type Props = {
   key: string,
   defaultValue?: boolean
 }
 
+@injectable()
 export class FeatureFlagManager {
   private config: WorkspaceConfiguration;
 

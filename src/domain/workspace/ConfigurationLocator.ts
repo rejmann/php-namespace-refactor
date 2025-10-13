@@ -1,4 +1,5 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
+import { injectable } from "tsyringe";
 
 export const ConfigKeys = {
   AUTO_IMPORT_NAMESPACE: 'autoImportNamespace',
@@ -12,6 +13,7 @@ export type Props<T> = {
   defaultValue?: T
 }
 
+@injectable()
 export class ConfigurationLocator {
     private config: WorkspaceConfiguration;
 

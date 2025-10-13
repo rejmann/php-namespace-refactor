@@ -1,3 +1,4 @@
+import { inject, injectable } from "tsyringe";
 import { Uri, workspace, WorkspaceEdit } from 'vscode';
 import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
@@ -14,12 +15,17 @@ interface Props {
   oldUri: Uri
 }
 
+@injectable()
 export class MultiFileReferenceUpdater {
-  private workspacePathResolver: WorkspacePathResolver;
-
-  constructor() {
-    this.workspacePathResolver = new WorkspacePathResolver();
-  }
+  constructor(
+    @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
+    @inject(ImportRemover) private importRemover: ImportRemover,
+    @inject(UseStatementCreator) private useStatementCreator: UseStatementCreator,
+    @inject(WorkspaceFileFinder) private workspaceFileFinder: WorkspaceFileFinder,
+    @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
+    @inject(UseStatementLocator) private useStatementLocator: UseStatementLocator,
+    @inject(UseStatementInjector) private useStatementInjector: UseStatementInjector,
+  ) {}
 
   public async execute({
     useOldNamespace,
@@ -30,11 +36,11 @@ export class MultiFileReferenceUpdater {
     const directoryPath = this.workspacePathResolver.extractDirectoryFromPath(oldUri.fsPath);
     const className = this.workspacePathResolver.extractClassNameFromPath(oldUri.fsPath);
 
-    const useImport = new UseStatementCreator().single({ fullNamespace: useNewNamespace });
+    const useImport = this.useStatementCreator.single({ fullNamespace: useNewNamespace });
 
     const ignoreFile = newUri.fsPath;
 
-    const files = await new WorkspaceFileFinder().execute();
+    const files = await this.workspaceFileFinder.execute();
 
     const filesToProcess = files.filter(file => ignoreFile !== file.fsPath);
 
@@ -72,7 +78,7 @@ export class MultiFileReferenceUpdater {
       }
     }));
 
-    await new ImportRemover().execute({ uri: newUri });
+    await this.importRemover.execute({ uri: newUri });
   }
 
   private async updateInFile(
@@ -87,20 +93,20 @@ export class MultiFileReferenceUpdater {
       }
 
       try {
-        const { document, text } = await new TextDocumentOpener().execute({ uri: file });
+        const { document, text } = await this.textDocumentOpener.execute({ uri: file });
 
         if (!text.includes(className)) {
           return;
         }
 
-        const insertionIndex = new UseStatementLocator().execute({ document });
+        const insertionIndex = this.useStatementLocator.execute({ document });
         if (insertionIndex === 0) {
           return;
         }
 
         const edit = new WorkspaceEdit();
 
-        await new UseStatementInjector().save({
+        await this.useStatementInjector.save({
           document,
           workspaceEdit: edit,
           uri: file,

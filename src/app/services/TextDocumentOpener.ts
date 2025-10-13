@@ -1,4 +1,5 @@
 import { TextDocument, Uri, workspace } from 'vscode';
+import { injectable } from "tsyringe";
 
 interface Props {
   uri: Uri
@@ -9,6 +10,7 @@ type OpenTextDocument = {
   text: string
 }
 
+@injectable()
 export class TextDocumentOpener {
   public async execute({ uri }: Props): Promise<OpenTextDocument> {
     const document = await workspace.openTextDocument(uri.fsPath);
