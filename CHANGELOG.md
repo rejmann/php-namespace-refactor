@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.3.2...php-namespace-refactor-v1.4.0) (2025-10-15)
+
+
+### 🚀 New Features
+
+* dedicated event ([3e1e716](https://github.com/rejmann/php-namespace-refactor/commit/3e1e7162d772dbe2d4c4d82e0d6c5e97fe425dba))
+* dependecy injection ([f26727e](https://github.com/rejmann/php-namespace-refactor/commit/f26727e1ecc2a77029eb5260fa3b94b46b57202f))
+
+
+### 🐛 Bug Fixes
+
+* security package ([e959f25](https://github.com/rejmann/php-namespace-refactor/commit/e959f255728c688a92f8b5abf4780aaab676edd7))
+
+
+### ♻️ Code Refactoring
+
+* from function to object ([7c0cb1e](https://github.com/rejmann/php-namespace-refactor/commit/7c0cb1e740f37cbfe740c944288ce0ca23593261))
+
 ## [1.3.2](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.3.1...php-namespace-refactor-v1.3.2) (2025-08-28)
 
 
