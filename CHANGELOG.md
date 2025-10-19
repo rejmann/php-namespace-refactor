@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.4.0...php-namespace-refactor-v1.5.0) (2025-10-19)
+
+
+### 🚀 New Features
+
+* rename file and also refactor namespace ([05e6769](https://github.com/rejmann/php-namespace-refactor/commit/05e676936f49522302f0d2ee363f2256c1de8485))
+
+
+### 🔧 Chores
+
+* makefile ([6958ab9](https://github.com/rejmann/php-namespace-refactor/commit/6958ab9629db5d654ba9051c4ab208e6821ebb75))
+
 ## [1.4.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.3.2...php-namespace-refactor-v1.4.0) (2025-10-15)
 
 
