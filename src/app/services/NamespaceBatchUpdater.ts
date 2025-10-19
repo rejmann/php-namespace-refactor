@@ -1,7 +1,8 @@
 import { inject, injectable } from "tsyringe";
+import { Namespace, NamespaceCreator } from '@domain/namespace/NamespaceCreator';
+import { ClassNameUpdater } from './update/ClassNameUpdater';
 import { MovedFileNamespaceUpdater } from './update/MovedFileNamespaceUpdater';
 import { MultiFileReferenceUpdater } from './update/MultiFileReferenceUpdater';
-import { NamespaceCreator } from '@domain/namespace/NamespaceCreator';
 import { Uri } from 'vscode';
 
 interface Props {
@@ -15,38 +16,40 @@ export class NamespaceBatchUpdater {
     @inject(MovedFileNamespaceUpdater) private movedFileNamespaceUpdater: MovedFileNamespaceUpdater,
     @inject(MultiFileReferenceUpdater) private multiFileReferenceUpdater: MultiFileReferenceUpdater,
     @inject(NamespaceCreator) private namespaceCreator: NamespaceCreator,
+    @inject(ClassNameUpdater) private classNameUpdater: ClassNameUpdater,
   ) {}
 
   public async execute({ newUri, oldUri }: Props) {
-    const {
-      namespace: newNamespace,
-      fullNamespace: useNewNamespace,
-    } = await this.namespaceCreator.execute({
-      uri: newUri,
-    });
+    const { namespace, fullNamespace } = await this.getNamespace(newUri);
 
-    if (!newNamespace) {
+    if (!namespace) {
       return;
     }
 
-    const { fullNamespace: useOldNamespace } = await this.namespaceCreator.execute({
-      uri: oldUri,
-    });
+    const { namespace: old, fullNamespace: oldFullNamespace } = await this.getNamespace(oldUri);
 
-    const updated = await this.movedFileNamespaceUpdater.execute({
-      newNamespace,
+    if (namespace === old && fullNamespace !== oldFullNamespace) {
+      this.classNameUpdater.execute({ newUri });
+    }
+
+    const isUpdated = await this.movedFileNamespaceUpdater.execute({
+      newNamespace: namespace,
       newUri,
     });
 
-    if (!updated) {
+    if (!isUpdated) {
       return;
     }
 
     await this.multiFileReferenceUpdater.execute({
-      useOldNamespace,
-      useNewNamespace,
+      useOldNamespace: oldFullNamespace,
+      useNewNamespace: fullNamespace,
       newUri,
       oldUri,
     });
+  }
+
+  private async getNamespace(uri: Uri): Promise<Namespace> {
+    return await this.namespaceCreator.execute({ uri });
   }
 }
