@@ -9,17 +9,20 @@ interface Props {
   workspaceRoot: string,
 }
 
+export const BACKSLASH_RE = /\\/g;
+export const TRAILING_BACKSLASHES_RE = /\\+$/;
+
 @injectable()
 export class AutoloadPathResolver {
   public async execute({ autoload, workspaceRoot }: Props) {
     for (const prefix in autoload) {
-      const src = autoload[prefix].replace(/\\/g, '/');
+      const src = autoload[prefix].replace(BACKSLASH_RE, '/');
 
       if (!workspaceRoot.startsWith(src)) {
         continue;
       }
 
-      const prefixBase = prefix.split('\\":').at(0)?.replace(/\\+$/, '') || '';
+      const prefixBase = prefix.split('\\":').at(0)?.replace(TRAILING_BACKSLASHES_RE, '') || '';
 
       const srcReplace = src.endsWith('/') ? prefixBase + '\\' : prefixBase;
 
