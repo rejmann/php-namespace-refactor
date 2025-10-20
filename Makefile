@@ -14,3 +14,6 @@ setup: ## setup
 
 test: ## run tests
 	npm run test
+
+pack-manual: setup ## package the extension manually
+	npm run pack
