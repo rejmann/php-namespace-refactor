@@ -1,14 +1,21 @@
+import { BACKSLASH_RE, TRAILING_BACKSLASHES_RE } from '@infra/autoload/AutoloadPathResolver';
 import { basename, dirname } from 'path';
-import { injectable } from "tsyringe";
-import { workspace } from 'vscode';
+import { inject, injectable } from "tsyringe";
+import { ComposerAutoloadManager } from '@infra/autoload/ComposerAutoloadManager';
+import { WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
 
 type AbsolutePath = string | null | undefined
 
 @injectable()
 export class WorkspacePathResolver {
+  constructor(
+    @inject(ComposerAutoloadManager) private composerAutoloadManager: ComposerAutoloadManager,
+  ) {
+  }
+
   public removeWorkspaceRoot(filePath: AbsolutePath) {
     return filePath
-      ?.replace(this.getRootPath(), '')
+      ?.replace(WORKSPACE_ROOT_PATH, '')
       .replace(/^\/|\\/g, '') || '';
   }
 
@@ -20,9 +27,37 @@ export class WorkspacePathResolver {
     return basename(filePath || '', '.php') || '';
   }
 
-  public getRootPath() {
-    return workspace.workspaceFolders
-      ? workspace.workspaceFolders[0].uri.fsPath
-      : '';
+  public async getDirectoryFromNamespace(namespace: string): Promise<string> {
+    const { autoload, autoloadDev } = await this.composerAutoloadManager.execute();
+
+    const workspaceRoot = WORKSPACE_ROOT_PATH;
+
+    for (const currentAutoload of [autoload, autoloadDev]) {
+      if (!currentAutoload || Object.keys(currentAutoload).length === 0) {
+        continue;
+      }
+
+      const sortedPrefixes = Object.keys(currentAutoload).sort((a, b) => b.length - a.length);
+
+      for (const prefix of sortedPrefixes) {
+        const cleanPrefix = prefix.replace(TRAILING_BACKSLASHES_RE, '');
+        if (!namespace.startsWith(cleanPrefix)) {
+          continue;
+        }
+
+        const relativePart = namespace.substring(cleanPrefix.length);
+        const relativePath = relativePart.replace(/^\\+/, '').replace(BACKSLASH_RE, '/');
+
+        const baseDirectory = currentAutoload[prefix].replace(/\/$/, '');
+
+        const fullPath = relativePath
+          ? `${workspaceRoot}/${baseDirectory}/${relativePath}`
+          : `${workspaceRoot}/${baseDirectory}`;
+
+        return fullPath;
+      }
+    }
+
+    throw new Error(`No autoload mapping found for namespace: ${namespace}`);
   }
 }

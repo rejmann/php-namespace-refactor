@@ -44,6 +44,7 @@ This extension contributes the following settings:
     "phpNamespaceRefactor.additionalExtensions": [
         "php"
     ],
+    "phpNamespaceRefactor.rename": true
 }
 ```
 
@@ -72,6 +73,14 @@ This extension contributes the following settings:
 - Specifies the file extensions to consider during the namespace refactor process.
 
 - Default: "php".
+
+**phpNamespaceRefactor.rename**
+
+- Can be triggered by pressing F2 or the preferred rename shortcut.
+- The feature can be enabled or disabled in the settings.
+
+- Default: true.
+
 
 ## Release notes
 

@@ -3,7 +3,7 @@ import { Range, Uri, workspace, WorkspaceEdit } from "vscode";
 import { TextDocumentOpener } from "../TextDocumentOpener";
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
 
-const CLASS_REGEX = /^\s*(?:abstract\s+)?(?:final\s+)?(?:class|interface|trait)\s+(\w+)/m;
+export const PHP_CLASS_DECLARATION_REGEX = /^\s*(?:abstract\s+)?(?:final\s+)?(?:class|interface|trait)\s+(\w+)/m;
 
 interface Props {
   newUri: Uri,
@@ -19,7 +19,7 @@ export class ClassNameUpdater {
   public async execute({ newUri }: Props): Promise<void> {
     const { document, text } = await this.textDocumentOpener.execute({ uri: newUri });
 
-    const match = CLASS_REGEX.exec(text);
+    const match = PHP_CLASS_DECLARATION_REGEX.exec(text);
     if (!match) {
       return;
     }
