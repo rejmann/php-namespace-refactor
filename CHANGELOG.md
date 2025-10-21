@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.6.0...php-namespace-refactor-v1.6.1) (2025-10-21)
+
+
+### 🐛 Bug Fixes
+
+* renaming class does not update class name ([a3e40ff](https://github.com/rejmann/php-namespace-refactor/commit/a3e40ff046b08ceaa83affcdf73231380e8bf0fe))
+
 ## [1.6.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.5.0...php-namespace-refactor-v1.6.0) (2025-10-20)
 
 
