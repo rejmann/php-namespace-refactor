@@ -6,7 +6,10 @@ interface Props {
   position: Position
 }
 
-type TypeRename = 'namespace' | 'class';
+export const NamespaceType = 'namespace';
+export const ClassType = 'class';
+
+type TypeRename = typeof NamespaceType | typeof ClassType;
 
 @injectable()
 export class RenameTypeDetector {
@@ -16,11 +19,11 @@ export class RenameTypeDetector {
     const currentLine = lines[position.line] ?? '';
 
     if (currentLine.match(/^\s*namespace\s+/)) {
-      return 'namespace';
+      return NamespaceType;
     }
 
     if (currentLine.match(/^\s*(?:abstract\s+)?(?:final\s+)?(?:class|interface|trait)\s+/)) {
-      return 'class';
+      return ClassType;
     }
 
     throw new Error('Type rename not identified');
