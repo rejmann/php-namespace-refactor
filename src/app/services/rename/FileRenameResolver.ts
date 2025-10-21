@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe';
+import { NamespaceType, RenameTypeDetector } from './RenameTypeDetector';
 import { Position, TextDocument, Uri, window } from 'vscode';
 import { FileRenameHandler } from '@app/commands/FileRenameHandler';
-import { RenameTypeDetector } from './RenameTypeDetector';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
 
 interface Props {
@@ -23,14 +23,12 @@ export class FileRenameResolver {
       throw new Error('New name cannot be empty');
     }
 
-    const type = this.renameTypeDetector.execute({ document, position });
-
     const currentUri = document.uri;
     const oldPath = currentUri.fsPath;
-    const fileName = this.workspacePathResolver.extractClassNameFromPath(oldPath);
 
-    if (type === 'namespace') {
+    if (this.isNamespaceType(document, position)) {
       try {
+        const fileName = this.workspacePathResolver.extractClassNameFromPath(oldPath);
         const newDirectoryPath = await this.workspacePathResolver.getDirectoryFromNamespace(newName);
 
         FileRenameHandler.create({
@@ -48,7 +46,11 @@ export class FileRenameResolver {
 
     FileRenameHandler.create({
       oldUri: currentUri,
-      newUri: Uri.file(`${directory}/${fileName}${extension}`),
+      newUri: Uri.file(`${directory}/${newName}${extension}`),
     });
+  }
+
+  private isNamespaceType(document: TextDocument, position: Position): boolean {
+    return NamespaceType === this.renameTypeDetector.execute({ document, position });
   }
 }
