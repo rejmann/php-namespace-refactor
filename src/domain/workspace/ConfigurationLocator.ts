@@ -1,5 +1,5 @@
+import { injectable } from 'tsyringe';
 import { workspace, WorkspaceConfiguration } from 'vscode';
-import { injectable } from "tsyringe";
 
 export const Config = 'phpNamespaceRefactor';
 

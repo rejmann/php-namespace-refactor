@@ -1,13 +1,13 @@
-import { inject, injectable } from "tsyringe";
-import { Uri, WorkspaceEdit } from 'vscode';
-import { promises as fs } from 'fs';
-import { PHP_EXTENSION } from '@infra/utils/constants';
 import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
-import { UnusedImportDetector } from './import/UnusedImportDetector';
 import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { promises as fs } from 'fs';
+import { inject, injectable } from 'tsyringe';
+import { Uri, WorkspaceEdit } from 'vscode';
+
+import { UnusedImportDetector } from './import/UnusedImportDetector';
 
 interface Props {
   oldUri: Uri
@@ -78,7 +78,7 @@ export class MissingClassImporter {
   private async getClassesNamesInDirectory(directory: string): Promise<string[]> {
     try {
       const files = await fs.readdir(directory);
-      return files.filter(file => file.endsWith(PHP_EXTENSION))
+      return files.filter(file => file.endsWith('.php'))
         .map(file => this.workspacePathResolver.extractClassNameFromPath(file))
         .filter(Boolean);
     } catch (_) {

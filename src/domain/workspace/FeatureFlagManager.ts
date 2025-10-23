@@ -1,6 +1,7 @@
+import { injectable } from 'tsyringe';
 import { workspace, WorkspaceConfiguration } from 'vscode';
+
 import { Config } from './ConfigurationLocator';
-import { injectable } from "tsyringe";
 
 export type Props = {
   key: string,

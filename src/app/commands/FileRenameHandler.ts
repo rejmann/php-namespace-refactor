@@ -1,6 +1,6 @@
-import { FileRenameEvent, Uri, workspace, WorkspaceEdit } from 'vscode';
-import { inject, injectable } from 'tsyringe';
 import { FileRenameFeature } from '@app/features/FileRenameFeature';
+import { inject, injectable } from 'tsyringe';
+import { FileRenameEvent, Uri, workspace, WorkspaceEdit } from 'vscode';
 
 interface Props {
   oldUri: Uri

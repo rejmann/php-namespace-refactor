@@ -1,8 +1,9 @@
-import { inject, injectable } from 'tsyringe';
-import { NamespaceType, RenameTypeDetector } from './RenameTypeDetector';
-import { Position, TextDocument, Uri, window } from 'vscode';
 import { FileRenameHandler } from '@app/commands/FileRenameHandler';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { inject, injectable } from 'tsyringe';
+import { Position, TextDocument, Uri, window } from 'vscode';
+
+import { NamespaceType, RenameTypeDetector } from './RenameTypeDetector';
 
 interface Props {
   document: TextDocument

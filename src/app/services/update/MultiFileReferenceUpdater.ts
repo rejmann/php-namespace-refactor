@@ -1,12 +1,12 @@
-import { inject, injectable } from "tsyringe";
-import { Uri, workspace, WorkspaceEdit } from 'vscode';
 import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
+import { WorkspaceFileFinder } from '@app/services/workspace/WorkspaceFileFinder';
 import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
-import { WorkspaceFileFinder } from '@app/services/workspace/WorkspaceFileFinder';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { inject, injectable } from 'tsyringe';
+import { Uri, workspace, WorkspaceEdit } from 'vscode';
 
 interface Props {
   useOldNamespace: string
@@ -87,35 +87,35 @@ export class MultiFileReferenceUpdater {
     useImport: string,
     className: string,
   ): Promise<void> {
-      const currentDir = this.workspacePathResolver.extractDirectoryFromPath(file.fsPath);
-      if (oldDirectoryPath !== currentDir) {
+    const currentDir = this.workspacePathResolver.extractDirectoryFromPath(file.fsPath);
+    if (oldDirectoryPath !== currentDir) {
+      return;
+    }
+
+    try {
+      const { document, text } = await this.textDocumentOpener.execute({ uri: file });
+
+      if (!text.includes(className)) {
         return;
       }
 
-      try {
-        const { document, text } = await this.textDocumentOpener.execute({ uri: file });
-
-        if (!text.includes(className)) {
-          return;
-        }
-
-        const insertionIndex = this.useStatementLocator.execute({ document });
-        if (insertionIndex === 0) {
-          return;
-        }
-
-        const edit = new WorkspaceEdit();
-
-        await this.useStatementInjector.save({
-          document,
-          workspaceEdit: edit,
-          uri: file,
-          lastUseEndIndex: insertionIndex,
-          useNamespace: useImport,
-          flush: true,
-        });
-      } catch (_) {
+      const insertionIndex = this.useStatementLocator.execute({ document });
+      if (insertionIndex === 0) {
         return;
       }
+
+      const edit = new WorkspaceEdit();
+
+      await this.useStatementInjector.save({
+        document,
+        workspaceEdit: edit,
+        uri: file,
+        lastUseEndIndex: insertionIndex,
+        useNamespace: useImport,
+        flush: true,
+      });
+    } catch (_) {
+      return;
+    }
   }
 }

@@ -1,6 +1,6 @@
-import { inject, injectable } from "tsyringe";
-import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
 import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
+import { inject, injectable } from 'tsyringe';
+import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
 
 interface Props {
   newNamespace: string,

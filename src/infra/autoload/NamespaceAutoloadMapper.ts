@@ -1,7 +1,8 @@
-import { inject, injectable } from "tsyringe";
+import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { inject, injectable } from 'tsyringe';
+
 import { AutoloadPathResolver } from './AutoloadPathResolver';
 import { ComposerAutoloadManager } from './ComposerAutoloadManager';
-import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
 
 interface Props {
   uri: string
@@ -18,24 +19,24 @@ export class NamespaceAutoloadMapper {
   public async execute({ uri }: Props) {
     const { autoload, autoloadDev } = await this.composerAutoloadManager.execute();
 
-      if (!autoload && !autoloadDev) {
-        return {
-          autoload: null,
-          autoloadDev: null,
-        };
-      }
-
-      const newDir = this.workspacePathResolver.removeWorkspaceRoot(uri);
-
+    if (!autoload && !autoloadDev) {
       return {
-        autoload: await this.autoloadPathResolver.execute({
-          autoload,
-          workspaceRoot: newDir,
-        }),
-        autoloadDev: await this.autoloadPathResolver.execute({
-          autoload: autoloadDev,
-          workspaceRoot: newDir,
-        })
+        autoload: null,
+        autoloadDev: null,
       };
+    }
+
+    const newDir = this.workspacePathResolver.removeWorkspaceRoot(uri);
+
+    return {
+      autoload: await this.autoloadPathResolver.execute({
+        autoload,
+        workspaceRoot: newDir,
+      }),
+      autoloadDev: await this.autoloadPathResolver.execute({
+        autoload: autoloadDev,
+        workspaceRoot: newDir,
+      })
+    };
   }
 }

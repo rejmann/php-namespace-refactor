@@ -1,7 +1,7 @@
-import { inject, injectable } from "tsyringe";
-import { NamespaceAutoloadMapper } from '@infra/autoload/NamespaceAutoloadMapper';
-import { Uri } from 'vscode';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { NamespaceAutoloadMapper } from '@infra/autoload/NamespaceAutoloadMapper';
+import { inject, injectable } from 'tsyringe';
+import { Uri } from 'vscode';
 
 interface Props {
   uri: Uri

@@ -1,10 +1,9 @@
-import { inject, injectable } from 'tsyringe';
-import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
-import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
-import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { MissingClassImporter } from '@app/services/MissingClassImporter';
 import { NamespaceBatchUpdater } from '@app/services/NamespaceBatchUpdater';
-import { PHP_EXTENSION } from '@infra/utils/constants';
+import { ImportRemover } from '@app/services/remove/ImportRemover';
+import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
+import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
+import { inject, injectable } from 'tsyringe';
 import { Uri } from 'vscode';
 
 interface Props extends ReadonlyArray<{
@@ -23,8 +22,7 @@ export class FileRenameFeature {
 
   public async execute(files: Props) {
     for (const { oldUri, newUri } of files) {
-      if (!oldUri.fsPath.endsWith(PHP_EXTENSION)
-        || !newUri.fsPath.endsWith(PHP_EXTENSION)) {
+      if (!newUri.fsPath.endsWith('.php') || !oldUri.fsPath.endsWith('.php')) {
         continue;
       }
 
