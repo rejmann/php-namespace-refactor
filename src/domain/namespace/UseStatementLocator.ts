@@ -1,4 +1,4 @@
-import { injectable } from "tsyringe";
+import { injectable } from 'tsyringe';
 import { TextDocument } from 'vscode';
 
 interface Props {

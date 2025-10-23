@@ -1,6 +1,7 @@
-import { inject, injectable } from "tsyringe";
-import { NamespaceCreator } from './NamespaceCreator';
+import { inject, injectable } from 'tsyringe';
 import { Uri } from 'vscode';
+
+import { NamespaceCreator } from './NamespaceCreator';
 
 interface MultipleProps {
   classesUsed: string[],

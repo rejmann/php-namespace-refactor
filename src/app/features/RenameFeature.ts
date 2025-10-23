@@ -1,8 +1,8 @@
-import { inject, injectable } from 'tsyringe';
-import { Position, TextDocument, Uri, window } from 'vscode';
 import { ExtractNameFromCursor } from '@app/services/rename/ExctratNameFromCursor';
 import { FileRenameResolver } from '@app/services/rename/FileRenameResolver';
 import { RenameValidator } from '@app/services/rename/RenameValidator';
+import { inject, injectable } from 'tsyringe';
+import { Position, TextDocument, Uri, window } from 'vscode';
 
 interface Props {
   document: TextDocument
@@ -28,7 +28,11 @@ export class RenameFeature {
       value,
       title: '',
       prompt: '',
-      validateInput: (value: string) => this.renameValidator.validate(value)
+      validateInput: (value: string) => this.renameValidator.validate({
+        value,
+        document,
+        position,
+      })
     });
 
     if (!newName || newName.trim() === '') {

@@ -1,5 +1,5 @@
 import { ConfigKeys, ConfigurationLocator } from '@domain/workspace/ConfigurationLocator';
-import { inject, injectable } from "tsyringe";
+import { inject, injectable } from 'tsyringe';
 import { Uri, workspace } from 'vscode';
 
 const DEFAULT_DIRECTORIES = ['/vendor/', '/var/', '/cache/'];

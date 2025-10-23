@@ -1,9 +1,10 @@
-import { inject, injectable } from "tsyringe";
 import { Namespace, NamespaceCreator } from '@domain/namespace/NamespaceCreator';
+import { inject, injectable } from 'tsyringe';
+import { Uri } from 'vscode';
+
 import { ClassNameUpdater } from './update/ClassNameUpdater';
 import { MovedFileNamespaceUpdater } from './update/MovedFileNamespaceUpdater';
 import { MultiFileReferenceUpdater } from './update/MultiFileReferenceUpdater';
-import { Uri } from 'vscode';
 
 interface Props {
   newUri: Uri,
