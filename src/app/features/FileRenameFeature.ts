@@ -22,8 +22,7 @@ export class FileRenameFeature {
 
   public async execute(files: Props) {
     for (const { oldUri, newUri } of files) {
-      if (!oldUri.fsPath.endsWith('.php')
-        || !newUri.fsPath.endsWith('.php')) {
+      if (!newUri.fsPath.endsWith('.php') || !oldUri.fsPath.endsWith('.php')) {
         continue;
       }
 
