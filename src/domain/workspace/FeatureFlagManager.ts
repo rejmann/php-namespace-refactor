@@ -1,4 +1,5 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
+import { Config } from './ConfigurationLocator';
 import { injectable } from "tsyringe";
 
 export type Props = {
@@ -11,7 +12,7 @@ export class FeatureFlagManager {
   private config: WorkspaceConfiguration;
 
   constructor() {
-    this.config = workspace.getConfiguration('phpNamespaceRefactor');
+    this.config = workspace.getConfiguration(Config);
   }
 
   public isActive({ key, defaultValue = true }: Props): boolean {
