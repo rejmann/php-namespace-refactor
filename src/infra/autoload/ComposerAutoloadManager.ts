@@ -13,26 +13,22 @@ const DEFAULT = {
 };
 
 let composerCache: ComposerAutoload | null = null;
-let cacheWorkspaceRoot: string | null = null;
 let cacheModifiedTime: number | null = null;
 
 @injectable()
 export class ComposerAutoloadManager {
   public async execute() {
-    const workspaceRoot = WORKSPACE_ROOT_PATH;
-    if (!workspaceRoot) {
+    if (!WORKSPACE_ROOT_PATH) {
       return DEFAULT;
     }
 
-    const composerPath = `${workspaceRoot}/${COMPOSER_FILE}`;
-
     try {
+      const composerPath = `${WORKSPACE_ROOT_PATH}/${COMPOSER_FILE}`;
+
       const stats = await fs.stat(composerPath);
       const currentModifiedTime = stats.mtimeMs;
 
-      if (composerCache &&
-        cacheWorkspaceRoot === workspaceRoot &&
-        cacheModifiedTime === currentModifiedTime) {
+      if (composerCache && cacheModifiedTime === currentModifiedTime) {
         return composerCache;
       }
 
@@ -45,7 +41,6 @@ export class ComposerAutoloadManager {
       };
 
       composerCache = result;
-      cacheWorkspaceRoot = workspaceRoot;
       cacheModifiedTime = currentModifiedTime;
 
       return result;
