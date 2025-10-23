@@ -50,7 +50,7 @@
       {
         "command": "phpNamespaceRefactor.rename",
         "key": "f2",
-        "when": "editorTextFocus && resourceExtname == .php"
+        "when": "editorTextFocus && resourceExtname == .php && config.phpNamespaceRefactor.rename"
       }
     ],
     "configuration": {

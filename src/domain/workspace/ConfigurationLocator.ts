@@ -27,4 +27,8 @@ export class ConfigurationLocator {
   public get<T>({ key, defaultValue }: Props<T>): T {
     return this.config.get<T>(key, defaultValue as T);
   }
+
+  public static getConfigKey(key: string): string {
+    return `${Config}.${key}`;
+  }
 }
