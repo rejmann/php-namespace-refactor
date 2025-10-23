@@ -1,6 +1,6 @@
 import { COMPOSER_FILE, WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
 import { promises as fs } from 'fs';
-import { injectable } from "tsyringe";
+import { injectable } from 'tsyringe';
 
 interface ComposerAutoload {
   autoload: Record<string, string>;

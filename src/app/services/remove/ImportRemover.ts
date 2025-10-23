@@ -1,10 +1,10 @@
-import { inject, injectable } from "tsyringe";
-import { Range, RelativePattern, TextDocument, Uri, workspace, WorkspaceEdit } from 'vscode';
+import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
+import { NamespaceCreator } from '@domain/namespace/NamespaceCreator';
 import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
-import { NamespaceCreator } from '@domain/namespace/NamespaceCreator';
-import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { inject, injectable } from 'tsyringe';
+import { Range, RelativePattern, TextDocument, Uri, workspace, WorkspaceEdit } from 'vscode';
 
 interface Props {
   uri: Uri

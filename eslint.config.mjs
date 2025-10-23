@@ -1,6 +1,7 @@
 import eslintJS from '@eslint/js';
 import tsParser from '@typescript-eslint/parser';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import eslintSimpleImportSort from 'eslint-plugin-simple-import-sort'
 import eslintPluginImport from 'eslint-plugin-import';
 
 export default [
@@ -10,6 +11,7 @@ export default [
     files: ['**/*.ts'],
     plugins: {
       '@typescript-eslint': typescriptEslint,
+      'simple-import-sort': eslintSimpleImportSort,
       'import': eslintPluginImport,
     },
     languageOptions: {
@@ -46,16 +48,11 @@ export default [
       'no-warning-comments': 'error',
       'no-console': ['error', { allow: ['debug', 'error'] }],
       'no-unused-vars': 'off',
-      'sort-imports': [
-        'error',
-        {
-          ignoreCase: true,
-          ignoreDeclarationSort: false,
-          ignoreMemberSort: false,
-          memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
-          allowSeparatedGroups: false,
-        },
-      ],
+      quotes: ['error', 'single'],
+      indent: ['error', 2],
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+      'import/newline-after-import': 'warn',
     },
   },
 ];

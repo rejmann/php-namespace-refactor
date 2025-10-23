@@ -1,8 +1,8 @@
 import { BACKSLASH_RE, TRAILING_BACKSLASHES_RE } from '@infra/autoload/AutoloadPathResolver';
-import { basename, dirname } from 'path';
-import { inject, injectable } from "tsyringe";
 import { ComposerAutoloadManager } from '@infra/autoload/ComposerAutoloadManager';
 import { WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
+import { basename, dirname } from 'path';
+import { inject, injectable } from 'tsyringe';
 
 type AbsolutePath = string | null | undefined
 

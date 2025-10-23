@@ -1,5 +1,5 @@
+import { injectable } from 'tsyringe';
 import { TextDocument, Uri, workspace } from 'vscode';
-import { injectable } from "tsyringe";
 
 interface Props {
   uri: Uri

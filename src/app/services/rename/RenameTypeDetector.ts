@@ -1,5 +1,5 @@
-import { Position, TextDocument } from 'vscode';
 import { injectable } from 'tsyringe';
+import { Position, TextDocument } from 'vscode';
 
 interface Props {
   document: TextDocument

@@ -1,5 +1,5 @@
-import { inject, injectable } from 'tsyringe';
 import { RenameFeature } from '@app/features/RenameFeature';
+import { inject, injectable } from 'tsyringe';
 import { TextEditor } from 'vscode';
 
 interface Props {

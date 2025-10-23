@@ -1,9 +1,9 @@
-import { inject, injectable } from 'tsyringe';
-import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
-import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
-import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { MissingClassImporter } from '@app/services/MissingClassImporter';
 import { NamespaceBatchUpdater } from '@app/services/NamespaceBatchUpdater';
+import { ImportRemover } from '@app/services/remove/ImportRemover';
+import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
+import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
+import { inject, injectable } from 'tsyringe';
 import { Uri } from 'vscode';
 
 interface Props extends ReadonlyArray<{

@@ -1,6 +1,7 @@
-import { ClassType, RenameTypeDetector } from './RenameTypeDetector';
 import { inject, injectable } from 'tsyringe';
 import { Position, TextDocument } from 'vscode';
+
+import { ClassType, RenameTypeDetector } from './RenameTypeDetector';
 
 const NAMESPACE_REGEX = /^[A-Za-z_][A-Za-z0-9_]*(\\[A-Za-z_][A-Za-z0-9_]*)*$/;
 const CLASS_NAME_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/;
