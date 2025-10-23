@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.2](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.6.1...php-namespace-refactor-v1.6.2) (2025-10-23)
+
+
+### 🐛 Bug Fixes
+
+* always log rename command even if disabled ([ff77a7b](https://github.com/rejmann/php-namespace-refactor/commit/ff77a7b92c12aec8ad1732efc213a667f858b541))
+* if the rename type is class do not allow backslashes ([c5a1070](https://github.com/rejmann/php-namespace-refactor/commit/c5a1070504787d1125e4808e7fe2c9d85fb40093))
+
+
+### ⚡ Performance Improvements
+
+* ignore if new file extension changes ([2aae40d](https://github.com/rejmann/php-namespace-refactor/commit/2aae40dd14e07b71b60b1ebbb0913d2658690faf))
+
+
+### ♻️ Code Refactoring
+
+* unnecessary constants ([ff13d01](https://github.com/rejmann/php-namespace-refactor/commit/ff13d017503caa12081e990886876312c4cf1c77))
+
+
+### 🔧 Chores
+
+* eslint - sort imports and indentation ([d131447](https://github.com/rejmann/php-namespace-refactor/commit/d13144705c8b93b3f897dd40c1d29577dc2ebd1f))
+* indentation ([c9082a4](https://github.com/rejmann/php-namespace-refactor/commit/c9082a40c87055274654e489262925903aa0f7be))
+
 ## [1.6.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.6.0...php-namespace-refactor-v1.6.1) (2025-10-21)
 
 
