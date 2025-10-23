@@ -28,7 +28,11 @@ export class RenameFeature {
       value,
       title: '',
       prompt: '',
-      validateInput: (value: string) => this.renameValidator.validate(value)
+      validateInput: (value: string) => this.renameValidator.validate({
+        value,
+        document,
+        position,
+      })
     });
 
     if (!newName || newName.trim() === '') {
