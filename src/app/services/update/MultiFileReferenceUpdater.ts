@@ -93,7 +93,7 @@ export class MultiFileReferenceUpdater {
     className: string,
   ): Promise<void> {
     try {
-      const { document, text } = await this.textDocumentOpener.execute({ uri: file });
+      const { document, text } = await this.textDocumentOpener.execute({ uri: file, useCache: true });
 
       if (!text.includes(className)) {
         return;

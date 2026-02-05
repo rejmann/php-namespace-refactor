@@ -14,7 +14,7 @@ export class MovedFileNamespaceUpdater {
   ) {}
 
   public async execute({ newNamespace, newUri }: Props) {
-    const { document, text } = await this.textDocumentOpener.execute({ uri: newUri });
+    const { document, text } = await this.textDocumentOpener.execute({ uri: newUri, useCache: true });
 
     const namespaceRegex = /^\s*namespace\s+[\w\\]+;/m;
     const match = text.match(namespaceRegex);

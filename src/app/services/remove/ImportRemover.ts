@@ -45,7 +45,7 @@ export class ImportRemover {
     }
 
     try {
-      const { document } = await this.textDocumentOpener.execute({ uri });
+      const { document } = await this.textDocumentOpener.execute({ uri, useCache: true });
       await this.removeImports({
         document,
         fileNames,
@@ -58,7 +58,7 @@ export class ImportRemover {
 
     await Promise.all(otherFiles.map(async (file) => {
       try {
-        const { document } = await this.textDocumentOpener.execute({ uri: file });
+        const { document } = await this.textDocumentOpener.execute({ uri: file, useCache: true });
         await this.removeImports({
           document,
           fileNames: [className],

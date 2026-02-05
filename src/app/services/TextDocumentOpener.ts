@@ -1,8 +1,10 @@
-import { injectable } from 'tsyringe';
+import { DocumentCache } from '@app/services/cache/DocumentCache';
+import { inject, injectable } from 'tsyringe';
 import { TextDocument, Uri, workspace } from 'vscode';
 
 interface Props {
   uri: Uri
+  useCache?: boolean
 }
 
 type OpenTextDocument = {
@@ -12,7 +14,15 @@ type OpenTextDocument = {
 
 @injectable()
 export class TextDocumentOpener {
-  public async execute({ uri }: Props): Promise<OpenTextDocument> {
+  constructor(
+    @inject(DocumentCache) private documentCache: DocumentCache,
+  ) {}
+
+  public async execute({ uri, useCache = false }: Props): Promise<OpenTextDocument> {
+    if (useCache) {
+      return this.documentCache.getOrOpen(uri);
+    }
+
     const document = await workspace.openTextDocument(uri.fsPath);
     return {
       document,

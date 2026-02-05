@@ -18,7 +18,7 @@ export class ClassNameUpdater {
   ) {}
 
   public async execute({ newUri }: Props): Promise<void> {
-    const { document, text } = await this.textDocumentOpener.execute({ uri: newUri });
+    const { document, text } = await this.textDocumentOpener.execute({ uri: newUri, useCache: true });
 
     const match = PHP_CLASS_DECLARATION_REGEX.exec(text);
     if (!match) {

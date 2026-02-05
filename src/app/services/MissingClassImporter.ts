@@ -35,7 +35,7 @@ export class MissingClassImporter {
     }
 
     try {
-      const { document, text } = await this.textDocumentOpener.execute({ uri: newUri });
+      const { document, text } = await this.textDocumentOpener.execute({ uri: newUri, useCache: true });
 
       const imports = await this.useStatementCreator.multiple({
         classesUsed: this.unusedImportDetector.execute({
