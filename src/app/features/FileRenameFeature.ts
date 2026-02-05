@@ -1,6 +1,5 @@
 import { MissingClassImporter } from '@app/services/MissingClassImporter';
 import { NamespaceBatchUpdater } from '@app/services/NamespaceBatchUpdater';
-import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
 import { inject, injectable } from 'tsyringe';
@@ -14,7 +13,6 @@ interface Props extends ReadonlyArray<{
 @injectable()
 export class FileRenameFeature {
   constructor(
-    @inject(ImportRemover) private importRemover: ImportRemover,
     @inject(MissingClassImporter) private missingClassImporter: MissingClassImporter,
     @inject(NamespaceBatchUpdater) private namespaceBatchUpdater: NamespaceBatchUpdater,
     @inject(FeatureFlagManager) private featureFlagManager: FeatureFlagManager,
@@ -35,8 +33,6 @@ export class FileRenameFeature {
             newUri,
           });
         }
-
-        await this.importRemover.execute({ uri: newUri });
       } catch (error) {
         // eslint-disable-next-line no-undef
         console.error('Error processing file rename:', error);
