@@ -1,12 +1,11 @@
 import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
-import { WorkspaceFileFinder } from '@app/services/workspace/WorkspaceFileFinder';
 import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
 import { inject, injectable } from 'tsyringe';
-import { Uri, workspace, WorkspaceEdit } from 'vscode';
+import { RelativePattern, Uri, workspace, WorkspaceEdit } from 'vscode';
 
 interface Props {
   useOldNamespace: string
@@ -21,7 +20,6 @@ export class MultiFileReferenceUpdater {
     @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
     @inject(ImportRemover) private importRemover: ImportRemover,
     @inject(UseStatementCreator) private useStatementCreator: UseStatementCreator,
-    @inject(WorkspaceFileFinder) private workspaceFileFinder: WorkspaceFileFinder,
     @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
     @inject(UseStatementLocator) private useStatementLocator: UseStatementLocator,
     @inject(UseStatementInjector) private useStatementInjector: UseStatementInjector,
@@ -38,60 +36,62 @@ export class MultiFileReferenceUpdater {
 
     const useImport = this.useStatementCreator.single({ fullNamespace: useNewNamespace });
 
-    const ignoreFile = newUri.fsPath;
+    await this.updateNamespaceReferences(useOldNamespace, useNewNamespace, newUri);
+    await this.addUseStatementsToSameDirectory(directoryPath, newUri, useImport, className);
+    await this.importRemover.execute({ uri: newUri });
+  }
 
-    const files = await this.workspaceFileFinder.execute();
+  private async updateNamespaceReferences(
+    useOldNamespace: string,
+    useNewNamespace: string,
+    newUri: Uri,
+  ): Promise<void> {
+    const filesWithOldNamespace = await workspace.findFiles('**/*.php', '**/vendor/**');
 
-    const filesToProcess = files.filter(file => ignoreFile !== file.fsPath);
+    await Promise.all(filesWithOldNamespace.map(async (file) => {
+      if (file.fsPath === newUri.fsPath) {
+        return;
+      }
 
-    await Promise.all(filesToProcess.map(async (file) => {
       try {
-        const fileStream = workspace.fs;
-
-        await fileStream.stat(file);
-
-        const fileContent = await fileStream.readFile(file);
+        const fileContent = await workspace.fs.readFile(file);
         let text = Buffer.from(fileContent).toString();
 
         if (!text.includes(useOldNamespace)) {
-          await this.updateInFile(
-            file,
-            directoryPath,
-            useImport,
-            className,
-          );
-
           return;
         }
 
         text = text.replace(useOldNamespace, useNewNamespace);
-        await fileStream.writeFile(file, Buffer.from(text));
-
-        await this.updateInFile(
-          file,
-          directoryPath,
-          useImport,
-          className,
-        );
+        await workspace.fs.writeFile(file, Buffer.from(text));
       } catch (_) {
         return;
       }
     }));
-
-    await this.importRemover.execute({ uri: newUri });
   }
 
-  private async updateInFile(
-    file: Uri,
-    oldDirectoryPath: string,
+  private async addUseStatementsToSameDirectory(
+    directoryPath: string,
+    newUri: Uri,
     useImport: string,
     className: string,
   ): Promise<void> {
-    const currentDir = this.workspacePathResolver.extractDirectoryFromPath(file.fsPath);
-    if (oldDirectoryPath !== currentDir) {
-      return;
-    }
+    const pattern = new RelativePattern(Uri.file(directoryPath), '*.php');
+    const sameDirectoryFiles = await workspace.findFiles(pattern);
 
+    await Promise.all(sameDirectoryFiles.map(async (file) => {
+      if (file.fsPath === newUri.fsPath) {
+        return;
+      }
+
+      await this.addUseStatementToFile(file, useImport, className);
+    }));
+  }
+
+  private async addUseStatementToFile(
+    file: Uri,
+    useImport: string,
+    className: string,
+  ): Promise<void> {
     try {
       const { document, text } = await this.textDocumentOpener.execute({ uri: file });
 
