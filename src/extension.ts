@@ -5,13 +5,17 @@ import { RenameHandler } from '@app/commands/RenameHandler';
 import { ConfigKeys, ConfigurationLocator } from '@domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
 import { COMPOSER_FILE, WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
-import * as fs from 'fs';
+import { promises as fs } from 'fs';
 import { container } from 'tsyringe';
 import { commands, FileRenameEvent, window, workspace } from 'vscode';
 
-export function activate() {
-  const files = fs.readdirSync(WORKSPACE_ROOT_PATH);
-  if (!files.includes(COMPOSER_FILE)) {
+export async function activate() {
+  try {
+    const files = await fs.readdir(WORKSPACE_ROOT_PATH);
+    if (!files.includes(COMPOSER_FILE)) {
+      return;
+    }
+  } catch {
     return;
   }
 
