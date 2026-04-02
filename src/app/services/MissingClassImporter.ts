@@ -50,27 +50,22 @@ export class MissingClassImporter {
         return;
       }
 
-      const insertionIndex = this.useStatementLocator.execute({ document });
-      if (insertionIndex === 0) {
+      const location = this.useStatementLocator.execute({ document });
+      if (location.index === 0) {
         return;
       }
 
       const edit = new WorkspaceEdit();
 
-      for (const use of imports) {
-        await this.useStatementInjector.save({
-          document,
-          workspaceEdit: edit,
-          uri: newUri,
-          lastUseEndIndex: insertionIndex,
-          useNamespace: use,
-          flush: false,
-        });
-      }
-
-      if (imports.length > 0) {
-        await this.useStatementInjector.flush(edit);
-      }
+      await this.useStatementInjector.save({
+        document,
+        workspaceEdit: edit,
+        uri: newUri,
+        lastUseEndIndex: location.index,
+        useNamespace: imports,
+        isFirstUse: location.isFirstUse,
+        flush: true,
+      });
     } catch (_) {
       return;
     }

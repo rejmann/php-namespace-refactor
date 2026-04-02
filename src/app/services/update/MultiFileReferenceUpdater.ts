@@ -99,8 +99,8 @@ export class MultiFileReferenceUpdater {
         return;
       }
 
-      const insertionIndex = this.useStatementLocator.execute({ document });
-      if (insertionIndex === 0) {
+      const location = this.useStatementLocator.execute({ document });
+      if (location.index === 0) {
         return;
       }
 
@@ -110,8 +110,9 @@ export class MultiFileReferenceUpdater {
         document,
         workspaceEdit: edit,
         uri: file,
-        lastUseEndIndex: insertionIndex,
+        lastUseEndIndex: location.index,
         useNamespace: useImport,
+        isFirstUse: location.isFirstUse,
         flush: true,
       });
     } catch (_) {
