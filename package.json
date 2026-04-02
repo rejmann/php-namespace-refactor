@@ -35,6 +35,7 @@
     "Other"
   ],
   "activationEvents": [
+    "workspaceContains:**/composer.json",
     "onLanguage:php"
   ],
   "main": "./dist/extension.js",
