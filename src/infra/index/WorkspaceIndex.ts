@@ -8,7 +8,7 @@ const DEFAULT_EXTENSION_PHP = 'php';
 const SECONDS_IN_AN_HOUR = 60 * 60;
 
 @injectable()
-export class WorkspaceFileFinder {
+export class WorkspaceIndex {
   private cachedFiles: Uri[] | null = null;
   private cacheTimestamp: number = 0;
   private cacheDuration: number = 0;

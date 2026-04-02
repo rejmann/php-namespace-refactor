@@ -1,10 +1,10 @@
 import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
-import { WorkspaceFileFinder } from '@app/services/workspace/WorkspaceFileFinder';
 import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { WorkspaceIndex } from '@infra/index/WorkspaceIndex';
 import { inject, injectable } from 'tsyringe';
 import { Uri, workspace, WorkspaceEdit } from 'vscode';
 
@@ -21,7 +21,7 @@ export class MultiFileReferenceUpdater {
     @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
     @inject(ImportRemover) private importRemover: ImportRemover,
     @inject(UseStatementCreator) private useStatementCreator: UseStatementCreator,
-    @inject(WorkspaceFileFinder) private workspaceFileFinder: WorkspaceFileFinder,
+    @inject(WorkspaceIndex) private workspaceFileFinder: WorkspaceIndex,
     @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
     @inject(UseStatementLocator) private useStatementLocator: UseStatementLocator,
     @inject(UseStatementInjector) private useStatementInjector: UseStatementInjector,
