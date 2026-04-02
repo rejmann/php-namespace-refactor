@@ -3,6 +3,7 @@ import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { FILE_EXTENSION } from '@infra/utils/constants';
 import { promises as fs } from 'fs';
 import { inject, injectable } from 'tsyringe';
 import { Uri, WorkspaceEdit } from 'vscode';
@@ -78,7 +79,7 @@ export class MissingClassImporter {
   private async getClassesNamesInDirectory(directory: string): Promise<string[]> {
     try {
       const files = await fs.readdir(directory);
-      return files.filter(file => file.endsWith('.php'))
+      return files.filter(file => file.endsWith(FILE_EXTENSION))
         .map(file => this.workspacePathResolver.extractClassNameFromPath(file))
         .filter(Boolean);
     } catch (_) {

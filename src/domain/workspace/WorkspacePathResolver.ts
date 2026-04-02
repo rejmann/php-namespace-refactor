@@ -1,6 +1,6 @@
 import { BACKSLASH_RE, TRAILING_BACKSLASHES_RE } from '@infra/autoload/AutoloadPathResolver';
 import { ComposerAutoloadManager } from '@infra/autoload/ComposerAutoloadManager';
-import { WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
+import { FILE_EXTENSION, WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
 import { basename, dirname } from 'path';
 import { inject, injectable } from 'tsyringe';
 
@@ -24,7 +24,7 @@ export class WorkspacePathResolver {
   }
 
   public extractClassNameFromPath(filePath: AbsolutePath) {
-    return basename(filePath || '', '.php') || '';
+    return basename(filePath || '', FILE_EXTENSION) || '';
   }
 
   public async getDirectoryFromNamespace(namespace: string): Promise<string> {

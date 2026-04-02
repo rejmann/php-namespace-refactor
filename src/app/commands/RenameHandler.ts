@@ -1,4 +1,5 @@
 import { RenameFeature } from '@app/features/RenameFeature';
+import { FILE_EXTENSION } from '@infra/utils/constants';
 import { inject, injectable } from 'tsyringe';
 import { TextEditor } from 'vscode';
 
@@ -18,7 +19,7 @@ export class RenameHandler {
     }
 
     const document = activeEditor.document;
-    if (!document.fileName.endsWith('.php')) {
+    if (!document.fileName.endsWith(FILE_EXTENSION)) {
       return;
     }
 

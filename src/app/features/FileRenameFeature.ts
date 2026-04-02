@@ -3,6 +3,7 @@ import { NamespaceBatchUpdater } from '@app/services/NamespaceBatchUpdater';
 import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
+import { FILE_EXTENSION } from '@infra/utils/constants';
 import { inject, injectable } from 'tsyringe';
 import { Uri } from 'vscode';
 
@@ -22,7 +23,7 @@ export class FileRenameFeature {
 
   public async execute(files: Props) {
     for (const { oldUri, newUri } of files) {
-      if (!newUri.fsPath.endsWith('.php') || !oldUri.fsPath.endsWith('.php')) {
+      if (!newUri.fsPath.endsWith(FILE_EXTENSION) || !oldUri.fsPath.endsWith(FILE_EXTENSION)) {
         continue;
       }
 
