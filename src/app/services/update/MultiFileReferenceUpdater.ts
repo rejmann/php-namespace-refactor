@@ -79,7 +79,15 @@ export class MultiFileReferenceUpdater {
     await Promise.all(sameDirectoryFiles.map(async (file) => {
       try {
         await fileStream.stat(file);
-        await this.updateInFile(file, directoryPath, useImport, className);
+        if (classNameRegex) {
+          const fileContent = await fileStream.readFile(file);
+          const text = Buffer.from(fileContent).toString();
+          if (text.includes(className)) {
+            await fileStream.writeFile(file, Buffer.from(text.replace(new RegExp(`\\b${className}\\b`, 'g'), newClassName)));
+          }
+        } else {
+          await this.updateInFile(file, directoryPath, useImport, className);
+        }
       } catch (_) {
         return;
       }
