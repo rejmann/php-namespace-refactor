@@ -30,17 +30,16 @@ export class ClassNameUpdater {
       return;
     }
 
-    const startIndex = match.index! + match[0].indexOf(currentName);
-    const endIndex = startIndex + currentName.length;
+    const newText = text.replace(new RegExp(`\\b${currentName}\\b`, 'g'), expectedName);
 
     const edit = new WorkspaceEdit();
     edit.replace(
       newUri,
       new Range(
-        document.positionAt(startIndex),
-        document.positionAt(endIndex)
+        document.positionAt(0),
+        document.positionAt(text.length)
       ),
-      expectedName
+      newText
     );
 
     workspace.applyEdit(edit);
