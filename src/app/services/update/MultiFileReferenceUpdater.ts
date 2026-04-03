@@ -1,11 +1,11 @@
 import { ImportRemover } from '@app/services/remove/ImportRemover';
-import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
 import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
 import { NamespaceIndex } from '@infra/index/NamespaceIndex';
 import { WorkspaceIndex } from '@infra/index/WorkspaceIndex';
+import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
 import { Uri, workspace, WorkspaceEdit } from 'vscode';
 

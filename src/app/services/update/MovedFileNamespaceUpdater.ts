@@ -1,4 +1,4 @@
-import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
+import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
 import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
 

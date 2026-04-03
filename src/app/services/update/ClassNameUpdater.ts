@@ -1,10 +1,8 @@
+import { PHP_CLASS_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
 import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
-
-import { TextDocumentOpener } from '../TextDocumentOpener';
-
-export const PHP_CLASS_DECLARATION_REGEX = /^\s*(?:abstract\s+)?(?:final\s+)?(?:class|interface|trait)\s+(\w+)/m;
 
 interface Props {
   newUri: Uri,

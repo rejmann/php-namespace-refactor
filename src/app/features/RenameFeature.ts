@@ -1,8 +1,8 @@
 import { ClassRenameOperation } from '@app/operations/ClassRenameOperation';
 import { NamespaceRenameOperation } from '@app/operations/NamespaceRenameOperation';
-import { ExtractNameFromCursor } from '@app/services/rename/ExctratNameFromCursor';
-import { NamespaceType, RenameTypeDetector } from '@app/services/rename/RenameTypeDetector';
-import { RenameValidator } from '@app/services/rename/RenameValidator';
+import { ExtractNameFromCursor } from '@domain/rename/ExtractNameFromCursor';
+import { NamespaceType, RenameTypeDetector } from '@domain/rename/RenameTypeDetector';
+import { RenameValidator } from '@domain/rename/RenameValidator';
 import { inject, injectable } from 'tsyringe';
 import { Position, TextDocument, window } from 'vscode';
 
