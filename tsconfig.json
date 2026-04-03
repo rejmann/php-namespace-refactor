@@ -20,7 +20,8 @@
       ],
     },
     "types": [
-      "node"
+      "node",
+      "mocha"
     ],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
