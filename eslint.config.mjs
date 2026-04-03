@@ -24,6 +24,10 @@ export default [
         Buffer: 'readonly',
         suite: 'readonly',
         test: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        before: 'readonly',
+        after: 'readonly',
       },
     },
     settings: {
