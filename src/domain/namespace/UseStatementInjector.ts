@@ -22,18 +22,19 @@ export class UseStatementInjector {
     flush = false,
     isFirstUse = false,
   }: Props) {
-    if (isFirstUse) {
-      const documentText = document.getText();
-      const afterNamespace = documentText.slice(lastUseEndIndex);
-      const trailingNewlines = afterNamespace.match(/^\n+/)?.[0] ?? '';
-      const startPosition = document.positionAt(lastUseEndIndex);
-      const endPosition = document.positionAt(lastUseEndIndex + trailingNewlines.length);
-      const normalizedUse = useNamespace.replace(/^\n+/, '');
-      workspaceEdit.replace(uri, new Range(startPosition, endPosition), `\n\n${normalizedUse}\n\n`);
-    } else {
-      const endPosition = document.positionAt(lastUseEndIndex);
-      workspaceEdit.replace(uri, new Range(endPosition, endPosition), useNamespace);
-    }
+    const trailingNewlines = isFirstUse
+      ? (document.getText().slice(lastUseEndIndex).match(/^\n+/)?.[0] ?? '')
+      : '';
+    workspaceEdit.replace(
+      uri,
+      new Range(
+        document.positionAt(lastUseEndIndex),
+        document.positionAt(lastUseEndIndex + trailingNewlines.length),
+      ),
+      isFirstUse
+        ? `\n\n${useNamespace.replace(/^\n+/, '')}\n\n`
+        : useNamespace
+    );
 
     if (!flush) {
       return;
