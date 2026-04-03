@@ -37,9 +37,14 @@ export class MultiFileReferenceUpdater {
   }: Props) {
     const directoryPath = this.workspacePathResolver.extractDirectoryFromPath(oldUri.fsPath);
     const className = this.workspacePathResolver.extractClassNameFromPath(oldUri.fsPath);
+    const newClassName = this.workspacePathResolver.extractClassNameFromPath(newUri.fsPath);
     const useImport = this.useStatementCreator.single({ fullNamespace: useNewNamespace });
     const ignoreFile = newUri.fsPath;
     const fileStream = workspace.fs;
+
+    const classNameRegex = className !== newClassName
+      ? new RegExp(`\\b${className}\\b`, 'g')
+      : null;
 
     // Arquivos que importam o namespace antigo — lookup O(1) via índice
     const affectedPaths = this.namespaceIndex
@@ -51,7 +56,10 @@ export class MultiFileReferenceUpdater {
       try {
         await fileStream.stat(file);
         const fileContent = await fileStream.readFile(file);
-        const text = Buffer.from(fileContent).toString().replace(useOldNamespace, useNewNamespace);
+        let text = Buffer.from(fileContent).toString().replace(useOldNamespace, useNewNamespace);
+        if (classNameRegex) {
+          text = text.replace(classNameRegex, newClassName);
+        }
         await fileStream.writeFile(file, Buffer.from(text));
         await this.updateInFile(file, directoryPath, useImport, className);
       } catch (_) {

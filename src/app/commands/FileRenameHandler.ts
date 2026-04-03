@@ -9,6 +9,8 @@ interface Props {
 
 @injectable()
 export class FileRenameHandler {
+  private queue: Promise<void> = Promise.resolve();
+
   constructor(
     @inject(FileMoveOperation) private fileMoveOperation: FileMoveOperation,
   ) {}
@@ -19,7 +21,9 @@ export class FileRenameHandler {
     workspace.applyEdit(edit);
   }
 
-  public async handle(event: FileRenameEvent) {
-    await this.fileMoveOperation.execute(event.files);
+  public handle(event: FileRenameEvent): void {
+    this.queue = this.queue
+      .then(() => this.fileMoveOperation.execute(event.files))
+      .catch(() => {});
   }
 }
