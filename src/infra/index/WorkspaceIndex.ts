@@ -10,12 +10,17 @@ const SECONDS_IN_AN_HOUR = 60 * 60;
 @injectable()
 export class WorkspaceIndex {
   private cachedFiles: Uri[] | null = null;
-  private cacheTimestamp: number = 0;
   private cacheDuration: number = 0;
+  private cacheTimestamp: number = 0;
 
   constructor(
     @inject(ConfigurationLocator) private configurationLocator: ConfigurationLocator,
   ) {
+  }
+
+  clearCache() {
+    this.cachedFiles = null;
+    this.cacheTimestamp = 0;
   }
 
   async execute(duration: number = 4): Promise<Uri[]> {
@@ -47,10 +52,5 @@ export class WorkspaceIndex {
     this.cacheDuration = SECONDS_IN_AN_HOUR * duration;
 
     return filteredFiles;
-  }
-
-  clearCache() {
-    this.cachedFiles = null;
-    this.cacheTimestamp = 0;
   }
 }

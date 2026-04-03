@@ -1,6 +1,6 @@
-import { inject, singleton } from 'tsyringe';
 import * as fs from 'fs';
 import * as path from 'path';
+import { inject, singleton } from 'tsyringe';
 
 interface FileEntry {
   declares: string | null
@@ -23,6 +23,10 @@ export class NamespaceIndex {
     @inject('StorageUri') storagePath: string,
   ) {
     this.indexPath = path.join(storagePath, INDEX_FILENAME);
+  }
+
+  public getFilesUsing(namespace: string): string[] {
+    return this.data.usages[namespace] ?? [];
   }
 
   public parseAndAdd(fsPath: string, content: string): void {
@@ -62,21 +66,17 @@ export class NamespaceIndex {
     delete this.data.files[fsPath];
   }
 
-  public getFilesUsing(namespace: string): string[] {
-    return this.data.usages[namespace] ?? [];
-  }
-
   public async save(): Promise<void> {
     await fs.promises.writeFile(this.indexPath, JSON.stringify(this.data));
-  }
-
-  private extractNamespace(content: string): string | null {
-    const match = content.match(/^\s*namespace\s+([\w\\]+);/m);
-    return match ? match[1] : null;
   }
 
   private extractImports(content: string): string[] {
     const matches = [...content.matchAll(/^use\s+([\w\\]+)(?:\s+as\s+\w+)?;/gm)];
     return matches.map(m => m[1]);
+  }
+
+  private extractNamespace(content: string): string | null {
+    const match = content.match(/^\s*namespace\s+([\w\\]+);/m);
+    return match ? match[1] : null;
   }
 }

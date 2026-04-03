@@ -13,6 +13,10 @@ interface Props {
 
 @injectable()
 export class UseStatementInjector {
+  public async flush(edit: WorkspaceEdit): Promise<void> {
+    await workspace.applyEdit(edit);
+  }
+
   public async save({
     document,
     workspaceEdit,
@@ -41,9 +45,5 @@ export class UseStatementInjector {
     }
 
     await this.flush(workspaceEdit);
-  }
-
-  public async flush(edit: WorkspaceEdit): Promise<void> {
-    await workspace.applyEdit(edit);
   }
 }

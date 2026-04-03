@@ -35,7 +35,7 @@ export class FileMoveOperation {
 
         await this.importRemover.execute({ uri: newUri });
       } catch (error) {
-        console.error('Error processing file move:', error);
+        console.error('Error processing file move:', error); // eslint-disable-line
         throw error;
       }
     }
