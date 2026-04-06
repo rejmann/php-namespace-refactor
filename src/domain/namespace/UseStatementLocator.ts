@@ -5,17 +5,22 @@ interface Props {
   document: TextDocument
 }
 
+export interface UseStatementLocation {
+  index: number
+  isFirstUse: boolean
+}
+
 @injectable()
 export class UseStatementLocator {
-  public execute({ document }: Props) {
+  public execute({ document }: Props): UseStatementLocation {
     const text = document.getText();
     const lastUseEndIndex = this.findLastUseEndIndex(text);
 
     if (lastUseEndIndex > 0) {
-      return lastUseEndIndex;
+      return { index: lastUseEndIndex, isFirstUse: false };
     }
 
-    return this.findNamespaceEndIndex(text);
+    return { index: this.findNamespaceEndIndex(text), isFirstUse: true };
   }
 
   private findLastUseEndIndex(contentDocument: string): number {

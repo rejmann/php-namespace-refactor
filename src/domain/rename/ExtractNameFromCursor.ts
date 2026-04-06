@@ -1,4 +1,4 @@
-import { PHP_CLASS_DECLARATION_REGEX } from '@app/services/update/ClassNameUpdater';
+import { PHP_CLASS_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
 import { injectable } from 'tsyringe';
 import { Position, TextDocument } from 'vscode';
 

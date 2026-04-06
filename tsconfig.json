@@ -8,7 +8,6 @@
     "sourceMap": true,
     "rootDir": "src",
     "strict": true,
-    "baseUrl": ".",
     "paths": {
       "@app/*": [
         "./src/app/*"
@@ -20,6 +19,10 @@
         "./src/infra/*"
       ],
     },
+    "types": [
+      "node",
+      "mocha"
+    ],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   }

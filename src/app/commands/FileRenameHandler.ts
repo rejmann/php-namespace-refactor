@@ -1,4 +1,4 @@
-import { FileRenameFeature } from '@app/features/FileRenameFeature';
+import { FileMoveOperation } from '@app/operations/FileMoveOperation';
 import { inject, injectable } from 'tsyringe';
 import { FileRenameEvent, Uri, workspace, WorkspaceEdit } from 'vscode';
 
@@ -9,8 +9,10 @@ interface Props {
 
 @injectable()
 export class FileRenameHandler {
+  private queue: Promise<void> = Promise.resolve();
+
   constructor(
-    @inject(FileRenameFeature) private fileRenameFeature: FileRenameFeature,
+    @inject(FileMoveOperation) private fileMoveOperation: FileMoveOperation,
   ) {}
 
   public static create({ oldUri, newUri }: Props): void {
@@ -19,7 +21,9 @@ export class FileRenameHandler {
     workspace.applyEdit(edit);
   }
 
-  public async handle(event: FileRenameEvent) {
-    await this.fileRenameFeature.execute(event.files);
+  public handle(event: FileRenameEvent): void {
+    this.queue = this.queue
+      .then(() => this.fileMoveOperation.execute(event.files))
+      .catch(() => {});
   }
 }

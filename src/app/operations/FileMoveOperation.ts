@@ -6,21 +6,21 @@ import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
 import { inject, injectable } from 'tsyringe';
 import { Uri } from 'vscode';
 
-interface Props extends ReadonlyArray<{
+interface FileMove {
   oldUri: Uri
   newUri: Uri
-}> {}
+}
 
 @injectable()
-export class FileRenameFeature {
+export class FileMoveOperation {
   constructor(
-    @inject(ImportRemover) private importRemover: ImportRemover,
-    @inject(MissingClassImporter) private missingClassImporter: MissingClassImporter,
     @inject(NamespaceBatchUpdater) private namespaceBatchUpdater: NamespaceBatchUpdater,
+    @inject(MissingClassImporter) private missingClassImporter: MissingClassImporter,
+    @inject(ImportRemover) private importRemover: ImportRemover,
     @inject(FeatureFlagManager) private featureFlagManager: FeatureFlagManager,
   ) {}
 
-  public async execute(files: Props) {
+  public async execute(files: ReadonlyArray<FileMove>): Promise<void> {
     for (const { oldUri, newUri } of files) {
       if (!newUri.fsPath.endsWith('.php') || !oldUri.fsPath.endsWith('.php')) {
         continue;
@@ -30,16 +30,12 @@ export class FileRenameFeature {
         await this.namespaceBatchUpdater.execute({ newUri, oldUri });
 
         if (this.featureFlagManager.isActive({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
-          await this.missingClassImporter.execute({
-            oldUri,
-            newUri,
-          });
+          await this.missingClassImporter.execute({ oldUri, newUri });
         }
 
         await this.importRemover.execute({ uri: newUri });
       } catch (error) {
-        // eslint-disable-next-line no-undef
-        console.error('Error processing file rename:', error);
+        console.error('Error processing file move:', error); // eslint-disable-line
         throw error;
       }
     }

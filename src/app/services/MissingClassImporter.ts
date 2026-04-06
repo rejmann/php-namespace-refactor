@@ -1,13 +1,13 @@
-import { TextDocumentOpener } from '@app/services/TextDocumentOpener';
+import { UnusedImportDetector } from '@domain/namespace/UnusedImportDetector';
 import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { FILE_EXTENSION } from '@infra/utils/constants';
+import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { promises as fs } from 'fs';
 import { inject, injectable } from 'tsyringe';
 import { Uri, WorkspaceEdit } from 'vscode';
-
-import { UnusedImportDetector } from './import/UnusedImportDetector';
 
 interface Props {
   oldUri: Uri
@@ -49,27 +49,22 @@ export class MissingClassImporter {
         return;
       }
 
-      const insertionIndex = this.useStatementLocator.execute({ document });
-      if (insertionIndex === 0) {
+      const location = this.useStatementLocator.execute({ document });
+      if (location.index === 0) {
         return;
       }
 
       const edit = new WorkspaceEdit();
 
-      for (const use of imports) {
-        await this.useStatementInjector.save({
-          document,
-          workspaceEdit: edit,
-          uri: newUri,
-          lastUseEndIndex: insertionIndex,
-          useNamespace: use,
-          flush: false,
-        });
-      }
-
-      if (imports.length > 0) {
-        await this.useStatementInjector.flush(edit);
-      }
+      await this.useStatementInjector.save({
+        document,
+        workspaceEdit: edit,
+        uri: newUri,
+        lastUseEndIndex: location.index,
+        useNamespace: imports,
+        isFirstUse: location.isFirstUse,
+        flush: true,
+      });
     } catch (_) {
       return;
     }
@@ -78,7 +73,7 @@ export class MissingClassImporter {
   private async getClassesNamesInDirectory(directory: string): Promise<string[]> {
     try {
       const files = await fs.readdir(directory);
-      return files.filter(file => file.endsWith('.php'))
+      return files.filter(file => file.endsWith(FILE_EXTENSION))
         .map(file => this.workspacePathResolver.extractClassNameFromPath(file))
         .filter(Boolean);
     } catch (_) {

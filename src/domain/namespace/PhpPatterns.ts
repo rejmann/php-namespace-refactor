@@ -1,0 +1,1 @@
+export const PHP_CLASS_DECLARATION_REGEX = /^\s*(?:abstract\s+)?(?:final\s+)?(?:class|interface|trait)\s+(\w+)/m;

@@ -3,6 +3,7 @@ import tsParser from '@typescript-eslint/parser';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import eslintSimpleImportSort from 'eslint-plugin-simple-import-sort'
 import eslintPluginImport from 'eslint-plugin-import';
+import perfectionist from 'eslint-plugin-perfectionist';
 
 export default [
   // Configurações recomendadas do ESLint
@@ -13,6 +14,7 @@ export default [
       '@typescript-eslint': typescriptEslint,
       'simple-import-sort': eslintSimpleImportSort,
       'import': eslintPluginImport,
+      'perfectionist': perfectionist,
     },
     languageOptions: {
       parser: tsParser,
@@ -22,6 +24,10 @@ export default [
         Buffer: 'readonly',
         suite: 'readonly',
         test: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        before: 'readonly',
+        after: 'readonly',
       },
     },
     settings: {
@@ -53,6 +59,23 @@ export default [
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'import/newline-after-import': 'warn',
+      'lines-between-class-members': ['warn', 'always', { exceptAfterSingleLine: true }],
+      'perfectionist/sort-classes': [
+        'warn',
+        {
+          type: 'natural',
+          order: 'asc',
+          groups: [
+            'private-property',
+            'protected-property',
+            'property',
+            'constructor',
+            'public-method',
+            'protected-method',
+            'private-method',
+          ],
+        },
+      ],
     },
   },
 ];

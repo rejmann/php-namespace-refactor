@@ -1,6 +1,6 @@
 import { BACKSLASH_RE, TRAILING_BACKSLASHES_RE } from '@infra/autoload/AutoloadPathResolver';
 import { ComposerAutoloadManager } from '@infra/autoload/ComposerAutoloadManager';
-import { WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
+import { FILE_EXTENSION, WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
 import { basename, dirname } from 'path';
 import { inject, injectable } from 'tsyringe';
 
@@ -13,18 +13,12 @@ export class WorkspacePathResolver {
   ) {
   }
 
-  public removeWorkspaceRoot(filePath: AbsolutePath) {
-    return filePath
-      ?.replace(WORKSPACE_ROOT_PATH, '')
-      .replace(/^\/|\\/g, '') || '';
+  public extractClassNameFromPath(filePath: AbsolutePath) {
+    return basename(filePath || '', FILE_EXTENSION) || '';
   }
 
   public extractDirectoryFromPath(filePath: AbsolutePath) {
     return dirname(filePath || '');
-  }
-
-  public extractClassNameFromPath(filePath: AbsolutePath) {
-    return basename(filePath || '', '.php') || '';
   }
 
   public async getDirectoryFromNamespace(namespace: string): Promise<string> {
@@ -59,5 +53,11 @@ export class WorkspacePathResolver {
     }
 
     throw new Error(`No autoload mapping found for namespace: ${namespace}`);
+  }
+
+  public removeWorkspaceRoot(filePath: AbsolutePath) {
+    return filePath
+      ?.replace(WORKSPACE_ROOT_PATH, '')
+      .replace(/^\/|\\/g, '') || '';
   }
 }

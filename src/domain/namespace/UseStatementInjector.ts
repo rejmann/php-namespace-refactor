@@ -8,10 +8,15 @@ interface Props {
   useNamespace: string
   lastUseEndIndex: number
   flush: boolean
+  isFirstUse?: boolean
 }
 
 @injectable()
 export class UseStatementInjector {
+  public async flush(edit: WorkspaceEdit): Promise<void> {
+    await workspace.applyEdit(edit);
+  }
+
   public async save({
     document,
     workspaceEdit,
@@ -19,12 +24,20 @@ export class UseStatementInjector {
     uri,
     useNamespace,
     flush = false,
-  }: Props  ) {
-    const endPosition = document.positionAt(lastUseEndIndex);
+    isFirstUse = false,
+  }: Props) {
+    const trailingNewlines = isFirstUse
+      ? (document.getText().slice(lastUseEndIndex).match(/^\n+/)?.[0] ?? '')
+      : '';
     workspaceEdit.replace(
       uri,
-      new Range(endPosition, endPosition),
-      useNamespace,
+      new Range(
+        document.positionAt(lastUseEndIndex),
+        document.positionAt(lastUseEndIndex + trailingNewlines.length),
+      ),
+      isFirstUse
+        ? `\n\n${useNamespace.replace(/^\n+/, '')}\n\n`
+        : useNamespace
     );
 
     if (!flush) {
@@ -32,9 +45,5 @@ export class UseStatementInjector {
     }
 
     await this.flush(workspaceEdit);
-  }
-
-  public async flush(edit: WorkspaceEdit): Promise<void> {
-    await workspace.applyEdit(edit);
   }
 }

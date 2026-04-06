@@ -1,10 +1,8 @@
+import { PHP_CLASS_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
 import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
-
-import { TextDocumentOpener } from '../TextDocumentOpener';
-
-export const PHP_CLASS_DECLARATION_REGEX = /^\s*(?:abstract\s+)?(?:final\s+)?(?:class|interface|trait)\s+(\w+)/m;
 
 interface Props {
   newUri: Uri,
@@ -32,17 +30,16 @@ export class ClassNameUpdater {
       return;
     }
 
-    const startIndex = match.index! + match[0].indexOf(currentName);
-    const endIndex = startIndex + currentName.length;
+    const newText = text.replace(new RegExp(`\\b${currentName}\\b`, 'g'), expectedName);
 
     const edit = new WorkspaceEdit();
     edit.replace(
       newUri,
       new Range(
-        document.positionAt(startIndex),
-        document.positionAt(endIndex)
+        document.positionAt(0),
+        document.positionAt(text.length)
       ),
-      expectedName
+      newText
     );
 
     workspace.applyEdit(edit);

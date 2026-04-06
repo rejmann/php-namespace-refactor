@@ -30,6 +30,10 @@ export class RenameValidator {
     return this.validateNamespace(value);
   }
 
+  private isClassType(document: TextDocument, position: Position): boolean {
+    return ClassType === this.renameTypeDetector.execute({ document, position });
+  }
+
   private validateClassName(value: string): string | null {
     if (/^[0-9]/.test(value)) {
       return 'Class name cannot start with a number';
@@ -76,9 +80,5 @@ export class RenameValidator {
     }
 
     return null;
-  }
-
-  private isClassType(document: TextDocument, position: Position): boolean {
-    return ClassType === this.renameTypeDetector.execute({ document, position });
   }
 }
