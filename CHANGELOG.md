@@ -2,6 +2,55 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.6.2...php-namespace-refactor-v1.7.0) (2026-04-06)
+
+
+### 🚀 New Features
+
+* **eslint:** adicionar plugin perfectionist ([83a9f69](https://github.com/rejmann/php-namespace-refactor/commit/83a9f69952745940529c7310280c7a6d3573de53))
+* **index:** adicionar cache para índices de namespace ([df8442f](https://github.com/rejmann/php-namespace-refactor/commit/df8442fba064ca764afa1f71cacbc82f392259f8))
+* **namespace:** melhorar injeção de declarações de uso ([d296c3c](https://github.com/rejmann/php-namespace-refactor/commit/d296c3c6af6a59eb6897d2465260feee9634ee16))
+* **update:** adicionar atualização condicional de nome de classe ([5b9529d](https://github.com/rejmann/php-namespace-refactor/commit/5b9529d9c5b6cfe6cdeae5372ad8fbd85fedb909))
+
+
+### 🐛 Bug Fixes
+
+* **rename:** corrigir concorrência no FileRenameHandler ([0e71915](https://github.com/rejmann/php-namespace-refactor/commit/0e71915ce28f177243e69079f316d1937ac9e17d))
+
+
+### 📚 Documentation
+
+* **operations:** adicionar documentação de operações ([28242ac](https://github.com/rejmann/php-namespace-refactor/commit/28242acc755b6bd86ec90eaa8d8b6b1748db1c9f))
+
+
+### 💄 Styles
+
+* **esbuild:** ajustar indentação para 2 espaços ([3964656](https://github.com/rejmann/php-namespace-refactor/commit/3964656b0f61b17100e705e5f78dff9175c0e0aa))
+
+
+### ♻️ Code Refactoring
+
+* **autoload:** mover constante COMPOSER_FILE ([c5cd290](https://github.com/rejmann/php-namespace-refactor/commit/c5cd290cae0a814effbffe65e534a6420dacfbe1))
+* **core:** substituir string '.php' por constante ([df5569b](https://github.com/rejmann/php-namespace-refactor/commit/df5569b2788d7ae651f15245afe5de9e0d6e630a))
+* **index:** substituir WorkspaceFileFinder por WorkspaceIndex ([84540a1](https://github.com/rejmann/php-namespace-refactor/commit/84540a14924afa48a13ebb56a42aa9f14984e2d0))
+* **namespace:** reorganizar importações e mover arquivos ([99077c0](https://github.com/rejmann/php-namespace-refactor/commit/99077c0dc3c72be752f3a17dcd29e22d9c8c987d))
+* **namespace:** simplificar lógica de inserção de uso ([84250f4](https://github.com/rejmann/php-namespace-refactor/commit/84250f4178ee400319e5767f624f23767155228b))
+* **update:** simplificar substituição de nomes em ClassNameUpdater ([d406758](https://github.com/rejmann/php-namespace-refactor/commit/d40675877641acae0607309b342dfd94355e4797))
+
+
+### 🧪 Tests
+
+* **namespace-index:** adicionar testes para NamespaceIndex ([4aceae2](https://github.com/rejmann/php-namespace-refactor/commit/4aceae2f6d0e656e97188e52d7e55eee4e994c1c))
+
+
+### 🔧 Chores
+
+* **dependencies:** atualizar dependências no package-lock.json ([5b5cb0c](https://github.com/rejmann/php-namespace-refactor/commit/5b5cb0c4380f5bcf21d382a9f4ed193b58c96707))
+* **dependencies:** marcar pacotes como peer no package-lock.json ([5408aaa](https://github.com/rejmann/php-namespace-refactor/commit/5408aaa4f88783ff34db8a208a693f2d7b02ee46))
+* **dependencies:** remover flag 'peer' do package-lock.json ([3575330](https://github.com/rejmann/php-namespace-refactor/commit/35753301e9eaac5338fef5edf756512223d4c19a))
+* **deps:** atualizar dependências no package-lock.json ([0ab0d90](https://github.com/rejmann/php-namespace-refactor/commit/0ab0d90f3fa9681f0473ece4bf23f93c94206e04))
+* **tsconfig:** adicionar suporte ao Mocha ([0ad6d35](https://github.com/rejmann/php-namespace-refactor/commit/0ad6d3551f04d041f20522e1a7b214bbbf5cbd83))
+
 ## [1.6.2](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.6.1...php-namespace-refactor-v1.6.2) (2025-10-23)
 
 
