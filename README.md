@@ -8,9 +8,11 @@ PHP Namespace Refactor: Extension for Visual Studio Code that automatically refa
 
 ### 🚀 Automatic namespace refactoring
 
-The extension automatically detects when a PHP file is moved (dragged and dropped) between directories and updates:
+The extension automatically detects when a PHP file or directory is moved (dragged and dropped) between directories and updates:
     - The namespace declared in the file.
     - All references to the old namespace in other files in the project.
+
+When a directory is moved, all PHP files inside it are processed through the same refactor flow.
 
 Ideal for projects using PSR-4, making it easy to reorganize directories without breaking dependencies.
 
