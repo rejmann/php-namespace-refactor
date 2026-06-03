@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.2](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.1...php-namespace-refactor-v1.8.2) (2026-06-03)
+
+
+### 🐛 Bug Fixes
+
+* **workspace-index:** normalize additionalExtensions and update moved namespace references in YAML/XML ([bf3671d](https://github.com/rejmann/php-namespace-refactor/commit/bf3671d6574b8f6a68cbb541698a62e6b076f623))
+
 ## [1.8.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.0...php-namespace-refactor-v1.8.1) (2026-06-03)
 
 
