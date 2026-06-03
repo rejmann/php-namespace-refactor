@@ -1,19 +1,17 @@
+import { DirectoryMovedFilesResolver } from '@app/services/DirectoryMovedFilesResolver';
 import { MissingClassImporter } from '@app/services/MissingClassImporter';
 import { NamespaceBatchUpdater } from '@app/services/NamespaceBatchUpdater';
 import { ImportRemover } from '@app/services/remove/ImportRemover';
 import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
 import { inject, injectable } from 'tsyringe';
-import { Uri } from 'vscode';
 
-interface FileMove {
-  oldUri: Uri
-  newUri: Uri
-}
+import type { FileMove } from './FileMove';
 
 @injectable()
 export class FileMoveOperation {
   constructor(
+    @inject(DirectoryMovedFilesResolver) private directoryMovedFilesResolver: DirectoryMovedFilesResolver,
     @inject(NamespaceBatchUpdater) private namespaceBatchUpdater: NamespaceBatchUpdater,
     @inject(MissingClassImporter) private missingClassImporter: MissingClassImporter,
     @inject(ImportRemover) private importRemover: ImportRemover,
@@ -21,7 +19,9 @@ export class FileMoveOperation {
   ) {}
 
   public async execute(files: ReadonlyArray<FileMove>): Promise<void> {
-    for (const { oldUri, newUri } of files) {
+    const resolvedFiles = await this.directoryMovedFilesResolver.execute(files);
+
+    for (const { oldUri, newUri } of resolvedFiles) {
       if (!newUri.fsPath.endsWith('.php') || !oldUri.fsPath.endsWith('.php')) {
         continue;
       }

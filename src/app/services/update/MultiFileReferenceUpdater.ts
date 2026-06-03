@@ -46,10 +46,17 @@ export class MultiFileReferenceUpdater {
       ? new RegExp(`\\b${className}\\b`, 'g')
       : null;
 
-    // Arquivos que importam o namespace antigo — lookup O(1) via índice
-    const affectedPaths = this.namespaceIndex
+    // Files that import the old namespace — O(1) lookup via index
+    let affectedPaths = this.namespaceIndex
       .getFilesUsing(useOldNamespace)
       .filter(fsPath => fsPath !== ignoreFile);
+
+    if (affectedPaths.length === 0) {
+      affectedPaths = await this.findAffectedPathsByScan({
+        ignoreFile,
+        useOldNamespace,
+      });
+    }
 
     await Promise.all(affectedPaths.map(async (fsPath) => {
       const file = Uri.file(fsPath);
@@ -67,7 +74,7 @@ export class MultiFileReferenceUpdater {
       }
     }));
 
-    // Arquivos no mesmo diretório que possam precisar do novo use statement
+    // Files in the same directory that might need the new use statement.
     const affectedSet = new Set(affectedPaths);
     const allFiles = await this.workspaceFileFinder.execute();
     const sameDirectoryFiles = allFiles.filter(file =>
@@ -94,6 +101,39 @@ export class MultiFileReferenceUpdater {
     }));
 
     await this.importRemover.execute({ uri: newUri });
+  }
+
+  private async findAffectedPathsByScan({
+    useOldNamespace,
+    ignoreFile,
+  }: {
+    useOldNamespace: string,
+    ignoreFile: string,
+  }): Promise<string[]> {
+    const allFiles = await this.workspaceFileFinder.execute();
+    const escapedNamespace = useOldNamespace.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const importRegex = new RegExp(`^use\\s+${escapedNamespace}(?:\\s+as\\s+\\w+)?;`, 'm');
+
+    const matches = await Promise.all(allFiles.map(async (file) => {
+      if (file.fsPath === ignoreFile) {
+        return null;
+      }
+
+      try {
+        const fileContent = await workspace.fs.readFile(file);
+        const text = Buffer.from(fileContent).toString();
+
+        if (!importRegex.test(text)) {
+          return null;
+        }
+
+        return file.fsPath;
+      } catch {
+        return null;
+      }
+    }));
+
+    return matches.filter((fsPath): fsPath is string => fsPath !== null);
   }
 
   private async updateInFile(
