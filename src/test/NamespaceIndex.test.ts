@@ -8,7 +8,7 @@ import { NamespaceIndex } from '../infra/index/NamespaceIndex';
 suite('NamespaceIndex', () => {
   let index: NamespaceIndex;
 
-  beforeEach(() => {
+  setup(() => {
     index = new NamespaceIndex(os.tmpdir());
   });
 

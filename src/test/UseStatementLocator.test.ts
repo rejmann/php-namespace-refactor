@@ -12,7 +12,7 @@ async function openDocument(content: string): Promise<vscode.TextDocument> {
 suite('UseStatementLocator', () => {
   let locator: UseStatementLocator;
 
-  beforeEach(() => {
+  setup(() => {
     locator = new UseStatementLocator();
   });
 

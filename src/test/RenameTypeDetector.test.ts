@@ -12,7 +12,7 @@ async function openDocument(content: string): Promise<vscode.TextDocument> {
 suite('RenameTypeDetector', () => {
   let detector: RenameTypeDetector;
 
-  beforeEach(() => {
+  setup(() => {
     detector = new RenameTypeDetector();
   });
 

@@ -7,7 +7,7 @@ import { UnusedImportDetector } from '../domain/namespace/UnusedImportDetector';
 suite('UnusedImportDetector', () => {
   let detector: UnusedImportDetector;
 
-  beforeEach(() => {
+  setup(() => {
     detector = new UnusedImportDetector();
   });
 

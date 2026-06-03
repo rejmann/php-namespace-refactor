@@ -24,7 +24,7 @@ export default [
         Buffer: 'readonly',
         suite: 'readonly',
         test: 'readonly',
-        beforeEach: 'readonly',
+        setup: 'readonly',
         afterEach: 'readonly',
         before: 'readonly',
         after: 'readonly',
