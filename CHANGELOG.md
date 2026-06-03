@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.0...php-namespace-refactor-v1.8.1) (2026-06-03)
+
+
+### 🐛 Bug Fixes
+
+* support enum declarations in php refactors ([827a40f](https://github.com/rejmann/php-namespace-refactor/commit/827a40f91bf9ad2e67e419e37a88888536e82d6c))
+
 ## [1.8.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.7.0...php-namespace-refactor-v1.8.0) (2026-06-03)
 
 
