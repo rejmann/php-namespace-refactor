@@ -29,12 +29,12 @@ export class WorkspaceIndex {
       return this.cachedFiles;
     }
 
-    const extensions = this.configurationLocator.get<string[]>({
+    const extensions = this.normalizeExtensions(this.configurationLocator.get<string[]>({
       key: ConfigKeys.ADDITIONAL_EXTENSIONS,
       defaultValue: [DEFAULT_EXTENSION_PHP],
-    });
+    }));
 
-    const pattern = `**/*.{${[DEFAULT_EXTENSION_PHP, ...extensions].join(',')}}`;
+    const pattern = `**/*.{${extensions.join(',')}}`;
     const files = await workspace.findFiles(pattern);
 
     const ignoredDirectories = this.configurationLocator.get<string[]>({
@@ -52,5 +52,14 @@ export class WorkspaceIndex {
     this.cacheDuration = SECONDS_IN_AN_HOUR * duration;
 
     return filteredFiles;
+  }
+
+  private normalizeExtensions(extensions: string[]): string[] {
+    const normalized = extensions
+      .map(extension => extension.trim().toLowerCase())
+      .map(extension => extension.replace(/^\.+/, ''))
+      .filter(Boolean);
+
+    return [...new Set([DEFAULT_EXTENSION_PHP, ...normalized])];
   }
 }

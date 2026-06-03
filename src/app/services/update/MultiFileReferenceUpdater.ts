@@ -41,29 +41,30 @@ export class MultiFileReferenceUpdater {
     const useImport = this.useStatementCreator.single({ fullNamespace: useNewNamespace });
     const ignoreFile = newUri.fsPath;
     const fileStream = workspace.fs;
+    const namespaceRegex = new RegExp(this.escapeRegex(useOldNamespace), 'g');
 
     const classNameRegex = className !== newClassName
       ? new RegExp(`\\b${className}\\b`, 'g')
       : null;
 
-    // Files that import the old namespace — O(1) lookup via index
-    let affectedPaths = this.namespaceIndex
+    // Files that import/use the old namespace.
+    const indexedPaths = this.namespaceIndex
       .getFilesUsing(useOldNamespace)
       .filter(fsPath => fsPath !== ignoreFile);
 
-    if (affectedPaths.length === 0) {
-      affectedPaths = await this.findAffectedPathsByScan({
-        ignoreFile,
-        useOldNamespace,
-      });
-    }
+    const scannedPaths = await this.findAffectedPathsByScan({
+      ignoreFile,
+      useOldNamespace,
+    });
+
+    const affectedPaths = [...new Set([...indexedPaths, ...scannedPaths])];
 
     await Promise.all(affectedPaths.map(async (fsPath) => {
       const file = Uri.file(fsPath);
       try {
         await fileStream.stat(file);
         const fileContent = await fileStream.readFile(file);
-        let text = Buffer.from(fileContent).toString().replace(useOldNamespace, useNewNamespace);
+        let text = Buffer.from(fileContent).toString().replace(namespaceRegex, useNewNamespace);
         if (classNameRegex) {
           text = text.replace(classNameRegex, newClassName);
         }
@@ -103,6 +104,10 @@ export class MultiFileReferenceUpdater {
     await this.importRemover.execute({ uri: newUri });
   }
 
+  private escapeRegex(text: string): string {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   private async findAffectedPathsByScan({
     useOldNamespace,
     ignoreFile,
@@ -111,8 +116,6 @@ export class MultiFileReferenceUpdater {
     ignoreFile: string,
   }): Promise<string[]> {
     const allFiles = await this.workspaceFileFinder.execute();
-    const escapedNamespace = useOldNamespace.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const importRegex = new RegExp(`^use\\s+${escapedNamespace}(?:\\s+as\\s+\\w+)?;`, 'm');
 
     const matches = await Promise.all(allFiles.map(async (file) => {
       if (file.fsPath === ignoreFile) {
@@ -123,7 +126,7 @@ export class MultiFileReferenceUpdater {
         const fileContent = await workspace.fs.readFile(file);
         const text = Buffer.from(fileContent).toString();
 
-        if (!importRegex.test(text)) {
+        if (!text.includes(useOldNamespace)) {
           return null;
         }
 
