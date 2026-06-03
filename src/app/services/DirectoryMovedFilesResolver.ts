@@ -1,4 +1,4 @@
-import { join, relative } from 'path';
+import { extname, join, relative } from 'path';
 import { injectable } from 'tsyringe';
 import { FileType, Uri, workspace } from 'vscode';
 
@@ -60,6 +60,36 @@ export class DirectoryMovedFilesResolver {
     return movedFiles;
   }
 
+  private collectMovedFilesFromOpenDocuments({
+    oldDirectoryUri,
+    newDirectoryUri,
+  }: {
+    oldDirectoryUri: Uri,
+    newDirectoryUri: Uri,
+  }): FileMove[] {
+    const movedFiles: FileMove[] = [];
+
+    for (const document of workspace.textDocuments) {
+      if (document.uri.scheme !== 'file') {
+        continue;
+      }
+
+      const relativeFilePath = relative(newDirectoryUri.fsPath, document.uri.fsPath);
+      const isInsideDirectory = relativeFilePath !== '' && !relativeFilePath.startsWith('..');
+
+      if (!isInsideDirectory) {
+        continue;
+      }
+
+      movedFiles.push({
+        oldUri: Uri.file(join(oldDirectoryUri.fsPath, relativeFilePath)),
+        newUri: document.uri,
+      });
+    }
+
+    return movedFiles;
+  }
+
   private async isDirectory(uri: Uri): Promise<boolean> {
     try {
       const stat = await workspace.fs.stat(uri);
@@ -67,6 +97,10 @@ export class DirectoryMovedFilesResolver {
     } catch {
       return false;
     }
+  }
+
+  private isLikelyDirectoryMove(file: FileMove): boolean {
+    return extname(file.oldUri.fsPath) === '' && extname(file.newUri.fsPath) === '';
   }
 
   private removeDuplicates(files: ReadonlyArray<FileMove>): FileMove[] {
@@ -80,15 +114,26 @@ export class DirectoryMovedFilesResolver {
   }
 
   private async resolveMove(file: FileMove): Promise<{ moves: FileMove[], expandedDirectory: boolean }> {
-    if (!await this.isDirectory(file.newUri)) {
-      return { moves: [file], expandedDirectory: false };
+    if (await this.isDirectory(file.newUri)) {
+      const moves = await this.collectMovedFilesFromDirectory({
+        oldDirectoryUri: file.oldUri,
+        newDirectoryUri: file.newUri,
+      });
+
+      return { moves, expandedDirectory: true };
     }
 
-    const moves = await this.collectMovedFilesFromDirectory({
-      oldDirectoryUri: file.oldUri,
-      newDirectoryUri: file.newUri,
-    });
+    if (this.isLikelyDirectoryMove(file)) {
+      const moves = this.collectMovedFilesFromOpenDocuments({
+        oldDirectoryUri: file.oldUri,
+        newDirectoryUri: file.newUri,
+      });
 
-    return { moves, expandedDirectory: true };
+      if (moves.length > 0) {
+        return { moves, expandedDirectory: true };
+      }
+    }
+
+    return { moves: [file], expandedDirectory: false };
   }
 }
