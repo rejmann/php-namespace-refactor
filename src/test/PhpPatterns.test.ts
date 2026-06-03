@@ -41,6 +41,18 @@ suite('PHP_CLASS_DECLARATION_REGEX', () => {
       assert.strictEqual(match[1], 'HasTimestamps');
     });
 
+    test('captures an enum name', () => {
+      const match = PHP_CLASS_DECLARATION_REGEX.exec('enum ClassEnum {}');
+      assert.ok(match);
+      assert.strictEqual(match[1], 'ClassEnum');
+    });
+
+    test('captures a backed enum name', () => {
+      const match = PHP_CLASS_DECLARATION_REGEX.exec('enum PaymentStatus: string {}');
+      assert.ok(match);
+      assert.strictEqual(match[1], 'PaymentStatus');
+    });
+
     test('captures the class name in a full PHP file with namespace and use', () => {
       const content = [
         '<?php',
