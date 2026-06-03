@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.3](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.2...php-namespace-refactor-v1.8.3) (2026-06-03)
+
+
+### 🧪 Tests
+
+* **fix:** broken ([18efde4](https://github.com/rejmann/php-namespace-refactor/commit/18efde40b348fe04f007d61281f8111fd40e2654))
+
 ## [1.8.2](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.1...php-namespace-refactor-v1.8.2) (2026-06-03)
 
 
