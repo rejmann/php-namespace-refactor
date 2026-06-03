@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.7.0...php-namespace-refactor-v1.8.0) (2026-06-03)
+
+
+### 🚀 New Features
+
+* update the namespace of classes within a directory when moving the directory. ([be1f22e](https://github.com/rejmann/php-namespace-refactor/commit/be1f22ef13f02514d82cd3523a82351fc8a0c575))
+
+
+### 🐛 Bug Fixes
+
+* refactor imports after sequential directory moves with dirty editors ([b8072e1](https://github.com/rejmann/php-namespace-refactor/commit/b8072e1b2e28e6344cd7c76f82c5aad975f537fc))
+
 ## [1.7.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.6.2...php-namespace-refactor-v1.7.0) (2026-04-06)
 
 
