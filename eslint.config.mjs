@@ -22,6 +22,8 @@ export default [
       sourceType: 'module',
       globals: {
         Buffer: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
         suite: 'readonly',
         test: 'readonly',
         setup: 'readonly',

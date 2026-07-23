@@ -1,6 +1,7 @@
+import { FileExtensionResolver } from '@domain/workspace/FileExtensionResolver';
 import { BACKSLASH_RE, TRAILING_BACKSLASHES_RE } from '@infra/autoload/AutoloadPathResolver';
 import { ComposerAutoloadManager } from '@infra/autoload/ComposerAutoloadManager';
-import { FILE_EXTENSION, WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
+import { WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
 import { basename, dirname } from 'path';
 import { inject, injectable } from 'tsyringe';
 
@@ -10,15 +11,35 @@ type AbsolutePath = string | null | undefined
 export class WorkspacePathResolver {
   constructor(
     @inject(ComposerAutoloadManager) private composerAutoloadManager: ComposerAutoloadManager,
+    @inject(FileExtensionResolver) private fileExtensionResolver: FileExtensionResolver,
   ) {
   }
 
-  public extractClassNameFromPath(filePath: AbsolutePath) {
-    return basename(filePath || '', FILE_EXTENSION) || '';
+  public extractClassNameFromPath(filePath: AbsolutePath): string {
+    const fileName = basename(filePath || '');
+    const extension = this.fileExtensionResolver.match(fileName);
+
+    if (extension === null) {
+      return fileName;
+    }
+
+    return fileName.slice(0, fileName.length - extension.length);
   }
 
   public extractDirectoryFromPath(filePath: AbsolutePath) {
     return dirname(filePath || '');
+  }
+
+  public extractExtensionFromPath(filePath: AbsolutePath): string {
+    const fileName = basename(filePath || '');
+    const matched = this.fileExtensionResolver.match(fileName);
+
+    if (matched !== null) {
+      return matched;
+    }
+
+    const lastDotIndex = fileName.lastIndexOf('.');
+    return lastDotIndex > 0 ? fileName.slice(lastDotIndex) : '';
   }
 
   public async getDirectoryFromNamespace(namespace: string): Promise<string> {

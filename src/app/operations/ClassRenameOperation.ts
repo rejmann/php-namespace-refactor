@@ -17,7 +17,7 @@ export class ClassRenameOperation {
   public execute({ document, newClassName }: Props): void {
     const oldPath = document.uri.fsPath;
     const directory = this.workspacePathResolver.extractDirectoryFromPath(oldPath);
-    const extension = oldPath.substring(oldPath.lastIndexOf('.'));
+    const extension = this.workspacePathResolver.extractExtensionFromPath(oldPath);
 
     FileRenameHandler.create({
       oldUri: document.uri,
