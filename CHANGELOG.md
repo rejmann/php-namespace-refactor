@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.2](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.9.1...php-namespace-refactor-v1.9.2) (2026-07-24)
+
+
+### 📚 Documentation
+
+* **docs:** add technical documentation for extension internals ([0be08a1](https://github.com/rejmann/php-namespace-refactor/commit/0be08a17fb2de730832113d2dfa9f0d82f44d728))
+* **readme:** document background refactor editing setting ([101d42b](https://github.com/rejmann/php-namespace-refactor/commit/101d42bd0aec94b406e7537d70802b736ecc7160))
+
 ## [1.9.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.9.0...php-namespace-refactor-v1.9.1) (2026-07-24)
 
 
