@@ -8,9 +8,11 @@ import * as vscode from 'vscode';
 
 import { ClassNameUpdater } from '../app/services/update/ClassNameUpdater';
 import { ConfigurationLocator, Props } from '../domain/workspace/ConfigurationLocator';
+import { FeatureFlagManager } from '../domain/workspace/FeatureFlagManager';
 import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
 import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver';
 import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
+import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
 
 function fakeConfigurationLocator(additionalExtensions: string[]): ConfigurationLocator {
@@ -21,13 +23,23 @@ function fakeConfigurationLocator(additionalExtensions: string[]): Configuration
   } as ConfigurationLocator;
 }
 
+function fakeFeatureFlagManager(): FeatureFlagManager {
+  return {
+    isActive: ({ defaultValue = true }) => defaultValue,
+  } as FeatureFlagManager;
+}
+
 function buildUpdater(additionalExtensions: string[]): ClassNameUpdater {
   const workspacePathResolver = new WorkspacePathResolver(
     new ComposerAutoloadManager(),
     new FileExtensionResolver(fakeConfigurationLocator(additionalExtensions)),
   );
 
-  return new ClassNameUpdater(new TextDocumentOpener(), workspacePathResolver);
+  return new ClassNameUpdater(
+    new TextDocumentOpener(),
+    workspacePathResolver,
+    new FileEditApplier(fakeFeatureFlagManager()),
+  );
 }
 
 async function writeTempPhpFile(fileName: string, content: string): Promise<vscode.Uri> {
