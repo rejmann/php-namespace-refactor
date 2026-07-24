@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.4...php-namespace-refactor-v1.9.0) (2026-07-24)
+
+
+### 🚀 New Features
+
+* **vscode:** add background edit handling for refactors ([0f8c380](https://github.com/rejmann/php-namespace-refactor/commit/0f8c3808fbc3d0fd5cf8c754fe467cd7e0ead4cc))
+
+
+### 🐛 Bug Fixes
+
+* **namespace:** skip duplicate use statement injection ([e6e82ff](https://github.com/rejmann/php-namespace-refactor/commit/e6e82ffaab5988d22a935803ce58a5e364e7acae))
+
 ## [1.8.4](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.3...php-namespace-refactor-v1.8.4) (2026-07-24)
 
 
