@@ -12,6 +12,7 @@ import { UseStatementCreator } from '../domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '../domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '../domain/namespace/UseStatementLocator';
 import { ConfigurationLocator, Props } from '../domain/workspace/ConfigurationLocator';
+import { FeatureFlagManager } from '../domain/workspace/FeatureFlagManager';
 import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
 import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver';
 import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
@@ -26,11 +27,18 @@ function fakeConfigurationLocator(): ConfigurationLocator {
   } as ConfigurationLocator;
 }
 
-function buildUpdater(namespaceIndex: NamespaceIndex): MultiFileReferenceUpdater {
+function fakeFeatureFlagManager(editFilesInBackground = true): FeatureFlagManager {
+  return {
+    isActive: ({ defaultValue = true }) => defaultValue && editFilesInBackground,
+  } as FeatureFlagManager;
+}
+
+function buildUpdater(namespaceIndex: NamespaceIndex, editFilesInBackground = true): MultiFileReferenceUpdater {
   const workspacePathResolver = new WorkspacePathResolver(
     new ComposerAutoloadManager(),
     new FileExtensionResolver(fakeConfigurationLocator()),
   );
+  const fileEditApplier = new FileEditApplier(fakeFeatureFlagManager(editFilesInBackground));
 
   return new MultiFileReferenceUpdater(
     workspacePathResolver,
@@ -40,8 +48,8 @@ function buildUpdater(namespaceIndex: NamespaceIndex): MultiFileReferenceUpdater
     namespaceIndex,
     new TextDocumentOpener(),
     new UseStatementLocator(),
-    new UseStatementInjector(new FileEditApplier()),
-    new FileEditApplier(),
+    new UseStatementInjector(fileEditApplier),
+    fileEditApplier,
   );
 }
 
@@ -49,6 +57,15 @@ async function writeTempPhpFile(dir: string, fileName: string, content: string):
   const filePath = path.join(dir, fileName);
   await fs.writeFile(filePath, content, 'utf8');
   return vscode.Uri.file(filePath);
+}
+
+// vscode.window.showTextDocument can resolve slightly before the active
+// editor is fully registered, so an 'undo' fired right after may target
+// nothing the first time. Retry a few times rather than assume one call lands.
+async function undoUntil(document: vscode.TextDocument, predicate: (text: string) => boolean, attempts = 5): Promise<void> {
+  for (let attempt = 0; attempt < attempts && !predicate(document.getText()); attempt++) {
+    await vscode.commands.executeCommand('undo');
+  }
 }
 
 /**
@@ -74,7 +91,10 @@ suite('MultiFileReferenceUpdater', () => {
     const namespaceIndex = new NamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
 
-    const updater = buildUpdater(namespaceIndex);
+    // editFilesInBackground disabled here so the edit is left as an unsaved
+    // editor change, matching this test's original assumption — the
+    // background-save behaviour itself is covered separately below.
+    const updater = buildUpdater(namespaceIndex, false);
 
     await updater.execute({
       useOldNamespace: 'App\\Domain\\Order',
@@ -91,12 +111,96 @@ suite('MultiFileReferenceUpdater', () => {
     assert.ok(document.isDirty, 'the edit should be an unsaved change applied through the editor, not a raw disk write');
 
     await vscode.window.showTextDocument(document);
-    await vscode.commands.executeCommand('undo');
+    await undoUntil(document, text => text.includes('use App\\Domain\\Order;'));
 
     assert.ok(
       document.getText().includes('use App\\Domain\\Order;'),
       `undo should restore the original reference, got:\n${document.getText()}`,
     );
+  });
+
+  /**
+   * https://github.com/rejmann/php-namespace-refactor/issues/73
+   *
+   * Files were left half on disk (workspace.fs.writeFile) and half as
+   * unsaved editor changes (workspace.applyEdit), forcing manual conflict
+   * resolution per file — especially painful over SSH. With
+   * editFilesInBackground on (the default), files that weren't already open
+   * get their edit saved straight through instead of sitting dirty.
+   */
+  test('with editFilesInBackground on, saves edits to files that were not already open', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const orderUri = await writeTempPhpFile(
+      dir,
+      'Order.php',
+      '<?php\n\nnamespace App\\NewDomain;\n\nclass Order\n{\n}\n',
+    );
+
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex, true);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\NewDomain\\Order',
+      newUri: orderUri,
+      oldUri: orderUri,
+    });
+
+    const document = await vscode.workspace.openTextDocument(consumerUri);
+    assert.ok(
+      document.getText().includes('use App\\NewDomain\\Order;'),
+      `expected the updated reference, got:\n${document.getText()}`,
+    );
+    assert.ok(!document.isDirty, 'a file that was not already open should be saved straight through, not left dirty');
+
+    const onDiskContent = await fs.readFile(consumerUri.fsPath, 'utf8');
+    assert.ok(
+      onDiskContent.includes('use App\\NewDomain\\Order;'),
+      `expected the saved file on disk to contain the updated reference, got:\n${onDiskContent}`,
+    );
+  });
+
+  test('with editFilesInBackground on, leaves already-open files as an unsaved editor change', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const orderUri = await writeTempPhpFile(
+      dir,
+      'Order.php',
+      '<?php\n\nnamespace App\\NewDomain;\n\nclass Order\n{\n}\n',
+    );
+
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    // Simulate the user already having the affected file open before the refactor runs.
+    const openedDocument = await vscode.workspace.openTextDocument(consumerUri);
+    await vscode.window.showTextDocument(openedDocument, { preview: false });
+
+    const updater = buildUpdater(namespaceIndex, true);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\NewDomain\\Order',
+      newUri: orderUri,
+      oldUri: orderUri,
+    });
+
+    assert.ok(
+      openedDocument.getText().includes('use App\\NewDomain\\Order;'),
+      `expected the updated reference, got:\n${openedDocument.getText()}`,
+    );
+    assert.ok(openedDocument.isDirty, 'a file that was already open should stay as an unsaved editor change');
+
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
   });
 
   test('renaming the class itself does not double-replace the class name inside its own FQCN', async () => {

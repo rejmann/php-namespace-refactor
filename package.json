@@ -104,6 +104,11 @@
           "type": "boolean",
           "default": true,
           "description": "Enable or disable the Rename Namespace or Class command."
+        },
+        "phpNamespaceRefactor.editFilesInBackground": {
+          "type": "boolean",
+          "default": true,
+          "description": "Apply refactor edits to files without opening them, keeping only files that were already open in the editor. Disable to have every edited file opened in the editor as before."
         }
       }
     }
