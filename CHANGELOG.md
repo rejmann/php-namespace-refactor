@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.9.0...php-namespace-refactor-v1.9.1) (2026-07-24)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump eslint-config e corrige vulnerabilidade em serialize-javascript ([c596126](https://github.com/rejmann/php-namespace-refactor/commit/c5961268bdf964460e1f94ff4bfc3275db016c93))
+
 ## [1.9.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.4...php-namespace-refactor-v1.9.0) (2026-07-24)
 
 
