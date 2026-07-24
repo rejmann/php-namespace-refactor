@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.4](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.3...php-namespace-refactor-v1.8.4) (2026-07-24)
+
+
+### 🐛 Bug Fixes
+
+* **workspace-path:** handle compound php extensions in renames ([1c00997](https://github.com/rejmann/php-namespace-refactor/commit/1c0099747308bcab7bf4034a9507208c235963fd))
+
 ## [1.8.3](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.2...php-namespace-refactor-v1.8.3) (2026-06-03)
 
 
