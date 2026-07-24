@@ -1,0 +1,136 @@
+import 'reflect-metadata';
+
+import * as assert from 'assert';
+import { promises as fs } from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import * as vscode from 'vscode';
+
+import { ImportRemover } from '../app/services/remove/ImportRemover';
+import { MultiFileReferenceUpdater } from '../app/services/update/MultiFileReferenceUpdater';
+import { UseStatementCreator } from '../domain/namespace/UseStatementCreator';
+import { UseStatementInjector } from '../domain/namespace/UseStatementInjector';
+import { UseStatementLocator } from '../domain/namespace/UseStatementLocator';
+import { ConfigurationLocator, Props } from '../domain/workspace/ConfigurationLocator';
+import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
+import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver';
+import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
+import { NamespaceIndex } from '../infra/index/NamespaceIndex';
+import { WorkspaceIndex } from '../infra/index/WorkspaceIndex';
+import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
+
+function fakeConfigurationLocator(): ConfigurationLocator {
+  return {
+    get: <T>({ defaultValue }: Props<T>): T => defaultValue as T,
+  } as ConfigurationLocator;
+}
+
+function buildUpdater(namespaceIndex: NamespaceIndex): MultiFileReferenceUpdater {
+  const workspacePathResolver = new WorkspacePathResolver(
+    new ComposerAutoloadManager(),
+    new FileExtensionResolver(fakeConfigurationLocator()),
+  );
+
+  return new MultiFileReferenceUpdater(
+    workspacePathResolver,
+    { execute: async () => {} } as unknown as ImportRemover,
+    { single: ({ fullNamespace }: { fullNamespace: string }) => `\nuse ${fullNamespace};` } as UseStatementCreator,
+    new WorkspaceIndex(fakeConfigurationLocator()),
+    namespaceIndex,
+    new TextDocumentOpener(),
+    new UseStatementLocator(),
+    new UseStatementInjector(),
+  );
+}
+
+async function writeTempPhpFile(dir: string, fileName: string, content: string): Promise<vscode.Uri> {
+  const filePath = path.join(dir, fileName);
+  await fs.writeFile(filePath, content, 'utf8');
+  return vscode.Uri.file(filePath);
+}
+
+/**
+ * https://github.com/rejmann/php-namespace-refactor/issues/72 (item 4)
+ *
+ * Multi-file reference updates used to write straight to disk via
+ * workspace.fs.writeFile, bypassing VS Code's undo stack entirely. A refactor
+ * that touched several files could then only be undone in some of them.
+ */
+suite('MultiFileReferenceUpdater', () => {
+  test('updates references through an undoable edit instead of a raw disk write', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const orderUri = await writeTempPhpFile(
+      dir,
+      'Order.php',
+      '<?php\n\nnamespace App\\NewDomain;\n\nclass Order\n{\n}\n',
+    );
+
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\NewDomain\\Order',
+      newUri: orderUri,
+      oldUri: orderUri,
+    });
+
+    const document = await vscode.workspace.openTextDocument(consumerUri);
+    assert.ok(
+      document.getText().includes('use App\\NewDomain\\Order;'),
+      `expected the updated reference, got:\n${document.getText()}`,
+    );
+    assert.ok(document.isDirty, 'the edit should be an unsaved change applied through the editor, not a raw disk write');
+
+    await vscode.window.showTextDocument(document);
+    await vscode.commands.executeCommand('undo');
+
+    assert.ok(
+      document.getText().includes('use App\\Domain\\Order;'),
+      `undo should restore the original reference, got:\n${document.getText()}`,
+    );
+  });
+
+  test('renaming the class itself does not double-replace the class name inside its own FQCN', async () => {
+    // The bare class name (e.g. "Order") is always a substring of its own
+    // FQCN match (e.g. "App\Domain\Order"), so combining both replacements
+    // into one WorkspaceEdit risks registering overlapping ranges for the
+    // same file. Regression test for that combination.
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'Order.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'PurchaseOrder.php'));
+
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex);
+
+    await assert.doesNotReject(() => updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\Domain\\PurchaseOrder',
+      newUri,
+      oldUri,
+    }));
+
+    const document = await vscode.workspace.openTextDocument(consumerUri);
+    const text = document.getText();
+
+    assert.ok(text.includes('use App\\Domain\\PurchaseOrder;'), `FQCN not updated, got:\n${text}`);
+    assert.ok(text.includes('private PurchaseOrder $order;'), `bare class name not updated, got:\n${text}`);
+    assert.strictEqual(
+      (text.match(/use App\\Domain\\PurchaseOrder;/g) ?? []).length, 1,
+      `the import line should not be duplicated, got:\n${text}`,
+    );
+    assert.ok(!/\bprivate Order \$order\b/.test(text), `old bare class name should be gone, got:\n${text}`);
+  });
+});
