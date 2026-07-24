@@ -46,7 +46,8 @@ This extension contributes the following settings:
     "phpNamespaceRefactor.additionalExtensions": [
         "php"
     ],
-    "phpNamespaceRefactor.rename": true
+    "phpNamespaceRefactor.rename": true,
+    "phpNamespaceRefactor.editFilesInBackground": true
 }
 ```
 
@@ -83,85 +84,12 @@ This extension contributes the following settings:
 
 - Default: true.
 
+**phpNamespaceRefactor.editFilesInBackground**
 
-## Namespace Index Cache
+- Applies refactor edits to files without opening them, keeping only files that were already open in the editor.
+- Disable to have every edited file opened in the editor as before.
 
-To speed up namespace lookups, the extension builds a `namespace-index.json` on every activation. This index maps each namespace to the files that import it, avoiding a full workspace scan on every refactor operation.
-
-### How it works
-
-On activation, all PHP files in the workspace are scanned and two maps are built:
-
-- **`files`** — each file's declared namespace and its `use` imports.
-- **`usages`** — inverted index: given a namespace, which files import it.
-
-The index is kept up-to-date during the session via file system events:
-
-| Event | Action |
-|---|---|
-| File created | Parses the new file and adds it to the index |
-| File saved | Re-parses the file and updates its entry |
-| File deleted | Removes the file from the index |
-
-### Where the cache is stored
-
-The file is stored in VS Code's workspace storage, isolated per project and per session:
-
-```
-~/.config/Code/User/workspaceStorage/<workspace-hash>/<publisher>.<extension>/namespace-index.json
-```
-
-To find the hash for your current project:
-
-```bash
-grep -rl "your-project-folder" ~/.config/Code/User/workspaceStorage/*/workspace.json
-```
-
-Example output:
-```
-/home/user/.config/Code/User/workspaceStorage/58c76f185bb1a645e121bf49daf7664c/workspace.json
-```
-
-The cache path would then be:
-
-```
-~/.config/Code/User/workspaceStorage/58c76f185bb1a645e121bf49daf7664c/rejman.php-namespace-refactor/namespace-index.json
-```
-
-### Cache format
-
-```json
-{
-  "files": {
-    "/path/to/src/Models/User.php": {
-      "declares": "App\\Models",
-      "imports": ["App\\Services\\AuthService"]
-    }
-  },
-  "usages": {
-    "App\\Models\\User": [
-      "/path/to/src/Controllers/UserController.php"
-    ]
-  }
-}
-```
-
-### Inspecting or clearing the cache
-
-**View the cache:**
-```bash
-cat ~/.config/Code/User/workspaceStorage/<hash>/rejman.php-namespace-refactor/namespace-index.json | jq
-```
-
-**Delete the cache** (it will be rebuilt on next activation):
-```bash
-rm ~/.config/Code/User/workspaceStorage/<hash>/rejman.php-namespace-refactor/namespace-index.json
-```
-
-**Find all caches for this extension across projects:**
-```bash
-find ~/.config/Code/User/workspaceStorage -name "namespace-index.json" 2>/dev/null
-```
+- Default: true.
 
 ## Release notes
 
