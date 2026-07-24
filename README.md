@@ -28,7 +28,7 @@ Ideal for projects using PSR-4, making it easy to reorganize directories without
 
 - PHP 7.4+
 - Composer configured in the project for namespace detection.
-- Workspace configured no Visual Studio Code com arquivos .php
+- Workspace configured in Visual Studio Code with .php files
 
 ## Extension Settings
 
@@ -90,6 +90,10 @@ This extension contributes the following settings:
 - Disable to have every edited file opened in the editor as before.
 
 - Default: true.
+
+## Documentation
+
+For architecture, internals, and troubleshooting notes, see [./docs/](./docs/README.md).
 
 ## Release notes
 

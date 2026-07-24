@@ -1,45 +1,45 @@
 # NamespaceRenameOperation
 
-**Arquivo:** `src/app/operations/NamespaceRenameOperation.ts`
+**File:** `src/app/operations/NamespaceRenameOperation.ts`
 
-## Responsabilidade
+## Responsibility
 
-Executada quando o usuário pressiona F2 com o cursor sobre a linha `namespace Foo\Bar;` e digita um novo namespace.
+Runs when the user presses F2 with the cursor on the `namespace Foo\Bar;` line and types a new namespace.
 
-## Fluxo
+## Flow
 
 ```
-F2 (comando registrado)
+F2 (registered command)
   → RenameHandler.handle()
   → RenameFeature.execute()
-  → detecta NamespaceType no cursor
-  → NamespaceRenameOperation.execute()  ← aqui
-  → FileRenameHandler.create()          ← aciona WorkspaceEdit.renameFile()
-  → onDidRenameFiles                    ← dispara FileMoveOperation
+  → detects NamespaceType at the cursor
+  → NamespaceRenameOperation.execute()  ← here
+  → FileRenameHandler.create()          ← triggers WorkspaceEdit.renameFile()
+  → onDidRenameFiles                    ← triggers FileMoveOperation
 ```
 
-## O que faz
+## What it does
 
-1. Extrai o nome da classe a partir do path atual (ex.: `UserController`)
-2. Resolve o novo namespace para o diretório correspondente via PSR-4:
+1. Extracts the class name from the current path (e.g. `UserController`)
+2. Resolves the new namespace to its corresponding directory via PSR-4:
 
 ```
 App\Services\Auth  →  /src/Services/Auth
 ```
 
-3. Constrói o novo `Uri`:
+3. Builds the new `Uri`:
 
 ```
 /src/Domain/UserController.php  →  /src/Services/Auth/UserController.php
 ```
 
-4. Delega ao `FileRenameHandler.create()`, que aciona o `FileMoveOperation` para atualizar namespace e referências em todo o projeto.
+4. Delegates to `FileRenameHandler.create()`, which triggers `FileMoveOperation` (see [file-move.md](./file-move.md)) to update the namespace and references across the project.
 
-## Comportamento de erro
+## Error behavior
 
-Se o namespace informado não tiver mapeamento PSR-4 no `composer.json`, exibe uma mensagem de erro via `window.showErrorMessage` e aborta a operação.
+If the given namespace has no PSR-4 mapping in `composer.json`, it shows an error message via `window.showErrorMessage` and aborts the operation. Details on how PSR-4 mapping is resolved: [autoload.md](../autoload.md).
 
-## Dependências
+## Dependencies
 
-- `WorkspacePathResolver` — resolve namespace → diretório e extrai o nome da classe do path atual
-- `FileRenameHandler` — executa o rename via VS Code WorkspaceEdit API
+- `WorkspacePathResolver` — resolves namespace → directory and extracts the class name from the current path
+- `FileRenameHandler` — performs the rename via the VS Code WorkspaceEdit API
