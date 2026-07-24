@@ -17,6 +17,7 @@ import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver
 import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
 import { NamespaceIndex } from '../infra/index/NamespaceIndex';
 import { WorkspaceIndex } from '../infra/index/WorkspaceIndex';
+import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
 
 function fakeConfigurationLocator(): ConfigurationLocator {
@@ -39,7 +40,8 @@ function buildUpdater(namespaceIndex: NamespaceIndex): MultiFileReferenceUpdater
     namespaceIndex,
     new TextDocumentOpener(),
     new UseStatementLocator(),
-    new UseStatementInjector(),
+    new UseStatementInjector(new FileEditApplier()),
+    new FileEditApplier(),
   );
 }
 

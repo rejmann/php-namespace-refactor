@@ -11,6 +11,7 @@ import { ConfigurationLocator, Props } from '../domain/workspace/ConfigurationLo
 import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
 import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver';
 import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
+import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
 
 function fakeConfigurationLocator(additionalExtensions: string[]): ConfigurationLocator {
@@ -27,7 +28,7 @@ function buildUpdater(additionalExtensions: string[]): ClassNameUpdater {
     new FileExtensionResolver(fakeConfigurationLocator(additionalExtensions)),
   );
 
-  return new ClassNameUpdater(new TextDocumentOpener(), workspacePathResolver);
+  return new ClassNameUpdater(new TextDocumentOpener(), workspacePathResolver, new FileEditApplier());
 }
 
 async function writeTempPhpFile(fileName: string, content: string): Promise<vscode.Uri> {

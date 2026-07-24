@@ -5,6 +5,7 @@ import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
 import { NamespaceIndex } from '@infra/index/NamespaceIndex';
 import { WorkspaceIndex } from '@infra/index/WorkspaceIndex';
+import { FileEditApplier } from '@infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
 import { Range, TextDocument, Uri, workspace, WorkspaceEdit } from 'vscode';
@@ -32,6 +33,7 @@ export class MultiFileReferenceUpdater {
     @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
     @inject(UseStatementLocator) private useStatementLocator: UseStatementLocator,
     @inject(UseStatementInjector) private useStatementInjector: UseStatementInjector,
+    @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
   ) {}
 
   public async execute({
@@ -113,7 +115,7 @@ export class MultiFileReferenceUpdater {
       }
     }));
 
-    await workspace.applyEdit(edit);
+    await this.fileEditApplier.apply(edit);
     await this.importRemover.execute({ uri: newUri });
   }
 

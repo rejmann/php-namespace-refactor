@@ -1,5 +1,6 @@
-import { injectable } from 'tsyringe';
-import { Range, TextDocument, Uri, workspace, WorkspaceEdit } from 'vscode';
+import { FileEditApplier } from '@infra/vscode/FileEditApplier';
+import { inject, injectable } from 'tsyringe';
+import { Range, TextDocument, Uri, WorkspaceEdit } from 'vscode';
 
 interface Props {
   document: TextDocument
@@ -13,8 +14,12 @@ interface Props {
 
 @injectable()
 export class UseStatementInjector {
+  constructor(
+    @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
+  ) {}
+
   public async flush(edit: WorkspaceEdit): Promise<void> {
-    await workspace.applyEdit(edit);
+    await this.fileEditApplier.apply(edit);
   }
 
   public async save({
