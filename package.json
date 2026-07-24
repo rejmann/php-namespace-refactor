@@ -132,7 +132,7 @@
     "publish:pre-release": "vsce package --pre-release && vsce publish --pre-release"
   },
   "devDependencies": {
-    "@rocketseat/eslint-config": "^2.2.2",
+    "@rocketseat/eslint-config": "^3.0.12",
     "@types/jest": "^30.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.19.37",
@@ -153,5 +153,13 @@
   "dependencies": {
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0"
+  },
+  "allowScripts": {
+    "@vscode/vsce-sign@2.0.9": true,
+    "esbuild@0.25.12": true,
+    "keytar@7.9.0": true
+  },
+  "overrides": {
+    "serialize-javascript": "^7.0.7"
   }
 }
