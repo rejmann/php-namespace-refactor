@@ -1,4 +1,5 @@
 import { ImportRemover } from '@app/services/remove/ImportRemover';
+import { NOT_FOLLOWED_BY_IDENTIFIER_CHAR } from '@domain/namespace/PhpPatterns';
 import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
@@ -47,7 +48,7 @@ export class MultiFileReferenceUpdater {
     const newClassName = this.workspacePathResolver.extractClassNameFromPath(newUri.fsPath);
     const useImport = this.useStatementCreator.single({ fullNamespace: useNewNamespace });
     const ignoreFile = newUri.fsPath;
-    const namespaceRegex = new RegExp(this.escapeRegex(useOldNamespace), 'g');
+    const namespaceRegex = new RegExp(`${this.escapeRegex(useOldNamespace)}${NOT_FOLLOWED_BY_IDENTIFIER_CHAR}`, 'g');
 
     const classNameRegex = className !== newClassName
       ? new RegExp(`\\b${className}\\b`, 'g')

@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 
-import { PHP_CLASS_DECLARATION_REGEX } from '../domain/namespace/PhpPatterns';
+import { NOT_FOLLOWED_BY_IDENTIFIER_CHAR, PHP_CLASS_DECLARATION_REGEX } from '../domain/namespace/PhpPatterns';
 
 suite('PHP_CLASS_DECLARATION_REGEX', () => {
   /**
@@ -76,6 +76,58 @@ suite('PHP_CLASS_DECLARATION_REGEX', () => {
       const match = PHP_CLASS_DECLARATION_REGEX.exec(content);
       assert.ok(match);
       assert.strictEqual(match[1], 'Real');
+    });
+  });
+});
+
+suite('NOT_FOLLOWED_BY_IDENTIFIER_CHAR', () => {
+  /**
+   * Bug – renaming "DetalhePagamentoDTO" to "DetalhePagamentoDTOAbstract" was
+   * corrupting an unrelated "use ...DetalhePagamentoDTOAbstract;" statement
+   * already present in the same file, turning it into
+   * "...DetalhePagamentoDTOAbstractAbstract" because the namespace replace
+   * regex matched the old FQCN as a mere prefix of the longer one.
+   */
+  suite('Guard against matching a FQCN that is a prefix of a longer one', () => {
+    function buildNamespaceRegex(oldNamespace: string): RegExp {
+      const escaped = oldNamespace.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`${escaped}${NOT_FOLLOWED_BY_IDENTIFIER_CHAR}`, 'g');
+    }
+
+    test('replaces the old namespace when it is not followed by extra identifier characters', () => {
+      const regex = buildNamespaceRegex('SharedBundle\\DetalhePagamentoDTO');
+      const content = 'use SharedBundle\\DetalhePagamentoDTO;';
+
+      const result = content.replace(regex, 'SharedBundle\\DetalhePagamentoDTOAbstract');
+
+      assert.strictEqual(result, 'use SharedBundle\\DetalhePagamentoDTOAbstract;');
+    });
+
+    test('does not touch an unrelated FQCN that has the old namespace as a prefix', () => {
+      const regex = buildNamespaceRegex('SharedBundle\\DetalhePagamentoDTO');
+      const content = [
+        'use SharedBundle\\DetalhePagamentoDTO;',
+        'use SharedBundle\\DetalhePagamentoDTOAbstract;',
+      ].join('\n');
+
+      const result = content.replace(regex, 'SharedBundle\\DetalhePagamentoDTOAbstract');
+
+      assert.strictEqual(
+        result,
+        [
+          'use SharedBundle\\DetalhePagamentoDTOAbstract;',
+          'use SharedBundle\\DetalhePagamentoDTOAbstract;',
+        ].join('\n'),
+      );
+    });
+
+    test('without the guard, the old regex would double the suffix (regression check)', () => {
+      const unguardedRegex = new RegExp('SharedBundle\\\\DetalhePagamentoDTO', 'g');
+      const content = 'use SharedBundle\\DetalhePagamentoDTOAbstract;';
+
+      const result = content.replace(unguardedRegex, 'SharedBundle\\DetalhePagamentoDTOAbstract');
+
+      assert.strictEqual(result, 'use SharedBundle\\DetalhePagamentoDTOAbstractAbstract;');
     });
   });
 });

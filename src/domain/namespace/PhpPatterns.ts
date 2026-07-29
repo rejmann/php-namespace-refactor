@@ -20,3 +20,6 @@ export const PHP_CLASS_DECLARATION_REGEX = new RegExp(
   `^\\s*${DECLARATION_MODIFIER_PATTERN}(?:${NAMED_TYPE_PATTERN})\\s+(\\w+)`,
   'm'
 );
+
+// Prevents a match from being treated as a prefix of a longer identifier (e.g. "Foo" inside "FooAbstract").
+export const NOT_FOLLOWED_BY_IDENTIFIER_CHAR = '(?![A-Za-z0-9_])';
