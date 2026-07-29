@@ -2,6 +2,7 @@ import { NamespaceCreator } from '@domain/namespace/NamespaceCreator';
 import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { FileEditApplier } from '@infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
 import { Range, RelativePattern, TextDocument, Uri, workspace, WorkspaceEdit } from 'vscode';
@@ -22,6 +23,7 @@ export class ImportRemover {
     @inject(NamespaceCreator) private namespaceCreator: NamespaceCreator,
     @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
     @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
+    @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
   ) {}
 
   public async execute({ uri }: Props) {
@@ -100,6 +102,6 @@ export class ImportRemover {
       return;
     }
 
-    await workspace.applyEdit(edit);
+    await this.fileEditApplier.apply(edit);
   }
 }

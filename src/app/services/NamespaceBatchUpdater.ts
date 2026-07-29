@@ -30,7 +30,7 @@ export class NamespaceBatchUpdater {
     const { namespace: old, fullNamespace: oldFullNamespace } = await this.getNamespace(oldUri);
 
     if (namespace === old && fullNamespace !== oldFullNamespace) {
-      this.classNameUpdater.execute({ newUri });
+      await this.classNameUpdater.execute({ newUri });
     }
 
     const isUpdated = await this.movedFileNamespaceUpdater.execute({

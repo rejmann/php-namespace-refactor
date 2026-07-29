@@ -1,8 +1,9 @@
 import { PHP_CLASS_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { FileEditApplier } from '@infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
-import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
+import { Range, Uri, WorkspaceEdit } from 'vscode';
 
 interface Props {
   newUri: Uri,
@@ -13,6 +14,7 @@ export class ClassNameUpdater {
   constructor(
     @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
     @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
+    @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
   ) {}
 
   public async execute({ newUri }: Props): Promise<void> {
@@ -42,6 +44,6 @@ export class ClassNameUpdater {
       newText
     );
 
-    workspace.applyEdit(edit);
+    await this.fileEditApplier.apply(edit);
   }
 }

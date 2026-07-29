@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.2](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.9.1...php-namespace-refactor-v1.9.2) (2026-07-24)
+
+
+### 📚 Documentation
+
+* **docs:** add technical documentation for extension internals ([0be08a1](https://github.com/rejmann/php-namespace-refactor/commit/0be08a17fb2de730832113d2dfa9f0d82f44d728))
+* **readme:** document background refactor editing setting ([101d42b](https://github.com/rejmann/php-namespace-refactor/commit/101d42bd0aec94b406e7537d70802b736ecc7160))
+
+## [1.9.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.9.0...php-namespace-refactor-v1.9.1) (2026-07-24)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump eslint-config e corrige vulnerabilidade em serialize-javascript ([c596126](https://github.com/rejmann/php-namespace-refactor/commit/c5961268bdf964460e1f94ff4bfc3275db016c93))
+
+## [1.9.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.4...php-namespace-refactor-v1.9.0) (2026-07-24)
+
+
+### 🚀 New Features
+
+* **vscode:** add background edit handling for refactors ([0f8c380](https://github.com/rejmann/php-namespace-refactor/commit/0f8c3808fbc3d0fd5cf8c754fe467cd7e0ead4cc))
+
+
+### 🐛 Bug Fixes
+
+* **namespace:** skip duplicate use statement injection ([e6e82ff](https://github.com/rejmann/php-namespace-refactor/commit/e6e82ffaab5988d22a935803ce58a5e364e7acae))
+
+## [1.8.4](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.3...php-namespace-refactor-v1.8.4) (2026-07-24)
+
+
+### 🐛 Bug Fixes
+
+* **workspace-path:** handle compound php extensions in renames ([1c00997](https://github.com/rejmann/php-namespace-refactor/commit/1c0099747308bcab7bf4034a9507208c235963fd))
+
 ## [1.8.3](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.8.2...php-namespace-refactor-v1.8.3) (2026-06-03)
 
 

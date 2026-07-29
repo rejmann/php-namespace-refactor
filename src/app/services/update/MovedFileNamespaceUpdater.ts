@@ -1,6 +1,7 @@
+import { FileEditApplier } from '@infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
-import { Range, Uri, workspace, WorkspaceEdit } from 'vscode';
+import { Range, Uri, WorkspaceEdit } from 'vscode';
 
 interface Props {
   newNamespace: string,
@@ -10,7 +11,8 @@ interface Props {
 @injectable()
 export class MovedFileNamespaceUpdater {
   constructor(
-    @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener
+    @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
+    @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
   ) {}
 
   public async execute({ newNamespace, newUri }: Props) {
@@ -36,7 +38,7 @@ export class MovedFileNamespaceUpdater {
       namespaceReplace,
     );
 
-    workspace.applyEdit(edit);
+    await this.fileEditApplier.apply(edit);
 
     return true;
   }

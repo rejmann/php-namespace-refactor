@@ -9,6 +9,7 @@ export const ConfigKeys = {
   IGNORED_DIRECTORIES: 'ignoredDirectories',
   ADDITIONAL_EXTENSIONS: 'additionalExtensions',
   RENAME: 'rename',
+  EDIT_FILES_IN_BACKGROUND: 'editFilesInBackground',
 } as const;
 
 export type Props<T> = {
