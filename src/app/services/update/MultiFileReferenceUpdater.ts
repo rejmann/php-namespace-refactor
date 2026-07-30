@@ -44,7 +44,7 @@ export class MultiFileReferenceUpdater {
     useNewNamespace,
     newUri,
     oldUri,
-  }: Props) {
+  }: Props): Promise<Uri[]> {
     const directoryPath = this.workspacePathResolver.extractDirectoryFromPath(oldUri.fsPath);
     const className = this.workspacePathResolver.extractClassNameFromPath(oldUri.fsPath);
     const newClassName = this.workspacePathResolver.extractClassNameFromPath(newUri.fsPath);
@@ -120,6 +120,8 @@ export class MultiFileReferenceUpdater {
 
     await this.fileEditApplier.apply(edit);
     await this.importRemover.execute({ uri: newUri });
+
+    return [...affectedPaths.map(fsPath => Uri.file(fsPath)), ...sameDirectoryFiles];
   }
 
   /**

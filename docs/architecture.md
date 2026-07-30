@@ -16,7 +16,7 @@ Inside `app/`:
 
 - `commands/` — entry points triggered by VS Code commands or events (`RenameHandler`, `FileRenameHandler`)
 - `features/` — orchestrates the flow of a single user interaction (`RenameFeature`)
-- `operations/` — runs a full refactor operation (`ClassRenameOperation`, `NamespaceRenameOperation`, `FileMoveOperation`)
+- `operations/` — runs a full refactor operation (`ClassRenameOperation`, `NamespaceRenameOperation`, `FileMoveOperation`, `PropertyRenameOperation`)
 - `services/` — reusable steps used by the operations (`NamespaceBatchUpdater`, `MissingClassImporter`, `DirectoryMovedFilesResolver`, `remove/ImportRemover`, `update/*`)
 - `subscribers/` — react to workspace events to keep the namespace index up to date (`FileCreatedSubscriber`, `FileDeletedSubscriber`, `FileSavedSubscriber`)
 
