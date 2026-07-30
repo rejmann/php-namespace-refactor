@@ -5,11 +5,6 @@ All notable changes to this project will be documented in this file. See [standa
 ## [2.0.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.9.2...php-namespace-refactor-v2.0.0) (2026-07-30)
 
 
-### ⚠ BREAKING CHANGES
-
-* **property-rename:** renameProperties.enabled and renameProperties.renameMismatchedNames were removed in favor of phpNamespaceRefactor.renameProperties
-* **property-rename:** the configuration key is now `phpNamespaceRefactor.renameProperties.enabled` instead of `phpNamespaceRefactor.renameProperties`
-
 ### 🚀 New Features
 
 * **property-rename:** consolidate property rename settings into one polymorphic key ([ac7a475](https://github.com/rejmann/php-namespace-refactor/commit/ac7a4751e1dbea9f0f3173d4ecaf26ef2dea9234))
