@@ -69,13 +69,13 @@ At the end, `MultiFileReferenceUpdater` always calls `ImportRemover.execute({ ur
 
 ### 3. Property rename (`PropertyRenameOperation`, optional)
 
-Only runs if the `renameProperties.enabled` flag is on (off by default — see [configuration.md](../configuration.md#phpnamespacerefactorrenamepropertiesenabled)). Only acts when the class itself was actually renamed (`oldClassName !== newClassName`); a plain move to a different directory with the same class name is a no-op.
+Only runs if `renameProperties` resolves to enabled (off by default — see [configuration.md](../configuration.md#phpnamespacerefactorrenameproperties)). `PropertyRenameSettingsResolver` reads the raw setting (`boolean | { renameMismatchedNames?: boolean }`) once in `FileMoveOperation` and turns it into `{ enabled, renameMismatchedNames }`; only `enabled` gates whether this step runs at all. Also only acts when the class itself was actually renamed (`oldClassName !== newClassName`); a plain move to a different directory with the same class name is a no-op.
 
 1. Derives the expected old/new property names from the class names (`PropertyNameResolver`, e.g. `Teste` → `teste`)
 2. Builds the candidate file list from the `affectedFiles` `FileMoveOperation` received back from `NamespaceBatchUpdater` (step 2's output), plus the moved file itself — deliberately **not** an independent workspace-wide scan, so a differently-namespaced class that happens to share a short name is never touched
 3. For each candidate file whose text contains the new class name, `ClassTypedPropertyLocator` looks for the constructor property typed as that class — promoted or not, readonly or not, confirming a non-promoted parameter by checking for a `$this->x = $x;` assignment in the constructor body (see `ConstructorSpanFinder` for how the constructor's parameter list and body are located via brace/paren matching). The property's own declaration line doesn't need a type hint to be found this way — a legacy `private $x;` typed only via a `@var ClassName` docblock is still matched and renamed, via `PropertyDeclarationPattern`, once the constructor param already confirmed what class it holds
 4. If more than one property shares that type in the same file, it's ambiguous — the file is skipped entirely rather than guessing
-5. If exactly one property is found: it's renamed when its current name already matches the *old* class-name convention, or — only when `renameProperties.renameMismatchedNames` is also enabled — regardless of what it was named before
+5. If exactly one property is found: it's renamed when its current name already matches the *old* class-name convention, or — only when `renameMismatchedNames` also resolved to `true` — regardless of what it was named before
 6. Renaming rewrites the constructor parameter/property declaration and every `$this->x` usage in that file, accumulated into a single `WorkspaceEdit` (its own undo stop, separate from `MultiFileReferenceUpdater`'s)
 
 ### 4. Auto-import of classes from the source directory (`MissingClassImporter`, optional)
@@ -92,8 +92,8 @@ When enabled: it collects the class names declared in the other files of the mov
 
 | Flag | Behavior |
 |---|---|
-| `renameProperties.enabled` | Enables step 3 (renaming class-typed constructor properties to match the new class name) |
-| `renameProperties.renameMismatchedNames` | Extends step 3 to also rename properties whose name doesn't already match the class-name convention |
+| `renameProperties` (`true`/`{}`) | Enables step 3 (renaming class-typed constructor properties to match the new class name) |
+| `renameProperties: { renameMismatchedNames: true }` | Extends step 3 to also rename properties whose name doesn't already match the class-name convention |
 | `autoImportNamespace` | Enables step 4 (auto-import of classes from the old directory) |
 | `removeUnusedImports` | Enables the import removal in step 5 (checked inside `ImportRemover`) |
 | `editFilesInBackground` | Doesn't change what's edited, only whether touched files open a tab in the editor or are saved silently — see [configuration.md](../configuration.md) |

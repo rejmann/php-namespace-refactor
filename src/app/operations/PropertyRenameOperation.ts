@@ -2,8 +2,6 @@ import { ClassTypedPropertyLocator, PropertyMatch } from '@domain/property/Class
 import { ConstructorSpanFinder } from '@domain/property/ConstructorSpanFinder';
 import { buildPropertyDeclarationPattern } from '@domain/property/PropertyDeclarationPattern';
 import { PropertyNameResolver } from '@domain/property/PropertyNameResolver';
-import { PropertyRenameConfigKeys } from '@domain/property/PropertyRenameConfigKeys';
-import { ConfigurationLocator } from '@domain/workspace/ConfigurationLocator';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
 import { FileEditApplier } from '@infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
@@ -14,6 +12,7 @@ interface Props {
   oldUri: Uri
   newUri: Uri
   affectedFiles: Uri[]
+  renameMismatchedNames: boolean
 }
 
 @injectable()
@@ -22,13 +21,12 @@ export class PropertyRenameOperation {
     @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
     @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
     @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
-    @inject(ConfigurationLocator) private configurationLocator: ConfigurationLocator,
     @inject(ClassTypedPropertyLocator) private classTypedPropertyLocator: ClassTypedPropertyLocator,
     @inject(PropertyNameResolver) private propertyNameResolver: PropertyNameResolver,
     @inject(ConstructorSpanFinder) private constructorSpanFinder: ConstructorSpanFinder,
   ) {}
 
-  public async execute({ oldUri, newUri, affectedFiles }: Props): Promise<void> {
+  public async execute({ oldUri, newUri, affectedFiles, renameMismatchedNames }: Props): Promise<void> {
     const oldClassName = this.workspacePathResolver.extractClassNameFromPath(oldUri.fsPath);
     const newClassName = this.workspacePathResolver.extractClassNameFromPath(newUri.fsPath);
 
@@ -38,11 +36,6 @@ export class PropertyRenameOperation {
 
     const expectedOldName = this.propertyNameResolver.resolve(oldClassName);
     const expectedNewName = this.propertyNameResolver.resolve(newClassName);
-
-    const renameMismatched = this.configurationLocator.get<boolean>({
-      key: PropertyRenameConfigKeys.RENAME_MISMATCHED_NAMES,
-      defaultValue: false,
-    });
 
     const files = this.getCandidateFiles(newUri, affectedFiles);
     const edit = new WorkspaceEdit();
@@ -60,7 +53,7 @@ export class PropertyRenameOperation {
         }
 
         const matchesOldConvention = match.propertyName === expectedOldName;
-        if (!matchesOldConvention && !renameMismatched) {
+        if (!matchesOldConvention && !renameMismatchedNames) {
           return;
         }
 

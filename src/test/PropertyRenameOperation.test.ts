@@ -24,12 +24,6 @@ function fakePassthroughConfigurationLocator(): ConfigurationLocator {
   } as ConfigurationLocator;
 }
 
-function fakeRenameMismatchConfigurationLocator(renameMismatched: boolean): ConfigurationLocator {
-  return {
-    get: <T>(): T => renameMismatched as unknown as T,
-  } as unknown as ConfigurationLocator;
-}
-
 function fakeFeatureFlagManager(editFilesInBackground = true): FeatureFlagManager {
   return {
     isActive: ({ defaultValue = true }) => defaultValue && editFilesInBackground,
@@ -37,7 +31,6 @@ function fakeFeatureFlagManager(editFilesInBackground = true): FeatureFlagManage
 }
 
 function buildOperation({
-  renameMismatched = false,
   editFilesInBackground = true,
 } = {}): PropertyRenameOperation {
   const workspacePathResolver = new WorkspacePathResolver(
@@ -51,7 +44,6 @@ function buildOperation({
     workspacePathResolver,
     new TextDocumentOpener(),
     fileEditApplier,
-    fakeRenameMismatchConfigurationLocator(renameMismatched),
     new ClassTypedPropertyLocator(constructorSpanFinder),
     new PropertyNameResolver(),
     constructorSpanFinder,
@@ -74,7 +66,7 @@ suite('PropertyRenameOperation', () => {
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();
-    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: false });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private Novo $novo'), `expected the promoted property to be renamed, got:\n${text}`);
@@ -91,7 +83,7 @@ suite('PropertyRenameOperation', () => {
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();
-    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: false });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private Novo $novo;'), `expected the declared property to be renamed, got:\n${text}`);
@@ -107,8 +99,8 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserService\n{\n    /**\n     * @var ClienteRepository\n     */\n    private $repository;\n\n    public function __construct(ClienteRepository $repository)\n    {\n        $this->repository = $repository;\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserService.php', consumerContent);
 
-    const operation = buildOperation({ renameMismatched: true });
-    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
+    const operation = buildOperation();
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: true });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private $clienteRepository;'), `expected the untyped declaration to be renamed, got:\n${text}`);
@@ -117,7 +109,7 @@ suite('PropertyRenameOperation', () => {
     assert.ok(!text.includes('$repository'), `expected no leftover old property name, got:\n${text}`);
   });
 
-  test('leaves a mismatched property name untouched when the sub-flag is off', async () => {
+  test('leaves a mismatched property name untouched when renameMismatchedNames is false', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
     const oldUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
     const newUri = vscode.Uri.file(path.join(dir, 'Novo.php'));
@@ -125,14 +117,14 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $service)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
-    const operation = buildOperation({ renameMismatched: false });
-    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
+    const operation = buildOperation();
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: false });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.strictEqual(text, consumerContent, `expected no changes, got:\n${text}`);
   });
 
-  test('renames a mismatched property name when the sub-flag is on', async () => {
+  test('renames a mismatched property name when renameMismatchedNames is true', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
     const oldUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
     const newUri = vscode.Uri.file(path.join(dir, 'Novo.php'));
@@ -140,8 +132,8 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $service)\n    {\n        $this->service->run();\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
-    const operation = buildOperation({ renameMismatched: true });
-    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
+    const operation = buildOperation();
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: true });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private Novo $novo'), `expected the mismatched property to be renamed, got:\n${text}`);
@@ -156,8 +148,8 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $a, private Novo $b)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
-    const operation = buildOperation({ renameMismatched: true });
-    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
+    const operation = buildOperation();
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: true });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.strictEqual(text, consumerContent, `expected no changes when ambiguous, got:\n${text}`);
@@ -171,7 +163,7 @@ suite('PropertyRenameOperation', () => {
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();
-    await operation.execute({ oldUri: sameUri, newUri: sameUri, affectedFiles: [consumerUri] });
+    await operation.execute({ oldUri: sameUri, newUri: sameUri, affectedFiles: [consumerUri], renameMismatchedNames: false });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.strictEqual(text, consumerContent, `expected no changes, got:\n${text}`);
@@ -193,7 +185,7 @@ suite('PropertyRenameOperation', () => {
     const unrelatedUri = await writeTempPhpFile(dir, 'UnrelatedController.php', unrelatedContent);
 
     const operation = buildOperation();
-    await operation.execute({ oldUri, newUri, affectedFiles: [] });
+    await operation.execute({ oldUri, newUri, affectedFiles: [], renameMismatchedNames: false });
 
     const text = (await vscode.workspace.openTextDocument(unrelatedUri)).getText();
     assert.strictEqual(text, unrelatedContent, `expected the unaffected file to be left untouched, got:\n${text}`);

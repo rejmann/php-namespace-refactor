@@ -10,11 +10,10 @@ export const ConfigKeys = {
   ADDITIONAL_EXTENSIONS: 'additionalExtensions',
   RENAME: 'rename',
   EDIT_FILES_IN_BACKGROUND: 'editFilesInBackground',
-  // Namespaced under "renameProperties.*" (not the bare "renameProperties") because
-  // VS Code's settings schema can't have a key be both a leaf boolean and the parent
-  // of another setting (PropertyRenameConfigKeys.RENAME_MISMATCHED_NAMES) at once -
-  // doing so silently drops both values instead of erroring.
-  RENAME_PROPERTIES: 'renameProperties.enabled',
+  // Value is boolean|object (see PropertyRenameSettingsResolver) rather than a plain
+  // boolean - a single polymorphic key avoids VS Code's settings schema conflict that
+  // comes from one key being both a leaf boolean and the parent of another setting.
+  RENAME_PROPERTIES: 'renameProperties',
 } as const;
 
 export type Props<T> = {

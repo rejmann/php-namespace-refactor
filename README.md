@@ -50,8 +50,7 @@ This extension contributes the following settings:
     ],
     "phpNamespaceRefactor.rename": true,
     "phpNamespaceRefactor.editFilesInBackground": true,
-    "phpNamespaceRefactor.renameProperties.enabled": false,
-    "phpNamespaceRefactor.renameProperties.renameMismatchedNames": false
+    "phpNamespaceRefactor.renameProperties": false
 }
 ```
 
@@ -95,16 +94,20 @@ This extension contributes the following settings:
 
 - Default: true.
 
-**phpNamespaceRefactor.renameProperties.enabled**
+**phpNamespaceRefactor.renameProperties**
 
 - When a class is renamed, also renames its class-typed constructor properties (promoted or not, readonly or not) and every `$this->x` usage to match the new class name — e.g. `private Teste $teste` becomes `private Novo $novo` when `Teste` is renamed to `Novo`.
 - If more than one property shares the same type in a constructor, the file is skipped rather than guessing which one to rename.
-
-- Default: false.
-
-**phpNamespaceRefactor.renameProperties.renameMismatchedNames**
-
-- Only applies when `renameProperties.enabled` is true. By default, only properties whose name already matches the old class name are renamed. Enable this to also rename properties named differently from their type (e.g. `private Teste $service` becomes `private Novo $novo`).
+- Accepts either a boolean or an object:
+  ```json
+  "phpNamespaceRefactor.renameProperties": true
+  ```
+  ```json
+  "phpNamespaceRefactor.renameProperties": {
+      "renameMismatchedNames": true
+  }
+  ```
+  Setting an object automatically enables the feature. `renameMismatchedNames` (default `false`) additionally renames properties whose current name doesn't already match the class name on purpose (e.g. `private Teste $service` becomes `private Novo $novo`); without it, only properties already named after the old class are renamed.
 
 - Default: false.
 
