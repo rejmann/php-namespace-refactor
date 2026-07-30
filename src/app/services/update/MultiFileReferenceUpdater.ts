@@ -1,4 +1,6 @@
 import { ImportRemover } from '@app/services/remove/ImportRemover';
+import { ClassNameBoundaryRegexBuilder } from '@domain/namespace/ClassNameBoundaryRegexBuilder';
+import { NOT_FOLLOWED_BY_NAMESPACE_CHAR } from '@domain/namespace/PhpPatterns';
 import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
@@ -34,6 +36,7 @@ export class MultiFileReferenceUpdater {
     @inject(UseStatementLocator) private useStatementLocator: UseStatementLocator,
     @inject(UseStatementInjector) private useStatementInjector: UseStatementInjector,
     @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
+    @inject(ClassNameBoundaryRegexBuilder) private classNameBoundaryRegexBuilder: ClassNameBoundaryRegexBuilder,
   ) {}
 
   public async execute({
@@ -41,16 +44,16 @@ export class MultiFileReferenceUpdater {
     useNewNamespace,
     newUri,
     oldUri,
-  }: Props) {
+  }: Props): Promise<Uri[]> {
     const directoryPath = this.workspacePathResolver.extractDirectoryFromPath(oldUri.fsPath);
     const className = this.workspacePathResolver.extractClassNameFromPath(oldUri.fsPath);
     const newClassName = this.workspacePathResolver.extractClassNameFromPath(newUri.fsPath);
     const useImport = this.useStatementCreator.single({ fullNamespace: useNewNamespace });
     const ignoreFile = newUri.fsPath;
-    const namespaceRegex = new RegExp(this.escapeRegex(useOldNamespace), 'g');
+    const namespaceRegex = new RegExp(`${this.escapeRegex(useOldNamespace)}${NOT_FOLLOWED_BY_NAMESPACE_CHAR}`, 'g');
 
     const classNameRegex = className !== newClassName
-      ? new RegExp(`\\b${className}\\b`, 'g')
+      ? this.classNameBoundaryRegexBuilder.execute({ className })
       : null;
 
     // Files that import/use the old namespace.
@@ -117,6 +120,8 @@ export class MultiFileReferenceUpdater {
 
     await this.fileEditApplier.apply(edit);
     await this.importRemover.execute({ uri: newUri });
+
+    return [...affectedPaths.map(fsPath => Uri.file(fsPath)), ...sameDirectoryFiles];
   }
 
   /**

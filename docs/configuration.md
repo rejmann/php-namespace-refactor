@@ -12,15 +12,17 @@ All keys are centralized in `ConfigKeys` (`src/domain/workspace/ConfigurationLoc
 | `phpNamespaceRefactor.additionalExtensions` | `ADDITIONAL_EXTENSIONS` | `string[]` | `["php"]` | `FileExtensionResolver` and `WorkspaceIndex` |
 | `phpNamespaceRefactor.rename` | `RENAME` | `boolean` | `true` | The `phpNamespaceRefactor.rename` command (`extension.ts`) and the F2 keybinding's `when` clause (`package.json`) |
 | `phpNamespaceRefactor.editFilesInBackground` | `EDIT_FILES_IN_BACKGROUND` | `boolean` | `true` | `FileEditApplier` |
+| `phpNamespaceRefactor.renameProperties` | `RENAME_PROPERTIES` | `boolean \| { renameMismatchedNames?: boolean }` | `false` | `PropertyRenameSettingsResolver`, consumed by `FileMoveOperation`/`PropertyRenameOperation` |
 
 ## How configuration is read
 
-Two classes access `workspace.getConfiguration('phpNamespaceRefactor')`, each with a distinct purpose:
+Three classes access `workspace.getConfiguration('phpNamespaceRefactor')`, each with a distinct purpose:
 
 - **`ConfigurationLocator`** (`src/domain/workspace/ConfigurationLocator.ts`) — generic read, used for settings of any type (`ignoredDirectories`, `additionalExtensions`)
-- **`FeatureFlagManager`** (`src/domain/workspace/FeatureFlagManager.ts`) — specialized `boolean` read, with `defaultValue = true`. Used for every on/off flag (`autoImportNamespace`, `removeUnusedImports`, `rename`, `editFilesInBackground`)
+- **`FeatureFlagManager`** (`src/domain/workspace/FeatureFlagManager.ts`) — specialized `boolean` read, with `defaultValue = true`. Used for every plain on/off flag (`autoImportNamespace`, `removeUnusedImports`, `rename`, `editFilesInBackground`)
+- **`PropertyRenameSettingsResolver`** (`src/domain/property/PropertyRenameSettingsResolver.ts`) — the one setting whose raw value isn't a plain boolean; see [`phpNamespaceRefactor.renameProperties`](#phpnamespacerefactorrenameproperties) below
 
-Neither class caches the `WorkspaceConfiguration` — each instance reads `workspace.getConfiguration()` in its constructor, and since both are `@injectable()` (not singleton), a fresh read happens on every `container.resolve()`. This means a change to the user's configuration is picked up on the next operation, with no need to reload the window.
+None of the three caches the `WorkspaceConfiguration` — `ConfigurationLocator`/`FeatureFlagManager` read `workspace.getConfiguration()` in their constructor, and `PropertyRenameSettingsResolver` reads through a fresh `ConfigurationLocator` on every `resolve()` call. All three are `@injectable()` (not singleton), so a fresh read happens on every `container.resolve()`. This means a change to the user's configuration is picked up on the next operation, with no need to reload the window.
 
 ## `phpNamespaceRefactor.editFilesInBackground`
 
@@ -38,3 +40,29 @@ Filters files by simple substring match against `fsPath` (not a glob) — see `W
 ## `phpNamespaceRefactor.additionalExtensions`
 
 Normalized by `normalizeExtensions()` (`src/infra/utils/extensions.ts`): strips leading dots and whitespace, lowercases, and always guarantees `php` is included even if not listed. `FileExtensionResolver.match()` sorts extensions from longest to shortest before comparing, so a compound extension (e.g. `class.php`) is never shadowed by the plain `php` entry.
+
+## `phpNamespaceRefactor.renameProperties`
+
+Master switch for `PropertyRenameOperation` — off by default, unlike the extension's other flags, because it renames identifiers (constructor parameters, promoted/non-promoted properties, `$this->x` usages), not just type hints. Two conditions gate it: the class itself must have actually been renamed (`oldClassName !== newClassName` — a plain directory move is a no-op), and only files `NamespaceBatchUpdater`/`MultiFileReferenceUpdater` already determined were affected by that specific rename are ever touched, never an independent workspace-wide scan — so an unrelated class in another namespace that happens to share a short name is never at risk.
+
+For each candidate file, `ClassTypedPropertyLocator` looks for the single constructor property typed as the renamed class (promoted or not, readonly or not); if more than one property shares that type, the file is skipped entirely rather than guessing which one to rename — see [file-move.md](./operations/file-move.md#3-property-rename-propertyrenameoperation-optional).
+
+### Accepted values
+
+This one setting doubles as its own sub-option, via `PropertyRenameSettingsResolver`:
+
+```jsonc
+"phpNamespaceRefactor.renameProperties": false // disabled (default)
+"phpNamespaceRefactor.renameProperties": true // enabled, mismatched names left alone
+"phpNamespaceRefactor.renameProperties": {} // enabled, mismatched names left alone
+"phpNamespaceRefactor.renameProperties": { "renameMismatchedNames": true } // enabled, mismatched names renamed too
+```
+
+`renameMismatchedNames` controls what happens when a property's current name doesn't already follow the class-name convention:
+
+- unset/`false` (default) — a property is only renamed if its name already matches the *old* class name (e.g. `$teste` for `Teste`); a property named something else on purpose (e.g. `$service`) is left untouched
+- `true` — mismatched names are renamed too, to match the *new* class name (e.g. `$service` → `$novo`)
+
+Any object value implies the feature is enabled — `false` is the only way to turn it off; there's no `{ "enabled": false }` form.
+
+**Why one polymorphic setting instead of two plain booleans:** VS Code's settings schema doesn't allow a key to be both a leaf value and the parent of another key. An earlier version declared `phpNamespaceRefactor.renameProperties` (boolean) alongside `phpNamespaceRefactor.renameProperties.renameMismatchedNames` (boolean) as two separate keys — VS Code detected the conflict, logged `Ignoring phpNamespaceRefactor.renameProperties.renameMismatchedNames as phpNamespaceRefactor.renameProperties is false` in the console, and silently resolved **both** settings to `false` regardless of what the user configured. Collapsing them into a single `boolean | object` setting sidesteps the conflict entirely, since there's only ever one registered key.

@@ -24,6 +24,8 @@ Ideal for projects using PSR-4, making it easy to reorganize directories without
 
 - Additional Extensions:  Specify the file extensions to consider during the namespace refactoring process.
 
+- Rename Properties (off by default): When a class is renamed, also rename its class-typed constructor properties (promoted or not, readonly or not) and their `$this->x` usages to match the new class name.
+
 ## Requirements
 
 - PHP 7.4+
@@ -47,7 +49,8 @@ This extension contributes the following settings:
         "php"
     ],
     "phpNamespaceRefactor.rename": true,
-    "phpNamespaceRefactor.editFilesInBackground": true
+    "phpNamespaceRefactor.editFilesInBackground": true,
+    "phpNamespaceRefactor.renameProperties": false
 }
 ```
 
@@ -90,6 +93,23 @@ This extension contributes the following settings:
 - Disable to have every edited file opened in the editor as before.
 
 - Default: true.
+
+**phpNamespaceRefactor.renameProperties**
+
+- When a class is renamed, also renames its class-typed constructor properties (promoted or not, readonly or not) and every `$this->x` usage to match the new class name — e.g. `private Test $teste` becomes `private NewTest $newTest` when `Teste` is renamed to `Novo`.
+- If more than one property shares the same type in a constructor, the file is skipped rather than guessing which one to rename.
+- Accepts either a boolean or an object:
+  ```json
+  "phpNamespaceRefactor.renameProperties": true
+  ```
+  ```json
+  "phpNamespaceRefactor.renameProperties": {
+      "renameMismatchedNames": true
+  }
+  ```
+  Setting an object automatically enables the feature. `renameMismatchedNames` (default `false`) additionally renames properties whose current name doesn't already match the class name on purpose (e.g. `private Test $service` becomes `private NewTest $newTest`); without it, only properties already named after the old class are renamed.
+
+- Default: false.
 
 ## Documentation
 
