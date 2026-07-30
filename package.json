@@ -109,6 +109,16 @@
           "type": "boolean",
           "default": true,
           "description": "Apply refactor edits to files without opening them, keeping only files that were already open in the editor. Disable to have every edited file opened in the editor as before."
+        },
+        "phpNamespaceRefactor.renameProperties": {
+          "type": "boolean",
+          "default": false,
+          "description": "Rename constructor-typed properties (promoted or not, readonly or not) to match the class name when renaming a class."
+        },
+        "phpNamespaceRefactor.renameProperties.renameMismatchedNames": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also rename properties whose current name doesn't match the class name (e.g. $service for a Teste type). Only applies when renameProperties is enabled."
         }
       }
     }

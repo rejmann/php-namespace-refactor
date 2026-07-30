@@ -10,6 +10,7 @@ export const ConfigKeys = {
   ADDITIONAL_EXTENSIONS: 'additionalExtensions',
   RENAME: 'rename',
   EDIT_FILES_IN_BACKGROUND: 'editFilesInBackground',
+  RENAME_PROPERTIES: 'renameProperties',
 } as const;
 
 export type Props<T> = {

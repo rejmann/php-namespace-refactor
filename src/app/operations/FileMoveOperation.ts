@@ -7,6 +7,7 @@ import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
 import { inject, injectable } from 'tsyringe';
 
 import type { FileMove } from './FileMove';
+import { PropertyRenameOperation } from './PropertyRenameOperation';
 
 @injectable()
 export class FileMoveOperation {
@@ -16,6 +17,7 @@ export class FileMoveOperation {
     @inject(MissingClassImporter) private missingClassImporter: MissingClassImporter,
     @inject(ImportRemover) private importRemover: ImportRemover,
     @inject(FeatureFlagManager) private featureFlagManager: FeatureFlagManager,
+    @inject(PropertyRenameOperation) private propertyRenameOperation: PropertyRenameOperation,
   ) {}
 
   public async execute(files: ReadonlyArray<FileMove>): Promise<void> {
@@ -28,6 +30,10 @@ export class FileMoveOperation {
 
       try {
         await this.namespaceBatchUpdater.execute({ newUri, oldUri });
+
+        if (this.featureFlagManager.isActive({ key: ConfigKeys.RENAME_PROPERTIES, defaultValue: false })) {
+          await this.propertyRenameOperation.execute({ oldUri, newUri });
+        }
 
         if (this.featureFlagManager.isActive({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
           await this.missingClassImporter.execute({ oldUri, newUri });
