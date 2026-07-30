@@ -1,10 +1,10 @@
 import { ClassTypedPropertyLocator, PropertyMatch } from '@domain/property/ClassTypedPropertyLocator';
 import { ConstructorSpanFinder } from '@domain/property/ConstructorSpanFinder';
+import { buildPropertyDeclarationPattern } from '@domain/property/PropertyDeclarationPattern';
 import { PropertyNameResolver } from '@domain/property/PropertyNameResolver';
 import { PropertyRenameConfigKeys } from '@domain/property/PropertyRenameConfigKeys';
 import { ConfigurationLocator } from '@domain/workspace/ConfigurationLocator';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
-import { WorkspaceIndex } from '@infra/index/WorkspaceIndex';
 import { FileEditApplier } from '@infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
@@ -13,13 +13,13 @@ import { Range, TextDocument, Uri, WorkspaceEdit } from 'vscode';
 interface Props {
   oldUri: Uri
   newUri: Uri
+  affectedFiles: Uri[]
 }
 
 @injectable()
 export class PropertyRenameOperation {
   constructor(
     @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
-    @inject(WorkspaceIndex) private workspaceIndex: WorkspaceIndex,
     @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
     @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
     @inject(ConfigurationLocator) private configurationLocator: ConfigurationLocator,
@@ -28,7 +28,7 @@ export class PropertyRenameOperation {
     @inject(ConstructorSpanFinder) private constructorSpanFinder: ConstructorSpanFinder,
   ) {}
 
-  public async execute({ oldUri, newUri }: Props): Promise<void> {
+  public async execute({ oldUri, newUri, affectedFiles }: Props): Promise<void> {
     const oldClassName = this.workspacePathResolver.extractClassNameFromPath(oldUri.fsPath);
     const newClassName = this.workspacePathResolver.extractClassNameFromPath(newUri.fsPath);
 
@@ -44,7 +44,7 @@ export class PropertyRenameOperation {
       defaultValue: false,
     });
 
-    const files = await this.getCandidateFiles(newUri);
+    const files = this.getCandidateFiles(newUri, affectedFiles);
     const edit = new WorkspaceEdit();
 
     await Promise.all(files.map(async (file) => {
@@ -119,15 +119,18 @@ export class PropertyRenameOperation {
   }
 
   private findDeclarationSpan(text: string, className: string, propertyName: string): [number, number] | null {
-    const pattern = new RegExp(
-      `(?:public|protected|private)\\s+(?:readonly\\s+)?\\??\\b${className}\\b\\s+\\$${propertyName}\\s*;`,
-    );
-    const match = pattern.exec(text);
+    const match = buildPropertyDeclarationPattern(className, propertyName).exec(text);
     return match ? [match.index, match.index + match[0].length] : null;
   }
 
-  private async getCandidateFiles(newUri: Uri): Promise<Uri[]> {
-    const files = [newUri, ...await this.workspaceIndex.execute()];
+  /**
+   * Only the files MultiFileReferenceUpdater already determined were
+   * affected by this exact class rename (plus the renamed file itself) -
+   * never a broader workspace scan, so a differently-namespaced class that
+   * happens to share a short name is never touched.
+   */
+  private getCandidateFiles(newUri: Uri, affectedFiles: Uri[]): Uri[] {
+    const files = [newUri, ...affectedFiles];
     const seen = new Set<string>();
 
     return files.filter((file) => {

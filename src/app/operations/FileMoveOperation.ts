@@ -29,10 +29,10 @@ export class FileMoveOperation {
       }
 
       try {
-        await this.namespaceBatchUpdater.execute({ newUri, oldUri });
+        const affectedFiles = await this.namespaceBatchUpdater.execute({ newUri, oldUri });
 
         if (this.featureFlagManager.isActive({ key: ConfigKeys.RENAME_PROPERTIES, defaultValue: false })) {
-          await this.propertyRenameOperation.execute({ oldUri, newUri });
+          await this.propertyRenameOperation.execute({ oldUri, newUri, affectedFiles });
         }
 
         if (this.featureFlagManager.isActive({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {

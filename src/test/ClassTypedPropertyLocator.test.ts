@@ -56,6 +56,29 @@ suite('ClassTypedPropertyLocator', () => {
     assert.strictEqual(match!.hasSeparateDeclaration, true);
   });
 
+  test('finds an untyped property declared only via a @var docblock', () => {
+    const text = [
+      'class UserService',
+      '{',
+      '  /**',
+      '   * @var UserRepository',
+      '   */',
+      '  private $repository;',
+      '',
+      '  public function __construct(UserRepository $repository)',
+      '  {',
+      '    $this->repository = $repository;',
+      '  }',
+      '}',
+    ].join('\n');
+
+    const match = locate(text, 'UserRepository');
+    assert.ok(match);
+    assert.strictEqual(match!.propertyName, 'repository');
+    assert.strictEqual(match!.isPromoted, false);
+    assert.strictEqual(match!.hasSeparateDeclaration, true);
+  });
+
   test('ignores a non-promoted parameter that is never stored on $this', () => {
     const text = [
       'class Validator',

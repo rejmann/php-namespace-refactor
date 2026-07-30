@@ -15,7 +15,6 @@ import { FeatureFlagManager } from '../domain/workspace/FeatureFlagManager';
 import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
 import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver';
 import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
-import { WorkspaceIndex } from '../infra/index/WorkspaceIndex';
 import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
 
@@ -38,7 +37,6 @@ function fakeFeatureFlagManager(editFilesInBackground = true): FeatureFlagManage
 }
 
 function buildOperation({
-  files = [] as vscode.Uri[],
   renameMismatched = false,
   editFilesInBackground = true,
 } = {}): PropertyRenameOperation {
@@ -46,13 +44,11 @@ function buildOperation({
     new ComposerAutoloadManager(),
     new FileExtensionResolver(fakePassthroughConfigurationLocator()),
   );
-  const workspaceIndex = { execute: async () => files } as unknown as WorkspaceIndex;
   const fileEditApplier = new FileEditApplier(fakeFeatureFlagManager(editFilesInBackground));
   const constructorSpanFinder = new ConstructorSpanFinder();
 
   return new PropertyRenameOperation(
     workspacePathResolver,
-    workspaceIndex,
     new TextDocumentOpener(),
     fileEditApplier,
     fakeRenameMismatchConfigurationLocator(renameMismatched),
@@ -77,8 +73,8 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $teste)\n    {\n    }\n\n    public function run(): void\n    {\n        $this->teste->run();\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
-    const operation = buildOperation({ files: [consumerUri] });
-    await operation.execute({ oldUri, newUri });
+    const operation = buildOperation();
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private Novo $novo'), `expected the promoted property to be renamed, got:\n${text}`);
@@ -94,13 +90,31 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserController\n{\n    private Novo $teste;\n\n    public function __construct(Novo $teste)\n    {\n        $this->teste = $teste;\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
-    const operation = buildOperation({ files: [consumerUri] });
-    await operation.execute({ oldUri, newUri });
+    const operation = buildOperation();
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private Novo $novo;'), `expected the declared property to be renamed, got:\n${text}`);
     assert.ok(text.includes('__construct(Novo $novo)'), `expected the constructor parameter to be renamed, got:\n${text}`);
     assert.ok(text.includes('$this->novo = $novo;'), `expected the assignment to be renamed, got:\n${text}`);
+  });
+
+  test('renames an untyped property declared only via a @var docblock', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+    const oldUri = vscode.Uri.file(path.join(dir, 'UserRepository.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'ClienteRepository.php'));
+
+    const consumerContent = '<?php\n\nclass UserService\n{\n    /**\n     * @var ClienteRepository\n     */\n    private $repository;\n\n    public function __construct(ClienteRepository $repository)\n    {\n        $this->repository = $repository;\n    }\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'UserService.php', consumerContent);
+
+    const operation = buildOperation({ renameMismatched: true });
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
+
+    const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
+    assert.ok(text.includes('private $clienteRepository;'), `expected the untyped declaration to be renamed, got:\n${text}`);
+    assert.ok(text.includes('__construct(ClienteRepository $clienteRepository)'), `expected the constructor parameter to be renamed, got:\n${text}`);
+    assert.ok(text.includes('$this->clienteRepository = $clienteRepository;'), `expected the assignment to be renamed, got:\n${text}`);
+    assert.ok(!text.includes('$repository'), `expected no leftover old property name, got:\n${text}`);
   });
 
   test('leaves a mismatched property name untouched when the sub-flag is off', async () => {
@@ -111,8 +125,8 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $service)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
-    const operation = buildOperation({ files: [consumerUri], renameMismatched: false });
-    await operation.execute({ oldUri, newUri });
+    const operation = buildOperation({ renameMismatched: false });
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.strictEqual(text, consumerContent, `expected no changes, got:\n${text}`);
@@ -126,8 +140,8 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $service)\n    {\n        $this->service->run();\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
-    const operation = buildOperation({ files: [consumerUri], renameMismatched: true });
-    await operation.execute({ oldUri, newUri });
+    const operation = buildOperation({ renameMismatched: true });
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private Novo $novo'), `expected the mismatched property to be renamed, got:\n${text}`);
@@ -142,8 +156,8 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $a, private Novo $b)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
-    const operation = buildOperation({ files: [consumerUri], renameMismatched: true });
-    await operation.execute({ oldUri, newUri });
+    const operation = buildOperation({ renameMismatched: true });
+    await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri] });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.strictEqual(text, consumerContent, `expected no changes when ambiguous, got:\n${text}`);
@@ -156,10 +170,32 @@ suite('PropertyRenameOperation', () => {
     const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Teste $teste)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
-    const operation = buildOperation({ files: [consumerUri] });
-    await operation.execute({ oldUri: sameUri, newUri: sameUri });
+    const operation = buildOperation();
+    await operation.execute({ oldUri: sameUri, newUri: sameUri, affectedFiles: [consumerUri] });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.strictEqual(text, consumerContent, `expected no changes, got:\n${text}`);
+  });
+
+  /**
+   * A file that textually contains the new class name but wasn't part of
+   * this rename's affected-files set (e.g. an unrelated class with the same
+   * short name in a different namespace) must never be touched - property
+   * renaming is scoped to exactly what MultiFileReferenceUpdater determined
+   * was affected by this rename, never a broader workspace scan.
+   */
+  test('ignores a file that matches by text but was not part of the affected-files set', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+    const oldUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'Novo.php'));
+
+    const unrelatedContent = '<?php\n\nnamespace Other;\n\nclass UnrelatedController\n{\n    public function __construct(private Novo $teste)\n    {\n    }\n}\n';
+    const unrelatedUri = await writeTempPhpFile(dir, 'UnrelatedController.php', unrelatedContent);
+
+    const operation = buildOperation();
+    await operation.execute({ oldUri, newUri, affectedFiles: [] });
+
+    const text = (await vscode.workspace.openTextDocument(unrelatedUri)).getText();
+    assert.strictEqual(text, unrelatedContent, `expected the unaffected file to be left untouched, got:\n${text}`);
   });
 });

@@ -1,6 +1,7 @@
 import { inject, injectable } from 'tsyringe';
 
 import { ConstructorSpanFinder } from './ConstructorSpanFinder';
+import { buildPropertyDeclarationPattern } from './PropertyDeclarationPattern';
 
 const VISIBILITY = 'public|protected|private';
 
@@ -45,10 +46,7 @@ export class ClassTypedPropertyLocator {
   }
 
   private hasPropertyDeclaration(text: string, className: string, varName: string): boolean {
-    const pattern = new RegExp(
-      `(?:${VISIBILITY})\\s+(?:readonly\\s+)?\\??\\b${className}\\b\\s+\\$${varName}\\s*;`,
-    );
-    return pattern.test(text);
+    return buildPropertyDeclarationPattern(className, varName).test(text);
   }
 
   private isAssignedToThis(constructorBody: string, varName: string): boolean {
