@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.9.2...php-namespace-refactor-v2.0.0) (2026-07-30)
+
+
+### 🚀 New Features
+
+* **property-rename:** consolidate property rename settings into one polymorphic key ([ac7a475](https://github.com/rejmann/php-namespace-refactor/commit/ac7a4751e1dbea9f0f3173d4ecaf26ef2dea9234))
+* **property-renaming:** rename constructor-typed properties on class move ([5e4b25c](https://github.com/rejmann/php-namespace-refactor/commit/5e4b25c0e5d40885b67fbe74572ed5fe652dbe76))
+
+
+### 🐛 Bug Fixes
+
+* **namespace-refactor:** prevent prefix matches in php namespace refactors ([36f0869](https://github.com/rejmann/php-namespace-refactor/commit/36f086914750f8eccb6517c12ef569d3af6f2ee9))
+* **namespace:** centralize guarded class-name regex creation ([492bf51](https://github.com/rejmann/php-namespace-refactor/commit/492bf51985c47d352b6353775ee6d66a64a7133c))
+* **namespace:** prevent namespace renames from matching identifier prefixes ([3fdaad9](https://github.com/rejmann/php-namespace-refactor/commit/3fdaad9b77893b65986a6c8b7470973d4d317517))
+
+
+### 📚 Documentation
+
+* **docs:** clarify config reads and class rename behavior ([a22d3ab](https://github.com/rejmann/php-namespace-refactor/commit/a22d3abe7121eec57f55370aab0ef98f54b808a7))
+* document optional property renaming during file moves ([47e56e6](https://github.com/rejmann/php-namespace-refactor/commit/47e56e63e9a81dca64dfc46d0bc2dee6c0d785d0))
+
+
+### ♻️ Code Refactoring
+
+* **property-rename:** rename property flag and scope renames to affected files ([dd4b706](https://github.com/rejmann/php-namespace-refactor/commit/dd4b706168119f45eb633455d775ebfa23b163e0))
+
 ## [1.9.2](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.9.1...php-namespace-refactor-v1.9.2) (2026-07-24)
 
 
