@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 
 import { ImportRemover } from '../app/services/remove/ImportRemover';
 import { MultiFileReferenceUpdater } from '../app/services/update/MultiFileReferenceUpdater';
+import { ClassNameBoundaryRegexBuilder } from '../domain/namespace/ClassNameBoundaryRegexBuilder';
 import { UseStatementCreator } from '../domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '../domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '../domain/namespace/UseStatementLocator';
@@ -50,6 +51,7 @@ function buildUpdater(namespaceIndex: NamespaceIndex, editFilesInBackground = tr
     new UseStatementLocator(),
     new UseStatementInjector(fileEditApplier),
     fileEditApplier,
+    new ClassNameBoundaryRegexBuilder(),
   );
 }
 
@@ -238,5 +240,68 @@ suite('MultiFileReferenceUpdater', () => {
       `the import line should not be duplicated, got:\n${text}`,
     );
     assert.ok(!/\bprivate Order \$order\b/.test(text), `old bare class name should be gone, got:\n${text}`);
+  });
+
+  /**
+   * A class can share its name with a sibling namespace (e.g. a
+   * RenamedClass.php file next to a RenamedClass/ directory holding
+   * Foo/FormType.php and Bar/FormType.php). Renaming the class
+   * to RenamedClassTest must not corrupt aliased imports that merely
+   * start with the old FQCN but actually point into that sibling namespace.
+   */
+  test('renaming a class does not corrupt aliased imports from a sub-namespace sharing its name', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'RenamedClass.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'RenamedClassTest.php'));
+
+    const consumerContent = [
+      '<?php',
+      '',
+      'namespace App\\Controller;',
+      '',
+      'use App\\Controller\\RenamedClass;',
+      'use App\\Controller\\RenamedClass\\Foo\\FormType as FooFormType;',
+      'use App\\Controller\\RenamedClass\\Bar\\FormType as BarFormType;',
+      '',
+      'class RenamedClassController',
+      '{',
+      '    private RenamedClass $RenamedClass;',
+      '}',
+      '',
+    ].join('\n');
+    const consumerUri = await writeTempPhpFile(dir, 'RenamedClassController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Controller\\RenamedClass',
+      useNewNamespace: 'App\\Controller\\RenamedClassTest',
+      newUri,
+      oldUri,
+    });
+
+    const document = await vscode.workspace.openTextDocument(consumerUri);
+    const text = document.getText();
+
+    assert.ok(
+      text.includes('use App\\Controller\\RenamedClassTest;'),
+      `the exact FQCN import should be renamed, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('private RenamedClassTest $RenamedClass;'),
+      `the bare class name usage should be renamed, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('use App\\Controller\\RenamedClass\\Foo\\FormType as FooFormType;'),
+      `the aliased sub-namespace import should be left untouched, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('use App\\Controller\\RenamedClass\\Bar\\FormType as BarFormType;'),
+      `the aliased sub-namespace import should be left untouched, got:\n${text}`,
+    );
   });
 });

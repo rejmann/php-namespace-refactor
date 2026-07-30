@@ -1,4 +1,6 @@
-import { injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
+
+import { ClassNameBoundaryRegexBuilder } from './ClassNameBoundaryRegexBuilder';
 
 interface Props {
   contentDocument: string,
@@ -7,11 +9,15 @@ interface Props {
 
 @injectable()
 export class UnusedImportDetector {
+  constructor(
+    @inject(ClassNameBoundaryRegexBuilder) private classNameBoundaryRegexBuilder: ClassNameBoundaryRegexBuilder,
+  ) {}
+
   public execute({ contentDocument, classes }: Props): string[] {
     const classesUsed: string[] = [];
 
     classes.forEach(className => {
-      const regex = new RegExp(`\\b${className}\\b`, 'g');
+      const regex = this.classNameBoundaryRegexBuilder.execute({ className });
       if (regex.test(contentDocument) && !classesUsed.includes(className)) {
         classesUsed.push(className);
       }

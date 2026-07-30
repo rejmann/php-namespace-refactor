@@ -21,5 +21,10 @@ export const PHP_CLASS_DECLARATION_REGEX = new RegExp(
   'm'
 );
 
-// Prevents a match from being treated as a prefix of a longer identifier (e.g. "Foo" inside "FooAbstract").
-export const NOT_FOLLOWED_BY_IDENTIFIER_CHAR = '(?![A-Za-z0-9_])';
+// A namespace/identifier boundary: neither an identifier character (letter,
+// digit, underscore) nor a namespace separator (\) can sit on this side of a
+// match, otherwise the match is actually a prefix or suffix of a longer FQCN
+// rather than the identifier itself — e.g. matching "Foo" inside "FooBar" or
+// inside "Foo\Bar\Baz" (a sub-namespace that merely starts with "Foo").
+export const NOT_PRECEDED_BY_NAMESPACE_CHAR = '(?<![A-Za-z0-9_\\\\])';
+export const NOT_FOLLOWED_BY_NAMESPACE_CHAR = '(?![A-Za-z0-9_\\\\])';

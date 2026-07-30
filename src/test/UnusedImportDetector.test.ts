@@ -2,13 +2,14 @@ import 'reflect-metadata';
 
 import * as assert from 'assert';
 
+import { ClassNameBoundaryRegexBuilder } from '../domain/namespace/ClassNameBoundaryRegexBuilder';
 import { UnusedImportDetector } from '../domain/namespace/UnusedImportDetector';
 
 suite('UnusedImportDetector', () => {
   let detector: UnusedImportDetector;
 
   setup(() => {
-    detector = new UnusedImportDetector();
+    detector = new UnusedImportDetector(new ClassNameBoundaryRegexBuilder());
   });
 
   /**
@@ -109,6 +110,26 @@ suite('UnusedImportDetector', () => {
       const content = 'class Foo { function a(UserService $u) {} function b(UserService $u) {} }';
       const result = detector.execute({ contentDocument: content, classes: ['UserService'] });
       assert.strictEqual(result.length, 1);
+    });
+
+    /**
+     * A class can share its name with a sibling namespace (e.g. a
+     * RenamedClass.php file next to a RenamedClass/ directory). An
+     * aliased import from that sibling namespace, such as
+     * "use ...\RenamedClass\Foo\FormType as FooFormType;",
+     * must not make "RenamedClass" look used — it's a namespace segment
+     * there, not a reference to the class.
+     */
+    test('does not treat a class name as used merely because it prefixes a sub-namespace path', () => {
+      const content = [
+        'namespace App\\Controller;',
+        'use App\\Controller\\RenamedClass\\Foo\\FormType as FooFormType;',
+        'use App\\Controller\\RenamedClass\\Bar\\FormType as BarFormType;',
+        'class Foo { function bar(FooFormType $f) {} }',
+      ].join('\n');
+
+      const result = detector.execute({ contentDocument: content, classes: ['RenamedClass'] });
+      assert.deepStrictEqual(result, []);
     });
   });
 });

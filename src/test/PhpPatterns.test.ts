@@ -1,6 +1,10 @@
 import * as assert from 'assert';
 
-import { NOT_FOLLOWED_BY_IDENTIFIER_CHAR, PHP_CLASS_DECLARATION_REGEX } from '../domain/namespace/PhpPatterns';
+import {
+  NOT_FOLLOWED_BY_NAMESPACE_CHAR,
+  NOT_PRECEDED_BY_NAMESPACE_CHAR,
+  PHP_CLASS_DECLARATION_REGEX,
+} from '../domain/namespace/PhpPatterns';
 
 suite('PHP_CLASS_DECLARATION_REGEX', () => {
   /**
@@ -80,7 +84,83 @@ suite('PHP_CLASS_DECLARATION_REGEX', () => {
   });
 });
 
-suite('NOT_FOLLOWED_BY_IDENTIFIER_CHAR', () => {
+suite('NOT_PRECEDED_BY_NAMESPACE_CHAR / NOT_FOLLOWED_BY_NAMESPACE_CHAR', () => {
+  function escapeForRegex(text: string): string {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function buildGuardedRegex(identifier: string): RegExp {
+    return new RegExp(`${NOT_PRECEDED_BY_NAMESPACE_CHAR}${identifier}${NOT_FOLLOWED_BY_NAMESPACE_CHAR}`, 'g');
+  }
+
+  function buildGuardedNamespaceRegex(oldNamespace: string): RegExp {
+    return new RegExp(`${escapeForRegex(oldNamespace)}${NOT_FOLLOWED_BY_NAMESPACE_CHAR}`, 'g');
+  }
+
+  /**
+   * Bug – a class "RenamedClass" can coexist with a sibling namespace of
+   * the same name (e.g. a RenamedClass.php file next to a
+   * RenamedClass/ directory). Renaming the class to "RenamedClassTeste"
+   * must not corrupt aliased imports from that sibling namespace, such as
+   * "use ...\RenamedClass\Foo\FormType as FooFormType;",
+   * because "RenamedClass" there is a namespace segment, not the class.
+   */
+  suite('Guard against matching an identifier that is a namespace-path prefix of a longer one', () => {
+    test('replaces the identifier when it stands alone as a full FQCN', () => {
+      const regex = buildGuardedNamespaceRegex('App\\Controller\\Atendimento\\RenamedClass');
+      const content = 'use App\\Controller\\Atendimento\\RenamedClass;';
+
+      const result = content.replace(regex, 'App\\Controller\\Atendimento\\RenamedClassTeste');
+
+      assert.strictEqual(result, 'use App\\Controller\\Atendimento\\RenamedClassTeste;');
+    });
+
+    test('does not touch aliased imports from a deeper sub-namespace sharing the same prefix', () => {
+      const regex = buildGuardedRegex('RenamedClass');
+      const content = [
+        'use App\\Controller\\Atendimento\\RenamedClass\\Foo\\FormType as FooFormType;',
+        'use App\\Controller\\Atendimento\\RenamedClass\\Bar\\FormType as BarFormType;',
+      ].join('\n');
+
+      const result = content.replace(regex, 'RenamedClassTeste');
+
+      assert.strictEqual(result, content, `sub-namespace imports should be left untouched, got:\n${result}`);
+    });
+
+    test('still replaces the bare identifier when it is not part of a namespace path', () => {
+      const regex = buildGuardedRegex('RenamedClass');
+      const content = 'private RenamedClass $RenamedClass;\n\nnew RenamedClass();';
+
+      const result = content.replace(regex, 'RenamedClassTeste');
+
+      assert.strictEqual(
+        result,
+        'private RenamedClassTeste $RenamedClass;\n\nnew RenamedClassTeste();',
+      );
+    });
+
+    test('does not match a suffix identifier that merely starts with the same characters', () => {
+      const regex = buildGuardedRegex('RenamedClass');
+      const content = 'use App\\Domain\\RenamedClassAbstract;';
+
+      const result = content.replace(regex, 'RenamedClassTeste');
+
+      assert.strictEqual(result, content);
+    });
+
+    test('without the guard, the old regex would corrupt the sub-namespace imports (regression check)', () => {
+      const unguardedRegex = new RegExp('RenamedClass', 'g');
+      const content = 'use App\\Controller\\Atendimento\\RenamedClass\\Foo\\FormType as FooFormType;';
+
+      const result = content.replace(unguardedRegex, 'RenamedClassTeste');
+
+      assert.strictEqual(
+        result,
+        'use App\\Controller\\Atendimento\\RenamedClassTeste\\Foo\\FormType as FooFormType;',
+      );
+    });
+  });
+
   /**
    * Bug – renaming "DetalhePagamentoDTO" to "DetalhePagamentoDTOAbstract" was
    * corrupting an unrelated "use ...DetalhePagamentoDTOAbstract;" statement
@@ -88,14 +168,9 @@ suite('NOT_FOLLOWED_BY_IDENTIFIER_CHAR', () => {
    * "...DetalhePagamentoDTOAbstractAbstract" because the namespace replace
    * regex matched the old FQCN as a mere prefix of the longer one.
    */
-  suite('Guard against matching a FQCN that is a prefix of a longer one', () => {
-    function buildNamespaceRegex(oldNamespace: string): RegExp {
-      const escaped = oldNamespace.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return new RegExp(`${escaped}${NOT_FOLLOWED_BY_IDENTIFIER_CHAR}`, 'g');
-    }
-
+  suite('Guard against matching a FQCN that is a prefix of a longer identifier', () => {
     test('replaces the old namespace when it is not followed by extra identifier characters', () => {
-      const regex = buildNamespaceRegex('SharedBundle\\DetalhePagamentoDTO');
+      const regex = buildGuardedNamespaceRegex('SharedBundle\\DetalhePagamentoDTO');
       const content = 'use SharedBundle\\DetalhePagamentoDTO;';
 
       const result = content.replace(regex, 'SharedBundle\\DetalhePagamentoDTOAbstract');
@@ -104,7 +179,7 @@ suite('NOT_FOLLOWED_BY_IDENTIFIER_CHAR', () => {
     });
 
     test('does not touch an unrelated FQCN that has the old namespace as a prefix', () => {
-      const regex = buildNamespaceRegex('SharedBundle\\DetalhePagamentoDTO');
+      const regex = buildGuardedNamespaceRegex('SharedBundle\\DetalhePagamentoDTO');
       const content = [
         'use SharedBundle\\DetalhePagamentoDTO;',
         'use SharedBundle\\DetalhePagamentoDTOAbstract;',
