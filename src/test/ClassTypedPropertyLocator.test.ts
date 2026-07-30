@@ -15,7 +15,7 @@ suite('ClassTypedPropertyLocator', () => {
     const text = [
       'class UserController',
       '{',
-      '  public function __construct(private Teste $teste)',
+      '  public function __construct(private Test $teste)',
       '  {',
       '  }',
       '}',
@@ -30,7 +30,7 @@ suite('ClassTypedPropertyLocator', () => {
 
   test('finds a promoted readonly property regardless of modifier order', () => {
     const first = locate('function __construct(private readonly Teste $teste) {}', 'Teste');
-    const second = locate('function __construct(readonly private Teste $teste) {}', 'Teste');
+    const second = locate('function __construct(readonly private Test $teste) {}', 'Teste');
 
     assert.strictEqual(first!.propertyName, 'teste');
     assert.strictEqual(second!.propertyName, 'teste');
@@ -40,7 +40,7 @@ suite('ClassTypedPropertyLocator', () => {
     const text = [
       'class UserController',
       '{',
-      '  private Teste $teste;',
+      '  private Test $teste;',
       '',
       '  public function __construct(Teste $teste)',
       '  {',
@@ -94,7 +94,7 @@ suite('ClassTypedPropertyLocator', () => {
   });
 
   test('matches a property with a mismatched name', () => {
-    const text = 'function __construct(private Teste $service) {}';
+    const text = 'function __construct(private Test $service) {}';
     const match = locate(text, 'Teste');
 
     assert.ok(match);
@@ -119,7 +119,7 @@ suite('ClassTypedPropertyLocator', () => {
   });
 
   test('returns null when two parameters share the same type (ambiguous)', () => {
-    const text = 'function __construct(private Teste $a, private Teste $b) {}';
+    const text = 'function __construct(private Test $a, private Test $b) {}';
     assert.strictEqual(locate(text, 'Teste'), null);
   });
 });

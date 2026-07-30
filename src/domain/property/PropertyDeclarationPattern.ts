@@ -2,7 +2,7 @@ const VISIBILITY = 'public|protected|private';
 
 /**
  * Matches a class-body property declaration for `varName` - e.g.
- * `private Teste $teste;` or, since the type hint is optional in PHP,
+ * `private Test $teste;` or, since the type hint is optional in PHP,
  * a legacy `private $teste;` typed only via a `@var Teste` docblock.
  * `className` is accepted but not required, so a property whose type was
  * never declared in code (only documented) is still found once the caller

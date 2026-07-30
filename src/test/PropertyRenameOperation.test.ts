@@ -69,7 +69,7 @@ suite('PropertyRenameOperation', () => {
     await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: false });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
-    assert.ok(text.includes('private Novo $novo'), `expected the promoted property to be renamed, got:\n${text}`);
+    assert.ok(text.includes('private NewTest $newTest'), `expected the promoted property to be renamed, got:\n${text}`);
     assert.ok(text.includes('$this->novo->run();'), `expected $this-> usages to be renamed, got:\n${text}`);
     assert.ok(!text.includes('teste'), `expected no leftover old property name, got:\n${text}`);
   });
@@ -86,7 +86,7 @@ suite('PropertyRenameOperation', () => {
     await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: false });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
-    assert.ok(text.includes('private Novo $novo;'), `expected the declared property to be renamed, got:\n${text}`);
+    assert.ok(text.includes('private NewTest $newTest;'), `expected the declared property to be renamed, got:\n${text}`);
     assert.ok(text.includes('__construct(Novo $novo)'), `expected the constructor parameter to be renamed, got:\n${text}`);
     assert.ok(text.includes('$this->novo = $novo;'), `expected the assignment to be renamed, got:\n${text}`);
   });
@@ -136,7 +136,7 @@ suite('PropertyRenameOperation', () => {
     await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: true });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
-    assert.ok(text.includes('private Novo $novo'), `expected the mismatched property to be renamed, got:\n${text}`);
+    assert.ok(text.includes('private NewTest $newTest'), `expected the mismatched property to be renamed, got:\n${text}`);
     assert.ok(text.includes('$this->novo->run();'), `expected $this-> usages to be renamed, got:\n${text}`);
   });
 
@@ -159,7 +159,7 @@ suite('PropertyRenameOperation', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
     const sameUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
 
-    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Teste $teste)\n    {\n    }\n}\n';
+    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Test $teste)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();

@@ -22,7 +22,7 @@ Three classes access `workspace.getConfiguration('phpNamespaceRefactor')`, each 
 - **`FeatureFlagManager`** (`src/domain/workspace/FeatureFlagManager.ts`) — specialized `boolean` read, with `defaultValue = true`. Used for every plain on/off flag (`autoImportNamespace`, `removeUnusedImports`, `rename`, `editFilesInBackground`)
 - **`PropertyRenameSettingsResolver`** (`src/domain/property/PropertyRenameSettingsResolver.ts`) — the one setting whose raw value isn't a plain boolean; see [`phpNamespaceRefactor.renameProperties`](#phpnamespacerefactorrenameproperties) below
 
-Neither class caches the `WorkspaceConfiguration` — each instance reads `workspace.getConfiguration()` in its constructor, and since both are `@injectable()` (not singleton), a fresh read happens on every `container.resolve()`. This means a change to the user's configuration is picked up on the next operation, with no need to reload the window.
+None of the three caches the `WorkspaceConfiguration` — `ConfigurationLocator`/`FeatureFlagManager` read `workspace.getConfiguration()` in their constructor, and `PropertyRenameSettingsResolver` reads through a fresh `ConfigurationLocator` on every `resolve()` call. All three are `@injectable()` (not singleton), so a fresh read happens on every `container.resolve()`. This means a change to the user's configuration is picked up on the next operation, with no need to reload the window.
 
 ## `phpNamespaceRefactor.editFilesInBackground`
 
