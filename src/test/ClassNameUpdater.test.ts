@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 import { ClassNameUpdater } from '../app/services/update/ClassNameUpdater';
+import { ClassNameBoundaryRegexBuilder } from '../domain/namespace/ClassNameBoundaryRegexBuilder';
 import { ConfigurationLocator, Props } from '../domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '../domain/workspace/FeatureFlagManager';
 import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
@@ -39,6 +40,7 @@ function buildUpdater(additionalExtensions: string[]): ClassNameUpdater {
     new TextDocumentOpener(),
     workspacePathResolver,
     new FileEditApplier(fakeFeatureFlagManager()),
+    new ClassNameBoundaryRegexBuilder(),
   );
 }
 

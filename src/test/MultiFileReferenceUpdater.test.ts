@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 
 import { ImportRemover } from '../app/services/remove/ImportRemover';
 import { MultiFileReferenceUpdater } from '../app/services/update/MultiFileReferenceUpdater';
+import { ClassNameBoundaryRegexBuilder } from '../domain/namespace/ClassNameBoundaryRegexBuilder';
 import { UseStatementCreator } from '../domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '../domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '../domain/namespace/UseStatementLocator';
@@ -50,6 +51,7 @@ function buildUpdater(namespaceIndex: NamespaceIndex, editFilesInBackground = tr
     new UseStatementLocator(),
     new UseStatementInjector(fileEditApplier),
     fileEditApplier,
+    new ClassNameBoundaryRegexBuilder(),
   );
 }
 
@@ -242,33 +244,33 @@ suite('MultiFileReferenceUpdater', () => {
 
   /**
    * A class can share its name with a sibling namespace (e.g. a
-   * RevisaoCadastral.php file next to a RevisaoCadastral/ directory holding
-   * DadosPessoais/FormType.php and Endereco/FormType.php). Renaming the class
-   * to RevisaoCadastralTeste must not corrupt aliased imports that merely
+   * RenamedClass.php file next to a RenamedClass/ directory holding
+   * Foo/FormType.php and Bar/FormType.php). Renaming the class
+   * to RenamedClassTest must not corrupt aliased imports that merely
    * start with the old FQCN but actually point into that sibling namespace.
    */
   test('renaming a class does not corrupt aliased imports from a sub-namespace sharing its name', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
 
-    const oldUri = vscode.Uri.file(path.join(dir, 'RevisaoCadastral.php'));
-    const newUri = vscode.Uri.file(path.join(dir, 'RevisaoCadastralTeste.php'));
+    const oldUri = vscode.Uri.file(path.join(dir, 'RenamedClass.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'RenamedClassTest.php'));
 
     const consumerContent = [
       '<?php',
       '',
-      'namespace App\\Controller\\PreCadastro\\Atendimento;',
+      'namespace App\\Controller;',
       '',
-      'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral;',
-      'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\DadosPessoais\\FormType as DadosPessoaisFormType;',
-      'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\Endereco\\FormType as EnderecoFormType;',
+      'use App\\Controller\\RenamedClass;',
+      'use App\\Controller\\RenamedClass\\Foo\\FormType as FooFormType;',
+      'use App\\Controller\\RenamedClass\\Bar\\FormType as BarFormType;',
       '',
-      'class RevisaoCadastralController',
+      'class RenamedClassController',
       '{',
-      '    private RevisaoCadastral $revisaoCadastral;',
+      '    private RenamedClass $RenamedClass;',
       '}',
       '',
     ].join('\n');
-    const consumerUri = await writeTempPhpFile(dir, 'RevisaoCadastralController.php', consumerContent);
+    const consumerUri = await writeTempPhpFile(dir, 'RenamedClassController.php', consumerContent);
 
     const namespaceIndex = new NamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
@@ -276,8 +278,8 @@ suite('MultiFileReferenceUpdater', () => {
     const updater = buildUpdater(namespaceIndex);
 
     await updater.execute({
-      useOldNamespace: 'App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral',
-      useNewNamespace: 'App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastralTeste',
+      useOldNamespace: 'App\\Controller\\RenamedClass',
+      useNewNamespace: 'App\\Controller\\RenamedClassTest',
       newUri,
       oldUri,
     });
@@ -286,19 +288,19 @@ suite('MultiFileReferenceUpdater', () => {
     const text = document.getText();
 
     assert.ok(
-      text.includes('use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastralTeste;'),
+      text.includes('use App\\Controller\\RenamedClassTest;'),
       `the exact FQCN import should be renamed, got:\n${text}`,
     );
     assert.ok(
-      text.includes('private RevisaoCadastralTeste $revisaoCadastral;'),
+      text.includes('private RenamedClassTest $RenamedClass;'),
       `the bare class name usage should be renamed, got:\n${text}`,
     );
     assert.ok(
-      text.includes('use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\DadosPessoais\\FormType as DadosPessoaisFormType;'),
+      text.includes('use App\\Controller\\RenamedClass\\Foo\\FormType as FooFormType;'),
       `the aliased sub-namespace import should be left untouched, got:\n${text}`,
     );
     assert.ok(
-      text.includes('use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\Endereco\\FormType as EnderecoFormType;'),
+      text.includes('use App\\Controller\\RenamedClass\\Bar\\FormType as BarFormType;'),
       `the aliased sub-namespace import should be left untouched, got:\n${text}`,
     );
   });

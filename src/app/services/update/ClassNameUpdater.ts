@@ -1,4 +1,5 @@
-import { NOT_FOLLOWED_BY_NAMESPACE_CHAR, NOT_PRECEDED_BY_NAMESPACE_CHAR, PHP_CLASS_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
+import { ClassNameBoundaryRegexBuilder } from '@domain/namespace/ClassNameBoundaryRegexBuilder';
+import { PHP_CLASS_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
 import { FileEditApplier } from '@infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
@@ -15,6 +16,7 @@ export class ClassNameUpdater {
     @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
     @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
     @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
+    @inject(ClassNameBoundaryRegexBuilder) private classNameBoundaryRegexBuilder: ClassNameBoundaryRegexBuilder,
   ) {}
 
   public async execute({ newUri }: Props): Promise<void> {
@@ -33,7 +35,7 @@ export class ClassNameUpdater {
     }
 
     const newText = text.replace(
-      new RegExp(`${NOT_PRECEDED_BY_NAMESPACE_CHAR}${currentName}${NOT_FOLLOWED_BY_NAMESPACE_CHAR}`, 'g'),
+      this.classNameBoundaryRegexBuilder.execute({ className: currentName }),
       expectedName,
     );
 

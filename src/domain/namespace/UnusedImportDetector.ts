@@ -1,6 +1,6 @@
-import { injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import { NOT_FOLLOWED_BY_NAMESPACE_CHAR, NOT_PRECEDED_BY_NAMESPACE_CHAR } from './PhpPatterns';
+import { ClassNameBoundaryRegexBuilder } from './ClassNameBoundaryRegexBuilder';
 
 interface Props {
   contentDocument: string,
@@ -9,11 +9,15 @@ interface Props {
 
 @injectable()
 export class UnusedImportDetector {
+  constructor(
+    @inject(ClassNameBoundaryRegexBuilder) private classNameBoundaryRegexBuilder: ClassNameBoundaryRegexBuilder,
+  ) {}
+
   public execute({ contentDocument, classes }: Props): string[] {
     const classesUsed: string[] = [];
 
     classes.forEach(className => {
-      const regex = new RegExp(`${NOT_PRECEDED_BY_NAMESPACE_CHAR}${className}${NOT_FOLLOWED_BY_NAMESPACE_CHAR}`, 'g');
+      const regex = this.classNameBoundaryRegexBuilder.execute({ className });
       if (regex.test(contentDocument) && !classesUsed.includes(className)) {
         classesUsed.push(className);
       }

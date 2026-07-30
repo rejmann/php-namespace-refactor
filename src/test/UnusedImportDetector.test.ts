@@ -2,13 +2,14 @@ import 'reflect-metadata';
 
 import * as assert from 'assert';
 
+import { ClassNameBoundaryRegexBuilder } from '../domain/namespace/ClassNameBoundaryRegexBuilder';
 import { UnusedImportDetector } from '../domain/namespace/UnusedImportDetector';
 
 suite('UnusedImportDetector', () => {
   let detector: UnusedImportDetector;
 
   setup(() => {
-    detector = new UnusedImportDetector();
+    detector = new UnusedImportDetector(new ClassNameBoundaryRegexBuilder());
   });
 
   /**
@@ -113,21 +114,21 @@ suite('UnusedImportDetector', () => {
 
     /**
      * A class can share its name with a sibling namespace (e.g. a
-     * RevisaoCadastral.php file next to a RevisaoCadastral/ directory). An
+     * RenamedClass.php file next to a RenamedClass/ directory). An
      * aliased import from that sibling namespace, such as
-     * "use ...\RevisaoCadastral\DadosPessoais\FormType as DadosPessoaisFormType;",
-     * must not make "RevisaoCadastral" look used — it's a namespace segment
+     * "use ...\RenamedClass\Foo\FormType as FooFormType;",
+     * must not make "RenamedClass" look used — it's a namespace segment
      * there, not a reference to the class.
      */
     test('does not treat a class name as used merely because it prefixes a sub-namespace path', () => {
       const content = [
-        'namespace App\\Controller\\PreCadastro\\Atendimento;',
-        'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\DadosPessoais\\FormType as DadosPessoaisFormType;',
-        'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\Endereco\\FormType as EnderecoFormType;',
-        'class Foo { function bar(DadosPessoaisFormType $f) {} }',
+        'namespace App\\Controller;',
+        'use App\\Controller\\RenamedClass\\Foo\\FormType as FooFormType;',
+        'use App\\Controller\\RenamedClass\\Bar\\FormType as BarFormType;',
+        'class Foo { function bar(FooFormType $f) {} }',
       ].join('\n');
 
-      const result = detector.execute({ contentDocument: content, classes: ['RevisaoCadastral'] });
+      const result = detector.execute({ contentDocument: content, classes: ['RenamedClass'] });
       assert.deepStrictEqual(result, []);
     });
   });
