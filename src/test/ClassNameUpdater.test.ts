@@ -116,4 +116,42 @@ suite('ClassNameUpdater', () => {
     const text = await waitForText(uri, t => t.includes('OutroTest.class'));
     assert.ok(text.includes('class OutroTest.class'), `expected today's known-bad output, got:\n${text}`);
   });
+
+  /**
+   * A class can share its name with a sibling namespace (e.g. a
+   * RenamedClass.php file next to a RenamedClass/ directory holding
+   * Foo/Type.php). When RenamedClass.php is renamed to
+   * RenamedClassTest.php, its own aliased imports from that sibling
+   * namespace must not be corrupted just because they start with the old name.
+   */
+  test('does not corrupt its own aliased imports from a sub-namespace sharing its name', async () => {
+    const content = [
+      '<?php',
+      '',
+      'namespace App\\Controller;',
+      '',
+      'use App\\Controller\\RenamedClass\\Foo\\Type as FooType;',
+      'use App\\Controller\\RenamedClass\\Bar\\Type as BarType;',
+      '',
+      'class RenamedClass',
+      '{',
+      '}',
+      '',
+    ].join('\n');
+
+    const uri = await writeTempPhpFile('RenamedClassTest.php', content);
+    const updater = buildUpdater([]);
+
+    await updater.execute({ newUri: uri });
+
+    const text = await waitForText(uri, t => t.includes('class RenamedClassTest'));
+    assert.ok(
+      text.includes('use App\\Controller\\RenamedClass\\Foo\\Type as FooType;'),
+      `aliased sub-namespace import should be left untouched, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('use App\\Controller\\RenamedClass\\Bar\\Type as BarType;'),
+      `aliased sub-namespace import should be left untouched, got:\n${text}`,
+    );
+  });
 });

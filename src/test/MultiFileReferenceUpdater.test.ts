@@ -239,4 +239,67 @@ suite('MultiFileReferenceUpdater', () => {
     );
     assert.ok(!/\bprivate Order \$order\b/.test(text), `old bare class name should be gone, got:\n${text}`);
   });
+
+  /**
+   * A class can share its name with a sibling namespace (e.g. a
+   * RevisaoCadastral.php file next to a RevisaoCadastral/ directory holding
+   * DadosPessoais/FormType.php and Endereco/FormType.php). Renaming the class
+   * to RevisaoCadastralTeste must not corrupt aliased imports that merely
+   * start with the old FQCN but actually point into that sibling namespace.
+   */
+  test('renaming a class does not corrupt aliased imports from a sub-namespace sharing its name', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'RevisaoCadastral.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'RevisaoCadastralTeste.php'));
+
+    const consumerContent = [
+      '<?php',
+      '',
+      'namespace App\\Controller\\PreCadastro\\Atendimento;',
+      '',
+      'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral;',
+      'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\DadosPessoais\\FormType as DadosPessoaisFormType;',
+      'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\Endereco\\FormType as EnderecoFormType;',
+      '',
+      'class RevisaoCadastralController',
+      '{',
+      '    private RevisaoCadastral $revisaoCadastral;',
+      '}',
+      '',
+    ].join('\n');
+    const consumerUri = await writeTempPhpFile(dir, 'RevisaoCadastralController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral',
+      useNewNamespace: 'App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastralTeste',
+      newUri,
+      oldUri,
+    });
+
+    const document = await vscode.workspace.openTextDocument(consumerUri);
+    const text = document.getText();
+
+    assert.ok(
+      text.includes('use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastralTeste;'),
+      `the exact FQCN import should be renamed, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('private RevisaoCadastralTeste $revisaoCadastral;'),
+      `the bare class name usage should be renamed, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\DadosPessoais\\FormType as DadosPessoaisFormType;'),
+      `the aliased sub-namespace import should be left untouched, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\Endereco\\FormType as EnderecoFormType;'),
+      `the aliased sub-namespace import should be left untouched, got:\n${text}`,
+    );
+  });
 });

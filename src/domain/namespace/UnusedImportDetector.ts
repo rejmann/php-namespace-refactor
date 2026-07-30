@@ -1,5 +1,7 @@
 import { injectable } from 'tsyringe';
 
+import { NOT_FOLLOWED_BY_NAMESPACE_CHAR, NOT_PRECEDED_BY_NAMESPACE_CHAR } from './PhpPatterns';
+
 interface Props {
   contentDocument: string,
   classes: string[],
@@ -11,7 +13,7 @@ export class UnusedImportDetector {
     const classesUsed: string[] = [];
 
     classes.forEach(className => {
-      const regex = new RegExp(`\\b${className}\\b`, 'g');
+      const regex = new RegExp(`${NOT_PRECEDED_BY_NAMESPACE_CHAR}${className}${NOT_FOLLOWED_BY_NAMESPACE_CHAR}`, 'g');
       if (regex.test(contentDocument) && !classesUsed.includes(className)) {
         classesUsed.push(className);
       }

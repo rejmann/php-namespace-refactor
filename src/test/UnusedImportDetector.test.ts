@@ -110,5 +110,25 @@ suite('UnusedImportDetector', () => {
       const result = detector.execute({ contentDocument: content, classes: ['UserService'] });
       assert.strictEqual(result.length, 1);
     });
+
+    /**
+     * A class can share its name with a sibling namespace (e.g. a
+     * RevisaoCadastral.php file next to a RevisaoCadastral/ directory). An
+     * aliased import from that sibling namespace, such as
+     * "use ...\RevisaoCadastral\DadosPessoais\FormType as DadosPessoaisFormType;",
+     * must not make "RevisaoCadastral" look used — it's a namespace segment
+     * there, not a reference to the class.
+     */
+    test('does not treat a class name as used merely because it prefixes a sub-namespace path', () => {
+      const content = [
+        'namespace App\\Controller\\PreCadastro\\Atendimento;',
+        'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\DadosPessoais\\FormType as DadosPessoaisFormType;',
+        'use App\\Controller\\PreCadastro\\Atendimento\\RevisaoCadastral\\Endereco\\FormType as EnderecoFormType;',
+        'class Foo { function bar(DadosPessoaisFormType $f) {} }',
+      ].join('\n');
+
+      const result = detector.execute({ contentDocument: content, classes: ['RevisaoCadastral'] });
+      assert.deepStrictEqual(result, []);
+    });
   });
 });
