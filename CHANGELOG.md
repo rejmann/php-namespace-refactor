@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v2.0.0...php-namespace-refactor-v2.0.1) (2026-07-31)
+
+
+### 🐛 Bug Fixes
+
+* **property-rename:** default mismatched property renames to on ([c8bb98f](https://github.com/rejmann/php-namespace-refactor/commit/c8bb98f283d66cd0cf18df810af871ac5e312667))
+
+
+### ♻️ Code Refactoring
+
+* **property-rename:** fold property renames into the batch update pass ([8b7ef0a](https://github.com/rejmann/php-namespace-refactor/commit/8b7ef0a68e72ed190c83090422d366428624624e))
+* **workspace:** add polymorphic flag resolution for workspace settings ([fde3853](https://github.com/rejmann/php-namespace-refactor/commit/fde38531ab175cb018e12bd00f483dc7a1b8523a))
+
 ## [2.0.0](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v1.9.2...php-namespace-refactor-v2.0.0) (2026-07-30)
 
 
