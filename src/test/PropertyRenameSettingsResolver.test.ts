@@ -6,9 +6,13 @@ import { PropertyRenameSettingsResolver } from '../domain/property/PropertyRenam
 import { ConfigurationLocator } from '../domain/workspace/ConfigurationLocator';
 
 function buildResolver(rawValue: unknown): PropertyRenameSettingsResolver {
-  const configurationLocator = {
-    get: () => rawValue,
-  } as unknown as ConfigurationLocator;
+  // A real ConfigurationLocator instance (so the resolver exercises the
+  // actual getPolymorphicFlag implementation) with only the underlying
+  // raw-value read stubbed out.
+  const configurationLocator = Object.assign(
+    Object.create(ConfigurationLocator.prototype) as ConfigurationLocator,
+    { get: () => rawValue },
+  );
 
   return new PropertyRenameSettingsResolver(configurationLocator);
 }

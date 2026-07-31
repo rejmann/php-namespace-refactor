@@ -21,6 +21,13 @@ export type Props<T> = {
   defaultValue?: T
 }
 
+export type PolymorphicFlag<ChildKey extends string> = { enabled: boolean } & Record<ChildKey, boolean>;
+
+interface PolymorphicFlagProps<ChildKey extends string> {
+  key: string
+  childKeys: readonly ChildKey[]
+}
+
 @injectable()
 export class ConfigurationLocator {
   private config: WorkspaceConfiguration;
@@ -35,5 +42,32 @@ export class ConfigurationLocator {
 
   public static getConfigKey(key: string): string {
     return `${Config}.${key}`;
+  }
+
+  /**
+   * Resolves a setting that accepts either a boolean or an object of child
+   * flags (e.g. `phpNamespaceRefactor.renameProperties`) - a single
+   * polymorphic key, since VS Code's settings schema doesn't allow one key
+   * to be both a leaf value and the parent of another setting.
+   *
+   * A bare `true` (or any object, even `{}`) enables the feature and
+   * defaults every child flag to `true` as well; a bare `false` disables
+   * everything. The object form only exists to dial a specific child back
+   * to `false` - there's no way to enable a child while leaving the parent
+   * disabled.
+   */
+  public getPolymorphicFlag<ChildKey extends string>(
+    { key, childKeys }: PolymorphicFlagProps<ChildKey>,
+  ): PolymorphicFlag<ChildKey> {
+    const value = this.get<boolean | Partial<Record<ChildKey, boolean>> | undefined>({ key, defaultValue: false });
+    const isObject = typeof value === 'object' && value !== null;
+    const enabled = isObject || value === true;
+
+    const children = {} as Record<ChildKey, boolean>;
+    for (const childKey of childKeys) {
+      children[childKey] = isObject ? value[childKey] !== false : enabled;
+    }
+
+    return { enabled, ...children };
   }
 }
