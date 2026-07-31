@@ -129,13 +129,13 @@ suite('NOT_PRECEDED_BY_NAMESPACE_CHAR / NOT_FOLLOWED_BY_NAMESPACE_CHAR', () => {
 
     test('still replaces the bare identifier when it is not part of a namespace path', () => {
       const regex = buildGuardedRegex('RenamedClass');
-      const content = 'private RenamedClass $RenamedClass;\n\nnew RenamedClass();';
+      const content = 'private RenamedClass $instance;\n\nnew RenamedClass();';
 
       const result = content.replace(regex, 'RenamedClassTeste');
 
       assert.strictEqual(
         result,
-        'private RenamedClassTeste $RenamedClass;\n\nnew RenamedClassTeste();',
+        'private RenamedClassTeste $instance;\n\nnew RenamedClassTeste();',
       );
     });
 

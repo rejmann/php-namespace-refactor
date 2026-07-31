@@ -119,12 +119,12 @@
           "properties": {
             "renameMismatchedNames": {
               "type": "boolean",
-              "default": false,
-              "description": "Also rename properties whose current name doesn't match the class name (e.g. $service for a Teste type)."
+              "default": true,
+              "description": "Also rename properties whose current name doesn't match the class name (e.g. $service for a Test type). Defaults to true whenever renaming is enabled; set to false here to opt out just of this behavior."
             }
           },
           "additionalProperties": false,
-          "description": "Rename constructor-typed properties (promoted or not, readonly or not) - and their $this->x usages - to match the class name when renaming a class. Set to true/false to toggle, or to an object like { \"renameMismatchedNames\": true } to also rename properties whose current name doesn't match the class."
+          "description": "Rename constructor-typed properties (promoted or not, readonly or not) - and their $this->x usages - to match the class name when renaming a class. Set to true to enable everything, including renaming mismatched names, or to an object like { \"renameMismatchedNames\": false } to opt out of just that behavior."
         }
       }
     }

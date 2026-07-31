@@ -6,9 +6,13 @@ import { PropertyRenameSettingsResolver } from '../domain/property/PropertyRenam
 import { ConfigurationLocator } from '../domain/workspace/ConfigurationLocator';
 
 function buildResolver(rawValue: unknown): PropertyRenameSettingsResolver {
-  const configurationLocator = {
-    get: () => rawValue,
-  } as unknown as ConfigurationLocator;
+  // A real ConfigurationLocator instance (so the resolver exercises the
+  // actual getPolymorphicFlag implementation) with only the underlying
+  // raw-value read stubbed out.
+  const configurationLocator = Object.assign(
+    Object.create(ConfigurationLocator.prototype) as ConfigurationLocator,
+    { get: () => rawValue },
+  );
 
   return new PropertyRenameSettingsResolver(configurationLocator);
 }
@@ -28,17 +32,17 @@ suite('PropertyRenameSettingsResolver', () => {
     );
   });
 
-  test('resolves true to enabled, without the mismatch behavior', () => {
+  test('resolves true to enabled, with the mismatch behavior also on by default', () => {
     assert.deepStrictEqual(
       buildResolver(true).resolve(),
-      { enabled: true, renameMismatchedNames: false },
+      { enabled: true, renameMismatchedNames: true },
     );
   });
 
-  test('resolves an empty object to enabled, without the mismatch behavior', () => {
+  test('resolves an empty object to enabled, with the mismatch behavior also on by default', () => {
     assert.deepStrictEqual(
       buildResolver({}).resolve(),
-      { enabled: true, renameMismatchedNames: false },
+      { enabled: true, renameMismatchedNames: true },
     );
   });
 

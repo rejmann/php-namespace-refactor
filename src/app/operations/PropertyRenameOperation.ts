@@ -15,6 +15,13 @@ interface Props {
   renameMismatchedNames: boolean
 }
 
+export interface PropertyRenameNames {
+  oldClassName: string
+  newClassName: string
+  expectedOldName: string
+  expectedNewName: string
+}
+
 @injectable()
 export class PropertyRenameOperation {
   constructor(
@@ -26,16 +33,46 @@ export class PropertyRenameOperation {
     @inject(ConstructorSpanFinder) private constructorSpanFinder: ConstructorSpanFinder,
   ) {}
 
-  public async execute({ oldUri, newUri, affectedFiles, renameMismatchedNames }: Props): Promise<void> {
-    const oldClassName = this.workspacePathResolver.extractClassNameFromPath(oldUri.fsPath);
-    const newClassName = this.workspacePathResolver.extractClassNameFromPath(newUri.fsPath);
+  public collectEdits(
+    edit: WorkspaceEdit,
+    uri: Uri,
+    document: TextDocument,
+    text: string,
+    names: PropertyRenameNames,
+    renameMismatchedNames: boolean,
+  ): void {
+    const { oldClassName, newClassName, expectedOldName, expectedNewName } = names;
 
-    if (!oldClassName || !newClassName || oldClassName === newClassName) {
+    // The property's declared type still reads as whichever class name is
+    // actually present in this text: the new one when called after that
+    // rename has already landed in the document (the standalone execute()
+    // path below, and this class's own test suite), or still the old one
+    // when called from MultiFileReferenceUpdater's per-file loop, where the
+    // class-name replacement has only been queued into the shared edit, not
+    // yet applied to the buffer.
+    const searchClassName = text.includes(newClassName) ? newClassName : oldClassName;
+    if (!text.includes(searchClassName)) {
       return;
     }
 
-    const expectedOldName = this.propertyNameResolver.resolve(oldClassName);
-    const expectedNewName = this.propertyNameResolver.resolve(newClassName);
+    const match = this.classTypedPropertyLocator.execute({ text, className: searchClassName });
+    if (!match || match.propertyName === expectedNewName) {
+      return;
+    }
+
+    const matchesOldConvention = match.propertyName === expectedOldName;
+    if (!matchesOldConvention && !renameMismatchedNames) {
+      return;
+    }
+
+    this.addPropertyRenameEdits(edit, uri, document, text, searchClassName, match, expectedNewName);
+  }
+
+  public async execute({ oldUri, newUri, affectedFiles, renameMismatchedNames }: Props): Promise<void> {
+    const names = this.resolveNames(oldUri, newUri);
+    if (!names) {
+      return;
+    }
 
     const files = this.getCandidateFiles(newUri, affectedFiles);
     const edit = new WorkspaceEdit();
@@ -43,27 +80,36 @@ export class PropertyRenameOperation {
     await Promise.all(files.map(async (file) => {
       try {
         const { document, text } = await this.textDocumentOpener.execute({ uri: file });
-        if (!text.includes(newClassName)) {
-          return;
-        }
-
-        const match = this.classTypedPropertyLocator.execute({ text, className: newClassName });
-        if (!match || match.propertyName === expectedNewName) {
-          return;
-        }
-
-        const matchesOldConvention = match.propertyName === expectedOldName;
-        if (!matchesOldConvention && !renameMismatchedNames) {
-          return;
-        }
-
-        this.addPropertyRenameEdits(edit, file, document, text, newClassName, match, expectedNewName);
+        this.collectEdits(edit, file, document, text, names, renameMismatchedNames);
       } catch (_) {
         return;
       }
     }));
 
     await this.fileEditApplier.apply(edit);
+  }
+
+  /**
+   * Resolves the old/new property-name convention for a class rename, so a
+   * caller that already has a file's document open (e.g. MultiFileReferenceUpdater,
+   * mid class-rename) can fold property renaming into that same pass and
+   * WorkspaceEdit instead of re-opening every affected file in a second,
+   * later one.
+   */
+  public resolveNames(oldUri: Uri, newUri: Uri): PropertyRenameNames | null {
+    const oldClassName = this.workspacePathResolver.extractClassNameFromPath(oldUri.fsPath);
+    const newClassName = this.workspacePathResolver.extractClassNameFromPath(newUri.fsPath);
+
+    if (!oldClassName || !newClassName || oldClassName === newClassName) {
+      return null;
+    }
+
+    return {
+      oldClassName,
+      newClassName,
+      expectedOldName: this.propertyNameResolver.resolve(oldClassName),
+      expectedNewName: this.propertyNameResolver.resolve(newClassName),
+    };
   }
 
   private addPropertyRenameEdits(
