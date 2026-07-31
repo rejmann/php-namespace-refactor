@@ -45,7 +45,11 @@ function fakeFeatureFlagManager(editFilesInBackground = true): FeatureFlagManage
   } as FeatureFlagManager;
 }
 
-function buildUpdater(namespaceIndex: NamespaceIndex, editFilesInBackground = true): MultiFileReferenceUpdater {
+function buildUpdater(
+  namespaceIndex: NamespaceIndex,
+  editFilesInBackground = true,
+  propertyRenameEnabled = false,
+): MultiFileReferenceUpdater {
   const workspacePathResolver = new WorkspacePathResolver(
     new ComposerAutoloadManager(),
     new FileExtensionResolver(fakeConfigurationLocator()),
@@ -74,7 +78,7 @@ function buildUpdater(namespaceIndex: NamespaceIndex, editFilesInBackground = tr
     fileEditApplier,
     new ClassNameBoundaryRegexBuilder(),
     propertyRenameOperation,
-    fakePropertyRenameSettingsResolver(),
+    fakePropertyRenameSettingsResolver(propertyRenameEnabled),
   );
 }
 
@@ -263,6 +267,113 @@ suite('MultiFileReferenceUpdater', () => {
       `the import line should not be duplicated, got:\n${text}`,
     );
     assert.ok(!/\bprivate Order \$order\b/.test(text), `old bare class name should be gone, got:\n${text}`);
+  });
+
+  test('with property renaming enabled, renames the constructor property in the same pass as the class rename', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'Order.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'PurchaseOrder.php'));
+
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    public function __construct(private Order $order)\n    {\n    }\n\n    public function run(): void\n    {\n        $this->order->run();\n    }\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex, true, true);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\Domain\\PurchaseOrder',
+      newUri,
+      oldUri,
+    });
+
+    const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
+
+    assert.ok(
+      text.includes('private PurchaseOrder $purchaseOrder'),
+      `expected the constructor property to be renamed alongside the class, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('$this->purchaseOrder->run();'),
+      `expected $this-> usages to be renamed, got:\n${text}`,
+    );
+    assert.ok(!/\$order\b/.test(text), `expected no leftover old property name, got:\n${text}`);
+  });
+
+  test('with property renaming enabled, renames a non-promoted property in the same pass as the class rename', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'Order.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'PurchaseOrder.php'));
+
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n\n    public function __construct(Order $order)\n    {\n        $this->order = $order;\n    }\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex, true, true);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\Domain\\PurchaseOrder',
+      newUri,
+      oldUri,
+    });
+
+    const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
+
+    assert.ok(
+      text.includes('private PurchaseOrder $purchaseOrder;'),
+      `expected the declared property to be renamed alongside the class, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('__construct(PurchaseOrder $purchaseOrder)'),
+      `expected the constructor parameter to be renamed, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('$this->purchaseOrder = $purchaseOrder;'),
+      `expected the assignment to be renamed, got:\n${text}`,
+    );
+    assert.ok(!/\$order\b/.test(text), `expected no leftover old property name, got:\n${text}`);
+  });
+
+  test('with renameMismatchedNames off, still renames the class name and import even when the property name is left untouched', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'Order.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'PurchaseOrder.php'));
+
+    // "$service" doesn't follow the old class-name convention ("order"), so
+    // with renameMismatchedNames off the property itself must stay
+    // untouched - but that must not stop the class name and import from
+    // being renamed everywhere else in this same file.
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    public function __construct(private Order $service)\n    {\n    }\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    // propertyRenameEnabled=true, renameMismatchedNames defaults to false in fakePropertyRenameSettingsResolver
+    const updater = buildUpdater(namespaceIndex, true, true);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\Domain\\PurchaseOrder',
+      newUri,
+      oldUri,
+    });
+
+    const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
+
+    assert.ok(text.includes('use App\\Domain\\PurchaseOrder;'), `expected the import to be renamed, got:\n${text}`);
+    assert.ok(
+      text.includes('private PurchaseOrder $service'),
+      `expected the class name in the type hint to be renamed while the mismatched property name stays, got:\n${text}`,
+    );
   });
 
   /**

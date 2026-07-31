@@ -96,7 +96,7 @@ This extension contributes the following settings:
 
 **phpNamespaceRefactor.renameProperties**
 
-- When a class is renamed, also renames its class-typed constructor properties (promoted or not, readonly or not) and every `$this->x` usage to match the new class name — e.g. `private Test $teste` becomes `private NewTest $newTest` when `Teste` is renamed to `Novo`.
+- When a class is renamed, also renames its class-typed constructor properties (promoted or not, readonly or not) and every `$this->x` usage to match the new class name — e.g. `private Test $test` becomes `private NewTest $newTest` when `Test` is renamed to `NewTest`.
 - If more than one property shares the same type in a constructor, the file is skipped rather than guessing which one to rename.
 - Accepts either a boolean or an object:
   ```json
@@ -104,10 +104,10 @@ This extension contributes the following settings:
   ```
   ```json
   "phpNamespaceRefactor.renameProperties": {
-      "renameMismatchedNames": true
+      "renameMismatchedNames": false
   }
   ```
-  Setting an object automatically enables the feature. `renameMismatchedNames` (default `false`) additionally renames properties whose current name doesn't already match the class name on purpose (e.g. `private Test $service` becomes `private NewTest $newTest`); without it, only properties already named after the old class are renamed.
+  Setting `true` (or an empty object) enables the feature with every child behavior on by default, including `renameMismatchedNames` — properties whose current name doesn't already match the class name (e.g. `private Test $service`) get renamed too. Use the object form only to dial a specific child back to `false`.
 
 - Default: false.
 
