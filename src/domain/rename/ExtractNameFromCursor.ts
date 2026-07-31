@@ -1,4 +1,4 @@
-import { PHP_CLASS_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
+import { NAMESPACE_DECLARATION_REGEX, PHP_CLASS_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
 import { injectable } from 'tsyringe';
 import { Position, TextDocument } from 'vscode';
 
@@ -6,8 +6,6 @@ interface Props {
   document: TextDocument
   position: Position
 }
-
-const NAMESPACE_REGEX = /^\s*namespace\s+([\w\\]+);/;
 
 @injectable()
 export class ExtractNameFromCursor {
@@ -20,7 +18,7 @@ export class ExtractNameFromCursor {
       return null;
     }
 
-    const namespaceMatch = currentLine.match(NAMESPACE_REGEX);
+    const namespaceMatch = currentLine.match(NAMESPACE_DECLARATION_REGEX);
     if (namespaceMatch) {
       return namespaceMatch[1] ?? null;
     }

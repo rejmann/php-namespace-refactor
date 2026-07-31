@@ -2,7 +2,7 @@
   "name": "php-namespace-refactor",
   "displayName": "PHP Namespace Refactor",
   "description": "PHP Namespace Refactor: Extension for Visual Studio Code that automatically refactors namespace and references when moving PHP files between directories.",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": {
     "name": "rejman",
     "url": "https://github.com/rejmann"
@@ -125,6 +125,46 @@
           },
           "additionalProperties": false,
           "description": "Rename constructor-typed properties (promoted or not, readonly or not) - and their $this->x usages - to match the class name when renaming a class. Set to true to enable everything, including renaming mismatched names, or to an object like { \"renameMismatchedNames\": false } to opt out of just that behavior."
+        },
+        "phpNamespaceRefactor.namespaceMismatchDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a warning and a quick fix when a file's declared namespace doesn't match its PSR-4 location, without requiring a move/rename to fix it."
+        },
+        "phpNamespaceRefactor.highlightNotUsed": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a hint and a quick fix for \"use\" imports that are never referenced in the file."
+        },
+        "phpNamespaceRefactor.highlightNotImported": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a warning and a quick fix for classes used in the file that resolve to exactly one class elsewhere in the workspace but aren't imported yet."
+        },
+        "phpNamespaceRefactor.removeOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically remove unused \"use\" imports every time a PHP file is saved, independently of any move/rename operation."
+        },
+        "phpNamespaceRefactor.sortOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically sort \"use\" imports every time a PHP file is saved, using the order configured in phpNamespaceRefactor.sortMode."
+        },
+        "phpNamespaceRefactor.sortMode": {
+          "type": "string",
+          "enum": [
+            "natural",
+            "length",
+            "alphabetical"
+          ],
+          "enumDescriptions": [
+            "Natural order (case-insensitive, numeric-aware), e.g. Item2 before Item10.",
+            "Shortest \"use\" statement first.",
+            "Strict character-by-character alphabetical order."
+          ],
+          "default": "natural",
+          "description": "Sort order used by phpNamespaceRefactor.sortOnSave."
         }
       }
     }

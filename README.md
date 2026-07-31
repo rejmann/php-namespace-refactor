@@ -26,6 +26,18 @@ Ideal for projects using PSR-4, making it easy to reorganize directories without
 
 - Rename Properties (off by default): When a class is renamed, also rename its class-typed constructor properties (promoted or not, readonly or not) and their `$this->x` usages to match the new class name.
 
+### 🩺 Diagnostics and quick fixes
+
+Beyond the move/rename flow, the extension also watches files as you edit them and surfaces a few checks in the Problems panel, each individually toggleable:
+
+- Namespace Mismatch Diagnostics: Warns when a file's declared namespace doesn't match its PSR-4 location, with a quick fix to correct it in place (no move required).
+
+- Highlight Not Imported: Warns when a class is used in the file but not imported, whenever it resolves to exactly one class elsewhere in the workspace — with a quick fix to add the `use` statement. Ambiguous matches (the same class name found in more than one place) are left alone rather than guessed.
+
+- Highlight Not Used: Flags `use` imports that are never referenced in the file, with a quick fix to remove them.
+
+- Remove On Save / Sort On Save (off by default): Automatically remove unused imports and/or sort the remaining ones every time a PHP file is saved, independently of any move/rename operation. Sort order is configurable (natural, length, or alphabetical).
+
 ## Requirements
 
 - PHP 7.4+
@@ -50,7 +62,13 @@ This extension contributes the following settings:
     ],
     "phpNamespaceRefactor.rename": true,
     "phpNamespaceRefactor.editFilesInBackground": true,
-    "phpNamespaceRefactor.renameProperties": false
+    "phpNamespaceRefactor.renameProperties": false,
+    "phpNamespaceRefactor.namespaceMismatchDiagnostics": true,
+    "phpNamespaceRefactor.highlightNotUsed": true,
+    "phpNamespaceRefactor.highlightNotImported": true,
+    "phpNamespaceRefactor.removeOnSave": false,
+    "phpNamespaceRefactor.sortOnSave": false,
+    "phpNamespaceRefactor.sortMode": "natural"
 }
 ```
 
@@ -110,6 +128,46 @@ This extension contributes the following settings:
   Setting `true` (or an empty object) enables the feature with every child behavior on by default, including `renameMismatchedNames` — properties whose current name doesn't already match the class name (e.g. `private Test $service`) get renamed too. Use the object form only to dial a specific child back to `false`.
 
 - Default: false.
+
+**phpNamespaceRefactor.namespaceMismatchDiagnostics**
+
+- Shows a warning and a quick fix when a file's declared namespace doesn't match its PSR-4 location, without requiring a move/rename to fix it.
+
+- Default: true.
+
+**phpNamespaceRefactor.highlightNotUsed**
+
+- Shows a hint and a quick fix for `use` imports that are never referenced in the file.
+
+- Default: true.
+
+**phpNamespaceRefactor.highlightNotImported**
+
+- Shows a warning and a quick fix for classes used in the file that resolve to exactly one class elsewhere in the workspace but aren't imported yet. If the class name matches more than one location in the workspace, it's left alone rather than guessed.
+
+- Default: true.
+
+**phpNamespaceRefactor.removeOnSave**
+
+- Automatically removes unused `use` imports every time a PHP file is saved, independently of any move/rename operation.
+
+- Default: false.
+
+**phpNamespaceRefactor.sortOnSave**
+
+- Automatically sorts `use` imports every time a PHP file is saved, using the order configured in `phpNamespaceRefactor.sortMode`.
+- When combined with `removeOnSave`, both happen together as a single edit.
+
+- Default: false.
+
+**phpNamespaceRefactor.sortMode**
+
+- Sort order used by `phpNamespaceRefactor.sortOnSave`. One of:
+  - `natural`: case-insensitive, numeric-aware order (e.g. `Item2` before `Item10`).
+  - `length`: shortest `use` statement first.
+  - `alphabetical`: strict character-by-character order.
+
+- Default: "natural".
 
 ## Documentation
 

@@ -1,3 +1,4 @@
+import { NAMESPACE_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
 import { FileEditApplier } from '@infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
@@ -18,8 +19,7 @@ export class MovedFileNamespaceUpdater {
   public async execute({ newNamespace, newUri }: Props) {
     const { document, text } = await this.textDocumentOpener.execute({ uri: newUri });
 
-    const namespaceRegex = /^\s*namespace\s+[\w\\]+;/m;
-    const match = text.match(namespaceRegex);
+    const match = text.match(NAMESPACE_DECLARATION_REGEX);
 
     if (!match) {
       return false;

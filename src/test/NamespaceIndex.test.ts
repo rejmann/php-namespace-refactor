@@ -3,13 +3,32 @@ import 'reflect-metadata';
 import * as assert from 'assert';
 import * as os from 'os';
 
+import { ConfigurationLocator, Props } from '../domain/workspace/ConfigurationLocator';
+import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
+import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver';
+import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
 import { NamespaceIndex } from '../infra/index/NamespaceIndex';
+
+function fakeConfigurationLocator(): ConfigurationLocator {
+  return {
+    get: <T>({ defaultValue }: Props<T>): T => defaultValue as T,
+  } as ConfigurationLocator;
+}
+
+function buildNamespaceIndex(storagePath: string): NamespaceIndex {
+  const workspacePathResolver = new WorkspacePathResolver(
+    new ComposerAutoloadManager(),
+    new FileExtensionResolver(fakeConfigurationLocator()),
+  );
+
+  return new NamespaceIndex(storagePath, workspacePathResolver);
+}
 
 suite('NamespaceIndex', () => {
   let index: NamespaceIndex;
 
   setup(() => {
-    index = new NamespaceIndex(os.tmpdir());
+    index = buildNamespaceIndex(os.tmpdir());
   });
 
   /**
@@ -132,6 +151,37 @@ suite('NamespaceIndex', () => {
       assert.doesNotThrow(() => {
         index.parseAndAdd('/src/helpers.php', '<?php\nfunction helper() {}');
       });
+    });
+  });
+
+  suite('findClassLocations', () => {
+    test('finds the single file declaring a class by name', () => {
+      index.parseAndAdd('/src/Services/AuthService.php', 'namespace App\\Services;\nclass AuthService {}');
+
+      const locations = index.findClassLocations('AuthService');
+
+      assert.deepStrictEqual(locations, [
+        { fsPath: '/src/Services/AuthService.php', namespace: 'App\\Services' },
+      ]);
+    });
+
+    test('returns an empty array when no indexed file declares that class name', () => {
+      assert.deepStrictEqual(index.findClassLocations('Unknown'), []);
+    });
+
+    test('returns every location when more than one file declares the same class name', () => {
+      index.parseAndAdd('/src/Models/User.php', 'namespace App\\Models;\nclass User {}');
+      index.parseAndAdd('/src/Legacy/User.php', 'namespace App\\Legacy;\nclass User {}');
+
+      const locations = index.findClassLocations('User');
+
+      assert.strictEqual(locations.length, 2);
+    });
+
+    test('ignores an indexed file with no declared namespace', () => {
+      index.parseAndAdd('/src/helpers.php', '<?php\nfunction helper() {}');
+
+      assert.deepStrictEqual(index.findClassLocations('helpers'), []);
     });
   });
 });

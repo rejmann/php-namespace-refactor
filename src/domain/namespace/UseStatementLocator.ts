@@ -1,6 +1,8 @@
 import { injectable } from 'tsyringe';
 import { TextDocument } from 'vscode';
 
+import { NAMESPACE_DECLARATION_REGEX } from './PhpPatterns';
+
 interface Props {
   document: TextDocument
 }
@@ -36,7 +38,7 @@ export class UseStatementLocator {
   }
 
   private findNamespaceEndIndex(contentDocument: string): number {
-    const match = contentDocument.match(/^\s*namespace\s+[\w\\]+;/m);
+    const match = contentDocument.match(NAMESPACE_DECLARATION_REGEX);
     if (!match) {
       return 0;
     }
