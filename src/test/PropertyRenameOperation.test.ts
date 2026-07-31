@@ -59,10 +59,10 @@ async function writeTempPhpFile(dir: string, fileName: string, content: string):
 suite('PropertyRenameOperation', () => {
   test('renames a promoted property that matches the old class-name convention', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
-    const oldUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
-    const newUri = vscode.Uri.file(path.join(dir, 'Novo.php'));
+    const oldUri = vscode.Uri.file(path.join(dir, 'Test.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'NewTest.php'));
 
-    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $teste)\n    {\n    }\n\n    public function run(): void\n    {\n        $this->teste->run();\n    }\n}\n';
+    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private NewTest $test)\n    {\n    }\n\n    public function run(): void\n    {\n        $this->test->run();\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();
@@ -70,16 +70,16 @@ suite('PropertyRenameOperation', () => {
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private NewTest $newTest'), `expected the promoted property to be renamed, got:\n${text}`);
-    assert.ok(text.includes('$this->novo->run();'), `expected $this-> usages to be renamed, got:\n${text}`);
-    assert.ok(!text.includes('teste'), `expected no leftover old property name, got:\n${text}`);
+    assert.ok(text.includes('$this->newTest->run();'), `expected $this-> usages to be renamed, got:\n${text}`);
+    assert.ok(!text.includes('$test'), `expected no leftover old property name, got:\n${text}`);
   });
 
   test('renames a non-promoted property confirmed by its constructor assignment', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
-    const oldUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
-    const newUri = vscode.Uri.file(path.join(dir, 'Novo.php'));
+    const oldUri = vscode.Uri.file(path.join(dir, 'Test.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'NewTest.php'));
 
-    const consumerContent = '<?php\n\nclass UserController\n{\n    private Novo $teste;\n\n    public function __construct(Novo $teste)\n    {\n        $this->teste = $teste;\n    }\n}\n';
+    const consumerContent = '<?php\n\nclass UserController\n{\n    private NewTest $test;\n\n    public function __construct(NewTest $test)\n    {\n        $this->test = $test;\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();
@@ -87,34 +87,34 @@ suite('PropertyRenameOperation', () => {
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private NewTest $newTest;'), `expected the declared property to be renamed, got:\n${text}`);
-    assert.ok(text.includes('__construct(Novo $novo)'), `expected the constructor parameter to be renamed, got:\n${text}`);
-    assert.ok(text.includes('$this->novo = $novo;'), `expected the assignment to be renamed, got:\n${text}`);
+    assert.ok(text.includes('__construct(NewTest $newTest)'), `expected the constructor parameter to be renamed, got:\n${text}`);
+    assert.ok(text.includes('$this->newTest = $newTest;'), `expected the assignment to be renamed, got:\n${text}`);
   });
 
   test('renames an untyped property declared only via a @var docblock', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
     const oldUri = vscode.Uri.file(path.join(dir, 'UserRepository.php'));
-    const newUri = vscode.Uri.file(path.join(dir, 'ClienteRepository.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'ClientRepository.php'));
 
-    const consumerContent = '<?php\n\nclass UserService\n{\n    /**\n     * @var ClienteRepository\n     */\n    private $repository;\n\n    public function __construct(ClienteRepository $repository)\n    {\n        $this->repository = $repository;\n    }\n}\n';
+    const consumerContent = '<?php\n\nclass UserService\n{\n    /**\n     * @var ClientRepository\n     */\n    private $repository;\n\n    public function __construct(ClientRepository $repository)\n    {\n        $this->repository = $repository;\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserService.php', consumerContent);
 
     const operation = buildOperation();
     await operation.execute({ oldUri, newUri, affectedFiles: [consumerUri], renameMismatchedNames: true });
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
-    assert.ok(text.includes('private $clienteRepository;'), `expected the untyped declaration to be renamed, got:\n${text}`);
-    assert.ok(text.includes('__construct(ClienteRepository $clienteRepository)'), `expected the constructor parameter to be renamed, got:\n${text}`);
-    assert.ok(text.includes('$this->clienteRepository = $clienteRepository;'), `expected the assignment to be renamed, got:\n${text}`);
+    assert.ok(text.includes('private $clientRepository;'), `expected the untyped declaration to be renamed, got:\n${text}`);
+    assert.ok(text.includes('__construct(ClientRepository $clientRepository)'), `expected the constructor parameter to be renamed, got:\n${text}`);
+    assert.ok(text.includes('$this->clientRepository = $clientRepository;'), `expected the assignment to be renamed, got:\n${text}`);
     assert.ok(!text.includes('$repository'), `expected no leftover old property name, got:\n${text}`);
   });
 
   test('leaves a mismatched property name untouched when renameMismatchedNames is false', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
-    const oldUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
-    const newUri = vscode.Uri.file(path.join(dir, 'Novo.php'));
+    const oldUri = vscode.Uri.file(path.join(dir, 'Test.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'NewTest.php'));
 
-    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $service)\n    {\n    }\n}\n';
+    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private NewTest $service)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();
@@ -126,10 +126,10 @@ suite('PropertyRenameOperation', () => {
 
   test('renames a mismatched property name when renameMismatchedNames is true', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
-    const oldUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
-    const newUri = vscode.Uri.file(path.join(dir, 'Novo.php'));
+    const oldUri = vscode.Uri.file(path.join(dir, 'Test.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'NewTest.php'));
 
-    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $service)\n    {\n        $this->service->run();\n    }\n}\n';
+    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private NewTest $service)\n    {\n        $this->service->run();\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();
@@ -137,15 +137,15 @@ suite('PropertyRenameOperation', () => {
 
     const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
     assert.ok(text.includes('private NewTest $newTest'), `expected the mismatched property to be renamed, got:\n${text}`);
-    assert.ok(text.includes('$this->novo->run();'), `expected $this-> usages to be renamed, got:\n${text}`);
+    assert.ok(text.includes('$this->newTest->run();'), `expected $this-> usages to be renamed, got:\n${text}`);
   });
 
   test('skips a file when two properties share the renamed class type (ambiguous)', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
-    const oldUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
-    const newUri = vscode.Uri.file(path.join(dir, 'Novo.php'));
+    const oldUri = vscode.Uri.file(path.join(dir, 'Test.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'NewTest.php'));
 
-    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Novo $a, private Novo $b)\n    {\n    }\n}\n';
+    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private NewTest $a, private NewTest $b)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();
@@ -157,9 +157,9 @@ suite('PropertyRenameOperation', () => {
 
   test('does nothing when the class name did not actually change', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
-    const sameUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
+    const sameUri = vscode.Uri.file(path.join(dir, 'Test.php'));
 
-    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Test $teste)\n    {\n    }\n}\n';
+    const consumerContent = '<?php\n\nclass UserController\n{\n    public function __construct(private Test $test)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'UserController.php', consumerContent);
 
     const operation = buildOperation();
@@ -178,10 +178,10 @@ suite('PropertyRenameOperation', () => {
    */
   test('ignores a file that matches by text but was not part of the affected-files set', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
-    const oldUri = vscode.Uri.file(path.join(dir, 'Teste.php'));
-    const newUri = vscode.Uri.file(path.join(dir, 'Novo.php'));
+    const oldUri = vscode.Uri.file(path.join(dir, 'Test.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'NewTest.php'));
 
-    const unrelatedContent = '<?php\n\nnamespace Other;\n\nclass UnrelatedController\n{\n    public function __construct(private Novo $teste)\n    {\n    }\n}\n';
+    const unrelatedContent = '<?php\n\nnamespace Other;\n\nclass UnrelatedController\n{\n    public function __construct(private NewTest $test)\n    {\n    }\n}\n';
     const unrelatedUri = await writeTempPhpFile(dir, 'UnrelatedController.php', unrelatedContent);
 
     const operation = buildOperation();

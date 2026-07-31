@@ -15,43 +15,43 @@ suite('ClassTypedPropertyLocator', () => {
     const text = [
       'class UserController',
       '{',
-      '  public function __construct(private Test $teste)',
+      '  public function __construct(private Test $test)',
       '  {',
       '  }',
       '}',
     ].join('\n');
 
-    const match = locate(text, 'Teste');
+    const match = locate(text, 'Test');
     assert.ok(match);
-    assert.strictEqual(match!.propertyName, 'teste');
+    assert.strictEqual(match!.propertyName, 'test');
     assert.strictEqual(match!.isPromoted, true);
     assert.strictEqual(match!.hasSeparateDeclaration, false);
   });
 
   test('finds a promoted readonly property regardless of modifier order', () => {
-    const first = locate('function __construct(private readonly Teste $teste) {}', 'Teste');
-    const second = locate('function __construct(readonly private Test $teste) {}', 'Teste');
+    const first = locate('function __construct(private readonly Test $test) {}', 'Test');
+    const second = locate('function __construct(readonly private Test $test) {}', 'Test');
 
-    assert.strictEqual(first!.propertyName, 'teste');
-    assert.strictEqual(second!.propertyName, 'teste');
+    assert.strictEqual(first!.propertyName, 'test');
+    assert.strictEqual(second!.propertyName, 'test');
   });
 
   test('finds a non-promoted property confirmed by a constructor assignment', () => {
     const text = [
       'class UserController',
       '{',
-      '  private Test $teste;',
+      '  private Test $test;',
       '',
-      '  public function __construct(Teste $teste)',
+      '  public function __construct(Test $test)',
       '  {',
-      '    $this->teste = $teste;',
+      '    $this->test = $test;',
       '  }',
       '}',
     ].join('\n');
 
-    const match = locate(text, 'Teste');
+    const match = locate(text, 'Test');
     assert.ok(match);
-    assert.strictEqual(match!.propertyName, 'teste');
+    assert.strictEqual(match!.propertyName, 'test');
     assert.strictEqual(match!.isPromoted, false);
     assert.strictEqual(match!.hasSeparateDeclaration, true);
   });
@@ -83,43 +83,43 @@ suite('ClassTypedPropertyLocator', () => {
     const text = [
       'class Validator',
       '{',
-      '  public function __construct(Teste $teste)',
+      '  public function __construct(Test $test)',
       '  {',
-      '    $teste->validate();',
+      '    $test->validate();',
       '  }',
       '}',
     ].join('\n');
 
-    assert.strictEqual(locate(text, 'Teste'), null);
+    assert.strictEqual(locate(text, 'Test'), null);
   });
 
   test('matches a property with a mismatched name', () => {
     const text = 'function __construct(private Test $service) {}';
-    const match = locate(text, 'Teste');
+    const match = locate(text, 'Test');
 
     assert.ok(match);
     assert.strictEqual(match!.propertyName, 'service');
   });
 
   test('matches a nullable type hint', () => {
-    const text = 'function __construct(private ?Teste $teste) {}';
-    const match = locate(text, 'Teste');
+    const text = 'function __construct(private ?Test $test) {}';
+    const match = locate(text, 'Test');
 
     assert.ok(match);
-    assert.strictEqual(match!.propertyName, 'teste');
+    assert.strictEqual(match!.propertyName, 'test');
   });
 
   test('returns null when there is no constructor', () => {
-    assert.strictEqual(locate('class Teste {}', 'Teste'), null);
+    assert.strictEqual(locate('class Test {}', 'Test'), null);
   });
 
   test('returns null when the class type does not appear in the constructor', () => {
     const text = 'function __construct(private Other $other) {}';
-    assert.strictEqual(locate(text, 'Teste'), null);
+    assert.strictEqual(locate(text, 'Test'), null);
   });
 
   test('returns null when two parameters share the same type (ambiguous)', () => {
     const text = 'function __construct(private Test $a, private Test $b) {}';
-    assert.strictEqual(locate(text, 'Teste'), null);
+    assert.strictEqual(locate(text, 'Test'), null);
   });
 });
