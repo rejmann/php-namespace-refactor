@@ -6,12 +6,17 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
+import { PropertyRenameOperation } from '../app/operations/PropertyRenameOperation';
 import { ImportRemover } from '../app/services/remove/ImportRemover';
 import { MultiFileReferenceUpdater } from '../app/services/update/MultiFileReferenceUpdater';
 import { ClassNameBoundaryRegexBuilder } from '../domain/namespace/ClassNameBoundaryRegexBuilder';
 import { UseStatementCreator } from '../domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '../domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '../domain/namespace/UseStatementLocator';
+import { ClassTypedPropertyLocator } from '../domain/property/ClassTypedPropertyLocator';
+import { ConstructorSpanFinder } from '../domain/property/ConstructorSpanFinder';
+import { PropertyNameResolver } from '../domain/property/PropertyNameResolver';
+import { PropertyRenameSettingsResolver } from '../domain/property/PropertyRenameSettingsResolver';
 import { ConfigurationLocator, Props } from '../domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '../domain/workspace/FeatureFlagManager';
 import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
@@ -21,6 +26,12 @@ import { NamespaceIndex } from '../infra/index/NamespaceIndex';
 import { WorkspaceIndex } from '../infra/index/WorkspaceIndex';
 import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
+
+function fakePropertyRenameSettingsResolver(enabled = false): PropertyRenameSettingsResolver {
+  return {
+    resolve: () => ({ enabled, renameMismatchedNames: false }),
+  } as PropertyRenameSettingsResolver;
+}
 
 function fakeConfigurationLocator(): ConfigurationLocator {
   return {
@@ -40,6 +51,16 @@ function buildUpdater(namespaceIndex: NamespaceIndex, editFilesInBackground = tr
     new FileExtensionResolver(fakeConfigurationLocator()),
   );
   const fileEditApplier = new FileEditApplier(fakeFeatureFlagManager(editFilesInBackground));
+  const constructorSpanFinder = new ConstructorSpanFinder();
+
+  const propertyRenameOperation = new PropertyRenameOperation(
+    workspacePathResolver,
+    new TextDocumentOpener(),
+    fileEditApplier,
+    new ClassTypedPropertyLocator(constructorSpanFinder),
+    new PropertyNameResolver(),
+    constructorSpanFinder,
+  );
 
   return new MultiFileReferenceUpdater(
     workspacePathResolver,
@@ -52,6 +73,8 @@ function buildUpdater(namespaceIndex: NamespaceIndex, editFilesInBackground = tr
     new UseStatementInjector(fileEditApplier),
     fileEditApplier,
     new ClassNameBoundaryRegexBuilder(),
+    propertyRenameOperation,
+    fakePropertyRenameSettingsResolver(),
   );
 }
 
@@ -266,7 +289,7 @@ suite('MultiFileReferenceUpdater', () => {
       '',
       'class RenamedClassController',
       '{',
-      '    private RenamedClass $RenamedClass;',
+      '    private RenamedClass $instance;',
       '}',
       '',
     ].join('\n');
@@ -292,7 +315,7 @@ suite('MultiFileReferenceUpdater', () => {
       `the exact FQCN import should be renamed, got:\n${text}`,
     );
     assert.ok(
-      text.includes('private RenamedClassTest $RenamedClass;'),
+      text.includes('private RenamedClassTest $instance;'),
       `the bare class name usage should be renamed, got:\n${text}`,
     );
     assert.ok(
