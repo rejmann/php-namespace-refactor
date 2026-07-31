@@ -12,6 +12,7 @@ Documentation to support development and troubleshooting of the PHP Namespace Re
 - **[Namespace rename](./operations/namespace-rename.md)** — F2 on `namespace Foo\Bar;`
 - **[Class rename](./operations/class-rename.md)** — F2 on `class Foo`/`interface Foo`/`trait Foo`
 - **[File move](./operations/file-move.md)** — drag-and-drop in the Explorer (and the convergence point of the two flows above)
+- **[Diagnostics and quick fixes](./diagnostics.md)** — namespace-mismatch/unused-import/missing-import checks in the Problems panel, and the `removeOnSave`/`sortOnSave` save-time edits
 
 ## Infrastructure
 

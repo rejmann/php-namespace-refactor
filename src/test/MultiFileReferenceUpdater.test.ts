@@ -39,6 +39,15 @@ function fakeConfigurationLocator(): ConfigurationLocator {
   } as ConfigurationLocator;
 }
 
+function buildNamespaceIndex(storagePath: string): NamespaceIndex {
+  const workspacePathResolver = new WorkspacePathResolver(
+    new ComposerAutoloadManager(),
+    new FileExtensionResolver(fakeConfigurationLocator()),
+  );
+
+  return new NamespaceIndex(storagePath, workspacePathResolver);
+}
+
 function fakeFeatureFlagManager(editFilesInBackground = true): FeatureFlagManager {
   return {
     isActive: ({ defaultValue = true }) => defaultValue && editFilesInBackground,
@@ -117,7 +126,7 @@ suite('MultiFileReferenceUpdater', () => {
     const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
 
-    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    const namespaceIndex = buildNamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
 
     // editFilesInBackground disabled here so the edit is left as an unsaved
@@ -169,7 +178,7 @@ suite('MultiFileReferenceUpdater', () => {
     const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
 
-    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    const namespaceIndex = buildNamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
 
     const updater = buildUpdater(namespaceIndex, true);
@@ -207,7 +216,7 @@ suite('MultiFileReferenceUpdater', () => {
     const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
 
-    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    const namespaceIndex = buildNamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
 
     // Simulate the user already having the affected file open before the refactor runs.
@@ -245,7 +254,7 @@ suite('MultiFileReferenceUpdater', () => {
     const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
 
-    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    const namespaceIndex = buildNamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
 
     const updater = buildUpdater(namespaceIndex);
@@ -278,7 +287,7 @@ suite('MultiFileReferenceUpdater', () => {
     const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    public function __construct(private Order $order)\n    {\n    }\n\n    public function run(): void\n    {\n        $this->order->run();\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
 
-    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    const namespaceIndex = buildNamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
 
     const updater = buildUpdater(namespaceIndex, true, true);
@@ -312,7 +321,7 @@ suite('MultiFileReferenceUpdater', () => {
     const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n\n    public function __construct(Order $order)\n    {\n        $this->order = $order;\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
 
-    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    const namespaceIndex = buildNamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
 
     const updater = buildUpdater(namespaceIndex, true, true);
@@ -354,7 +363,7 @@ suite('MultiFileReferenceUpdater', () => {
     const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    public function __construct(private Order $service)\n    {\n    }\n}\n';
     const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
 
-    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    const namespaceIndex = buildNamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
 
     // propertyRenameEnabled=true, renameMismatchedNames defaults to false in fakePropertyRenameSettingsResolver
@@ -406,7 +415,7 @@ suite('MultiFileReferenceUpdater', () => {
     ].join('\n');
     const consumerUri = await writeTempPhpFile(dir, 'RenamedClassController.php', consumerContent);
 
-    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    const namespaceIndex = buildNamespaceIndex(os.tmpdir());
     namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
 
     const updater = buildUpdater(namespaceIndex);

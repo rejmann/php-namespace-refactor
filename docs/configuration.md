@@ -13,13 +13,21 @@ All keys are centralized in `ConfigKeys` (`src/domain/workspace/ConfigurationLoc
 | `phpNamespaceRefactor.rename` | `RENAME` | `boolean` | `true` | The `phpNamespaceRefactor.rename` command (`extension.ts`) and the F2 keybinding's `when` clause (`package.json`) |
 | `phpNamespaceRefactor.editFilesInBackground` | `EDIT_FILES_IN_BACKGROUND` | `boolean` | `true` | `FileEditApplier` |
 | `phpNamespaceRefactor.renameProperties` | `RENAME_PROPERTIES` | `boolean \| { renameMismatchedNames?: boolean }` | `false` | `PropertyRenameSettingsResolver`, consumed by `MultiFileReferenceUpdater`/`PropertyRenameOperation` |
+| `phpNamespaceRefactor.namespaceMismatchDiagnostics` | `NAMESPACE_MISMATCH_DIAGNOSTICS` | `boolean` | `true` | `NamespaceDiagnosticsBuilder` |
+| `phpNamespaceRefactor.highlightNotUsed` | `HIGHLIGHT_NOT_USED` | `boolean` | `true` | `UnusedImportDiagnosticsBuilder` |
+| `phpNamespaceRefactor.highlightNotImported` | `HIGHLIGHT_NOT_IMPORTED` | `boolean` | `true` | `MissingImportDiagnosticsBuilder` |
+| `phpNamespaceRefactor.removeOnSave` | `REMOVE_ON_SAVE` | `boolean` | `false` | `UseStatementBlockEditsBuilder` |
+| `phpNamespaceRefactor.sortOnSave` | `SORT_ON_SAVE` | `boolean` | `false` | `UseStatementBlockEditsBuilder` |
+| `phpNamespaceRefactor.sortMode` | `SORT_MODE` | `"natural" \| "length" \| "alphabetical"` | `"natural"` | `UseStatementBlockEditsBuilder`, sorting logic in `UseStatementSorter` |
+
+See [diagnostics.md](./diagnostics.md) for how the last six are wired together (the three diagnostics share one subscriber; the two save-time settings share one edit builder to avoid overlapping edits).
 
 ## How configuration is read
 
 Three classes access `workspace.getConfiguration('phpNamespaceRefactor')`, each with a distinct purpose:
 
 - **`ConfigurationLocator`** (`src/domain/workspace/ConfigurationLocator.ts`) — generic read, used for settings of any type (`ignoredDirectories`, `additionalExtensions`)
-- **`FeatureFlagManager`** (`src/domain/workspace/FeatureFlagManager.ts`) — specialized `boolean` read, with `defaultValue = true`. Used for every plain on/off flag (`autoImportNamespace`, `removeUnusedImports`, `rename`, `editFilesInBackground`)
+- **`FeatureFlagManager`** (`src/domain/workspace/FeatureFlagManager.ts`) — specialized `boolean` read, with `defaultValue = true`. Used for every plain on/off flag (`autoImportNamespace`, `removeUnusedImports`, `rename`, `editFilesInBackground`, `namespaceMismatchDiagnostics`, `highlightNotUsed`, `highlightNotImported`) — `removeOnSave` and `sortOnSave` also go through it, but pass `defaultValue: false` explicitly since they mutate the file on every save and shouldn't be on by default
 - **`PropertyRenameSettingsResolver`** (`src/domain/property/PropertyRenameSettingsResolver.ts`) — the one setting whose raw value isn't a plain boolean; see [`phpNamespaceRefactor.renameProperties`](#phpnamespacerefactorrenameproperties) below
 
 None of the three caches the `WorkspaceConfiguration` — `ConfigurationLocator`/`FeatureFlagManager` read `workspace.getConfiguration()` in their constructor, and `PropertyRenameSettingsResolver` reads through a fresh `ConfigurationLocator` on every `resolve()` call. All three are `@injectable()` (not singleton), so a fresh read happens on every `container.resolve()`. This means a change to the user's configuration is picked up on the next operation, with no need to reload the window.

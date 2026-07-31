@@ -14,6 +14,12 @@ export const ConfigKeys = {
   // boolean - a single polymorphic key avoids VS Code's settings schema conflict that
   // comes from one key being both a leaf boolean and the parent of another setting.
   RENAME_PROPERTIES: 'renameProperties',
+  NAMESPACE_MISMATCH_DIAGNOSTICS: 'namespaceMismatchDiagnostics',
+  HIGHLIGHT_NOT_USED: 'highlightNotUsed',
+  HIGHLIGHT_NOT_IMPORTED: 'highlightNotImported',
+  REMOVE_ON_SAVE: 'removeOnSave',
+  SORT_ON_SAVE: 'sortOnSave',
+  SORT_MODE: 'sortMode',
 } as const;
 
 export type Props<T> = {
