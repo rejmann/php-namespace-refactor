@@ -1,4 +1,4 @@
-import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
+import { PhpFilePathResolver } from '@domain/path/PhpFilePathResolver';
 import { inject, injectable } from 'tsyringe';
 
 import { AutoloadPathResolver } from './AutoloadPathResolver';
@@ -12,7 +12,7 @@ interface Props {
 export class NamespaceAutoloadMapper {
   constructor (
     @inject(ComposerAutoloadManager) private composerAutoloadManager: ComposerAutoloadManager,
-    @inject(WorkspacePathResolver) private workspacePathResolver: WorkspacePathResolver,
+    @inject(PhpFilePathResolver) private phpFilePathResolver: PhpFilePathResolver,
     @inject(AutoloadPathResolver) private autoloadPathResolver: AutoloadPathResolver,
   ) {}
 
@@ -26,7 +26,7 @@ export class NamespaceAutoloadMapper {
       };
     }
 
-    const newDir = this.workspacePathResolver.removeWorkspaceRoot(uri);
+    const newDir = this.phpFilePathResolver.removeWorkspaceRoot(uri);
 
     return {
       autoload: await this.autoloadPathResolver.execute({

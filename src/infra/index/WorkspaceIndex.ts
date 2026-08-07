@@ -1,4 +1,4 @@
-import { ConfigKeys, ConfigurationLocator } from '@domain/workspace/ConfigurationLocator';
+import { ConfigKeys, ConfigurationLocator } from '@domain/config/ConfigurationLocator';
 import { DEFAULT_EXTENSION, normalizeExtensions } from '@infra/utils/extensions';
 import { inject, injectable } from 'tsyringe';
 import { Uri, workspace } from 'vscode';

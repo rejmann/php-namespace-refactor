@@ -1,13 +1,14 @@
 import 'reflect-metadata';
 
-import { FileRenameHandler } from '@app/commands/FileRenameHandler';
-import { AutoImportNamespaceFeature } from '@app/operations/AutoImportNamespaceFeature';
-import { RemoveUnusedImportsFeature } from '@app/operations/RemoveUnusedImportsFeature';
-import { FileCreatedSubscriber } from '@app/subscribers/FileCreatedSubscriber';
-import { FileDeletedSubscriber } from '@app/subscribers/FileDeletedSubscriber';
-import { FileSavedSubscriber } from '@app/subscribers/FileSavedSubscriber';
-import { NamespaceIndex } from '@infra/index/NamespaceIndex';
+import { FileCreatedListener } from '@app/index-listeners/FileCreatedListener';
+import { FileDeletedListener } from '@app/index-listeners/FileDeletedListener';
+import { FileSavedListener } from '@app/index-listeners/FileSavedListener';
+import { AutoImportUsedClassesStep } from '@app/rename-file/steps/AutoImportUsedClassesStep';
+import { RemoveUnusedImportsStep } from '@app/rename-file/steps/RemoveUnusedImportsStep';
+import { FileExplorerRenameBridge } from '@app/rename-file/triggers/FileExplorerRenameBridge';
 import { NamespaceIndexBuilder } from '@infra/index/NamespaceIndexBuilder';
+import { NamespaceIndexRepository } from '@infra/index/NamespaceIndexRepository';
+import { NamespaceIndexStore } from '@infra/index/NamespaceIndexStore';
 import * as fs from 'fs';
 import { container } from 'tsyringe';
 import { ExtensionContext, workspace } from 'vscode';
@@ -17,25 +18,29 @@ export async function activate(context: ExtensionContext) {
 
   container.register('StorageUri', { useValue: context.storageUri!.fsPath });
 
-  // Order here is the apply order inside FileMoveOperation's per-file loop.
-  container.register('MoveFileFeature', { useClass: AutoImportNamespaceFeature });
-  container.register('MoveFileFeature', { useClass: RemoveUnusedImportsFeature });
+  // Order here is the apply order inside RenameFileUseCase's per-file loop.
+  container.register('RenameFileStep', { useClass: AutoImportUsedClassesStep });
+  container.register('RenameFileStep', { useClass: RemoveUnusedImportsStep });
 
-  const namespaceIndex = container.resolve(NamespaceIndex);
-  await namespaceIndex.load(); // cache from the previous session, so getFilesUsing works before the scan below finishes
+  // Cache from the previous session, so getFilesUsing works before the scan below finishes.
+  const namespaceIndexStore = container.resolve(NamespaceIndexStore);
+  const cachedIndex = await container.resolve(NamespaceIndexRepository).load();
+  if (cachedIndex) {
+    namespaceIndexStore.hydrate(cachedIndex);
+  }
 
   const builder = container.resolve(NamespaceIndexBuilder);
   builder.build(); // fire and forget — não bloqueia a ativação, faz refresh/prune em background
 
-  const fileCreatedSubscriber = container.resolve(FileCreatedSubscriber);
-  workspace.onDidCreateFiles(event => fileCreatedSubscriber.handle(event));
+  const fileCreatedListener = container.resolve(FileCreatedListener);
+  workspace.onDidCreateFiles(event => fileCreatedListener.handle(event));
 
-  const fileDeletedSubscriber = container.resolve(FileDeletedSubscriber);
-  workspace.onDidDeleteFiles(event => fileDeletedSubscriber.handle(event));
+  const fileDeletedListener = container.resolve(FileDeletedListener);
+  workspace.onDidDeleteFiles(event => fileDeletedListener.handle(event));
 
-  const fileSavedSubscriber = container.resolve(FileSavedSubscriber);
-  workspace.onDidSaveTextDocument(document => fileSavedSubscriber.handle(document));
+  const fileSavedListener = container.resolve(FileSavedListener);
+  workspace.onDidSaveTextDocument(document => fileSavedListener.handle(document));
 
-  const fileRenameHandler = container.resolve(FileRenameHandler);
-  workspace.onDidRenameFiles(event => fileRenameHandler.handle(event));
+  const fileExplorerRenameBridge = container.resolve(FileExplorerRenameBridge);
+  workspace.onDidRenameFiles(event => fileExplorerRenameBridge.handle(event));
 }

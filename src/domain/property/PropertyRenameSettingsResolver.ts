@@ -1,4 +1,4 @@
-import { ConfigKeys, ConfigurationLocator } from '@domain/workspace/ConfigurationLocator';
+import { ConfigKeys, ConfigurationLocator } from '@domain/config/ConfigurationLocator';
 import { inject, injectable } from 'tsyringe';
 
 export interface PropertyRenameSettings {

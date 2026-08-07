@@ -1,22 +1,23 @@
-import { NamespaceIndex } from '@infra/index/NamespaceIndex';
+import { NamespaceIndexRepository } from '@infra/index/NamespaceIndexRepository';
+import { NamespaceIndexStore } from '@infra/index/NamespaceIndexStore';
 import { inject, injectable } from 'tsyringe';
 
 const SAVE_DEBOUNCE_MS = 300;
 
 /**
  * Single place where "parse/remove a file, then persist" happens - the
- * orchestration shared by FileSavedSubscriber, FileCreatedSubscriber,
- * FileDeletedSubscriber and NamespaceIndexBuilder, which used to each call
- * NamespaceIndex.save() individually on every single event. Debouncing here
- * collapses bursts (e.g. a batch build, or several saves in a row) into one
- * disk write.
+ * orchestration shared by FileSavedListener, FileCreatedListener,
+ * FileDeletedListener and NamespaceIndexBuilder, which used to each call
+ * save() individually on every single event. Debouncing here collapses
+ * bursts (e.g. a batch build, or several saves in a row) into one disk write.
  */
 @injectable()
 export class IndexSyncAdapter {
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
-    @inject(NamespaceIndex) private namespaceIndex: NamespaceIndex,
+    @inject(NamespaceIndexStore) private namespaceIndexStore: NamespaceIndexStore,
+    @inject(NamespaceIndexRepository) private namespaceIndexRepository: NamespaceIndexRepository,
   ) {}
 
   /** Forces a pending debounced save to happen now - for callers (e.g. the batch builder) that need it flushed before they return. */
@@ -25,16 +26,16 @@ export class IndexSyncAdapter {
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
     }
-    await this.namespaceIndex.save();
+    await this.namespaceIndexRepository.save(this.namespaceIndexStore.getSnapshot());
   }
 
   public onFileChanged(fsPath: string, content: string): void {
-    this.namespaceIndex.parseAndAdd(fsPath, content);
+    this.namespaceIndexStore.parseAndAdd(fsPath, content);
     this.scheduleSave();
   }
 
   public onFileRemoved(fsPath: string): void {
-    this.namespaceIndex.removeFile(fsPath);
+    this.namespaceIndexStore.removeFile(fsPath);
     this.scheduleSave();
   }
 
@@ -44,7 +45,7 @@ export class IndexSyncAdapter {
     }
     this.saveTimer = setTimeout(() => {
       this.saveTimer = null;
-      void this.namespaceIndex.save();
+      void this.namespaceIndexRepository.save(this.namespaceIndexStore.getSnapshot());
     }, SAVE_DEBOUNCE_MS);
   }
 }

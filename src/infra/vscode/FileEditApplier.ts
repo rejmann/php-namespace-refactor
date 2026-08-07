@@ -1,5 +1,5 @@
-import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
-import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
+import { ConfigKeys } from '@domain/config/ConfigurationLocator';
+import { FeatureFlagManager } from '@domain/config/FeatureFlagManager';
 import { BackgroundSaveStrategy, EditApplyStrategy, ShowEditorSaveStrategy } from '@infra/vscode/EditApplyStrategy';
 import { inject, injectable } from 'tsyringe';
 import { TabInputText, window, workspace, WorkspaceEdit } from 'vscode';
