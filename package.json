@@ -40,20 +40,6 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "phpNamespaceRefactor.rename",
-        "title": "Rename Namespace",
-        "category": "PHP Namespace Refactor"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "phpNamespaceRefactor.rename",
-        "key": "f2",
-        "when": "editorTextFocus && resourceExtname == .php && config.phpNamespaceRefactor.rename"
-      }
-    ],
     "configuration": {
       "languages": [
         {
@@ -99,11 +85,6 @@
             "php"
           ],
           "description": "List of additional file extensions to consider for namespace refactoring."
-        },
-        "phpNamespaceRefactor.rename": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable or disable the Rename Namespace or Class command."
         },
         "phpNamespaceRefactor.editFilesInBackground": {
           "type": "boolean",

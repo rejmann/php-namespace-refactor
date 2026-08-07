@@ -2,20 +2,18 @@
 
 **File:** `src/app/operations/NamespaceRenameOperation.ts`
 
+> **Not currently wired to any command.** This operation used to run from the extension's own F2 keybinding, which was removed in favor of VS Code's native rename (see [architecture.md](../architecture.md)). The class is kept as a building block — given a document and a new namespace, it moves the underlying file to the directory that namespace maps to — but nothing in `extension.ts` calls it today.
+
 ## Responsibility
 
-Runs when the user presses F2 with the cursor on the `namespace Foo\Bar;` line and types a new namespace.
+Given the current document and a new namespace, moves the underlying file to the directory that namespace maps to via PSR-4 (previously triggered when the user pressed F2 with the cursor on the `namespace Foo\Bar;` line and typed a new namespace).
 
 ## Flow
 
 ```
-F2 (registered command)
-  → RenameHandler.handle()
-  → RenameFeature.execute()
-  → detects NamespaceType at the cursor
-  → NamespaceRenameOperation.execute()  ← here
-  → FileRenameHandler.create()          ← triggers WorkspaceEdit.renameFile()
-  → onDidRenameFiles                    ← triggers FileMoveOperation
+NamespaceRenameOperation.execute()  ← entry point, currently uncalled
+  → FileRenameHandler.create()      ← triggers WorkspaceEdit.renameFile()
+  → onDidRenameFiles                ← triggers FileMoveOperation
 ```
 
 ## What it does

@@ -10,7 +10,6 @@ All keys are centralized in `ConfigKeys` (`src/domain/workspace/ConfigurationLoc
 | `phpNamespaceRefactor.autoImportNamespace` | `AUTO_IMPORT_NAMESPACE` | `boolean` | `true` | `FileMoveOperation` (decides whether to call `MissingClassImporter`) |
 | `phpNamespaceRefactor.removeUnusedImports` | `REMOVE_UNUSED_IMPORTS` | `boolean` | `true` | `ImportRemover` (returns early when disabled) |
 | `phpNamespaceRefactor.additionalExtensions` | `ADDITIONAL_EXTENSIONS` | `string[]` | `["php"]` | `FileExtensionResolver` and `WorkspaceIndex` |
-| `phpNamespaceRefactor.rename` | `RENAME` | `boolean` | `true` | The `phpNamespaceRefactor.rename` command (`extension.ts`) and the F2 keybinding's `when` clause (`package.json`) |
 | `phpNamespaceRefactor.editFilesInBackground` | `EDIT_FILES_IN_BACKGROUND` | `boolean` | `true` | `FileEditApplier` |
 | `phpNamespaceRefactor.renameProperties` | `RENAME_PROPERTIES` | `boolean \| { renameMismatchedNames?: boolean }` | `false` | `PropertyRenameSettingsResolver`, consumed by `MultiFileReferenceUpdater`/`PropertyRenameOperation` |
 
@@ -19,8 +18,7 @@ All keys are centralized in `ConfigKeys` (`src/domain/workspace/ConfigurationLoc
 Three classes access `workspace.getConfiguration('phpNamespaceRefactor')`, each with a distinct purpose:
 
 - **`ConfigurationLocator`** (`src/domain/workspace/ConfigurationLocator.ts`) — generic read, used for settings of any type (`ignoredDirectories`, `additionalExtensions`)
-- **`FeatureFlagManager`** (`src/domain/workspace/FeatureFlagManager.ts`) — specialized `boolean` read, with `defaultValue = true`. Used for every plain on/off flag (`autoImportNamespace`, `removeUnusedImports`, `rename`, `editFilesInBackground`)
-- **`PropertyRenameSettingsResolver`** (`src/domain/property/PropertyRenameSettingsResolver.ts`) — the one setting whose raw value isn't a plain boolean; see [`phpNamespaceRefactor.renameProperties`](#phpnamespacerefactorrenameproperties) below
+- **`FeatureFlagManager`** (`src/domain/workspace/FeatureFlagManager.ts`) — specialized `boolean` read, with `defaultValue = true`. Used for every on/off flag (`autoImportNamespace`, `removeUnusedImports`, `editFilesInBackground`)
 
 None of the three caches the `WorkspaceConfiguration` — `ConfigurationLocator`/`FeatureFlagManager` read `workspace.getConfiguration()` in their constructor, and `PropertyRenameSettingsResolver` reads through a fresh `ConfigurationLocator` on every `resolve()` call. All three are `@injectable()` (not singleton), so a fresh read happens on every `container.resolve()`. This means a change to the user's configuration is picked up on the next operation, with no need to reload the window.
 
