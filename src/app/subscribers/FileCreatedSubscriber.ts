@@ -1,22 +1,21 @@
-import { NamespaceIndex } from '@infra/index/NamespaceIndex';
+import { IndexSyncAdapter } from '@infra/index/IndexSyncAdapter';
+import { WorkspaceFileReader } from '@infra/vscode/WorkspaceFileReader';
 import { inject, injectable } from 'tsyringe';
-import { FileCreateEvent, workspace } from 'vscode';
+import { FileCreateEvent } from 'vscode';
 
 @injectable()
 export class FileCreatedSubscriber {
   constructor(
-    @inject(NamespaceIndex) private namespaceIndex: NamespaceIndex,
+    @inject(IndexSyncAdapter) private indexSyncAdapter: IndexSyncAdapter,
+    @inject(WorkspaceFileReader) private workspaceFileReader: WorkspaceFileReader,
   ) {}
 
   public async handle(event: FileCreateEvent): Promise<void> {
     for (const file of event.files) {
-      try {
-        const content = Buffer.from(await workspace.fs.readFile(file)).toString();
-        this.namespaceIndex.parseAndAdd(file.fsPath, content);
-      } catch {
-        // skip unreadable files
+      const content = await this.workspaceFileReader.readText(file);
+      if (content !== null) {
+        this.indexSyncAdapter.onFileChanged(file.fsPath, content);
       }
     }
-    await this.namespaceIndex.save();
   }
 }

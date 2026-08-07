@@ -1,21 +1,16 @@
 import { DirectoryMovedFilesResolver } from '@app/services/DirectoryMovedFilesResolver';
-import { MissingClassImporter } from '@app/services/MissingClassImporter';
 import { NamespaceBatchUpdater } from '@app/services/NamespaceBatchUpdater';
-import { ImportRemover } from '@app/services/remove/ImportRemover';
-import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
-import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
-import { inject, injectable } from 'tsyringe';
+import { inject, injectable,injectAll } from 'tsyringe';
 
 import type { FileMove } from './FileMove';
+import type { MoveFileFeature } from './MoveFileFeature';
 
 @injectable()
 export class FileMoveOperation {
   constructor(
     @inject(DirectoryMovedFilesResolver) private directoryMovedFilesResolver: DirectoryMovedFilesResolver,
     @inject(NamespaceBatchUpdater) private namespaceBatchUpdater: NamespaceBatchUpdater,
-    @inject(MissingClassImporter) private missingClassImporter: MissingClassImporter,
-    @inject(ImportRemover) private importRemover: ImportRemover,
-    @inject(FeatureFlagManager) private featureFlagManager: FeatureFlagManager,
+    @injectAll('MoveFileFeature') private features: MoveFileFeature[],
   ) {}
 
   public async execute(files: ReadonlyArray<FileMove>): Promise<void> {
@@ -33,11 +28,11 @@ export class FileMoveOperation {
         // than as a separate pass here that re-opened every file again.
         await this.namespaceBatchUpdater.execute({ newUri, oldUri });
 
-        if (this.featureFlagManager.isActive({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
-          await this.missingClassImporter.execute({ oldUri, newUri });
+        for (const feature of this.features) {
+          if (feature.isEnabled()) {
+            await feature.apply({ oldUri, newUri });
+          }
         }
-
-        await this.importRemover.execute({ uri: newUri });
       } catch (error) {
         console.error('Error processing file move:', error); // eslint-disable-line
         throw error;

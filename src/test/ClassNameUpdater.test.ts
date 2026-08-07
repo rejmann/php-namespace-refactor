@@ -13,6 +13,7 @@ import { FeatureFlagManager } from '../domain/workspace/FeatureFlagManager';
 import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
 import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver';
 import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
+import { BackgroundSaveStrategy, ShowEditorSaveStrategy } from '../infra/vscode/EditApplyStrategy';
 import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
 
@@ -39,7 +40,7 @@ function buildUpdater(additionalExtensions: string[]): ClassNameUpdater {
   return new ClassNameUpdater(
     new TextDocumentOpener(),
     workspacePathResolver,
-    new FileEditApplier(fakeFeatureFlagManager()),
+    new FileEditApplier(fakeFeatureFlagManager(), new BackgroundSaveStrategy(), new ShowEditorSaveStrategy()),
     new ClassNameBoundaryRegexBuilder(),
   );
 }

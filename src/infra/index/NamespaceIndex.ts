@@ -29,6 +29,25 @@ export class NamespaceIndex {
     return this.data.usages[namespace] ?? [];
   }
 
+  public isEmpty(): boolean {
+    return Object.keys(this.data.files).length === 0;
+  }
+
+  /**
+   * Reads the cache written by the previous session's save() calls, so
+   * getFilesUsing() has something to answer with before build()'s full
+   * workspace scan finishes. Silently keeps the empty default on a missing
+   * or corrupted file - build() is what repopulates it either way.
+   */
+  public async load(): Promise<void> {
+    try {
+      const raw = await fs.promises.readFile(this.indexPath, 'utf8');
+      this.data = JSON.parse(raw);
+    } catch {
+      // no cache yet, or corrupted - start empty
+    }
+  }
+
   public parseAndAdd(fsPath: string, content: string): void {
     this.removeFile(fsPath);
 
@@ -43,6 +62,14 @@ export class NamespaceIndex {
       }
       if (!this.data.usages[ns].includes(fsPath)) {
         this.data.usages[ns].push(fsPath);
+      }
+    }
+  }
+
+  public pruneMissing(currentPaths: Set<string>): void {
+    for (const fsPath of Object.keys(this.data.files)) {
+      if (!currentPaths.has(fsPath)) {
+        this.removeFile(fsPath);
       }
     }
   }

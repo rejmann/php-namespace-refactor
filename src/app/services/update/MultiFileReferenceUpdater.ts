@@ -7,12 +7,13 @@ import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
 import { PropertyRenameSettingsResolver } from '@domain/property/PropertyRenameSettingsResolver';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
-import { NamespaceIndex } from '@infra/index/NamespaceIndex';
 import { WorkspaceIndex } from '@infra/index/WorkspaceIndex';
 import { FileEditApplier } from '@infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '@infra/vscode/TextDocumentOpener';
 import { inject, injectable } from 'tsyringe';
-import { Range, TextDocument, Uri, workspace, WorkspaceEdit } from 'vscode';
+import { Range, TextDocument, Uri, WorkspaceEdit } from 'vscode';
+
+import { AffectedFilesResolver } from './AffectedFilesResolver';
 
 interface Props {
   useOldNamespace: string
@@ -33,7 +34,7 @@ export class MultiFileReferenceUpdater {
     @inject(ImportRemover) private importRemover: ImportRemover,
     @inject(UseStatementCreator) private useStatementCreator: UseStatementCreator,
     @inject(WorkspaceIndex) private workspaceFileFinder: WorkspaceIndex,
-    @inject(NamespaceIndex) private namespaceIndex: NamespaceIndex,
+    @inject(AffectedFilesResolver) private affectedFilesResolver: AffectedFilesResolver,
     @inject(TextDocumentOpener) private textDocumentOpener: TextDocumentOpener,
     @inject(UseStatementLocator) private useStatementLocator: UseStatementLocator,
     @inject(UseStatementInjector) private useStatementInjector: UseStatementInjector,
@@ -70,16 +71,7 @@ export class MultiFileReferenceUpdater {
       : null;
 
     // Files that import/use the old namespace.
-    const indexedPaths = this.namespaceIndex
-      .getFilesUsing(useOldNamespace)
-      .filter(fsPath => fsPath !== ignoreFile);
-
-    const scannedPaths = await this.findAffectedPathsByScan({
-      ignoreFile,
-      useOldNamespace,
-    });
-
-    const affectedPaths = [...new Set([...indexedPaths, ...scannedPaths])];
+    const affectedPaths = await this.affectedFilesResolver.find(useOldNamespace, ignoreFile);
 
     // A single WorkspaceEdit shared by every file touched below, so the
     // whole multi-file refactor lands on VS Code's undo stack as one atomic
@@ -229,36 +221,5 @@ export class MultiFileReferenceUpdater {
 
   private escapeRegex(text: string): string {
     return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
-
-  private async findAffectedPathsByScan({
-    useOldNamespace,
-    ignoreFile,
-  }: {
-    useOldNamespace: string,
-    ignoreFile: string,
-  }): Promise<string[]> {
-    const allFiles = await this.workspaceFileFinder.execute();
-
-    const matches = await Promise.all(allFiles.map(async (file) => {
-      if (file.fsPath === ignoreFile) {
-        return null;
-      }
-
-      try {
-        const fileContent = await workspace.fs.readFile(file);
-        const text = Buffer.from(fileContent).toString();
-
-        if (!text.includes(useOldNamespace)) {
-          return null;
-        }
-
-        return file.fsPath;
-      } catch {
-        return null;
-      }
-    }));
-
-    return matches.filter((fsPath): fsPath is string => fsPath !== null);
   }
 }

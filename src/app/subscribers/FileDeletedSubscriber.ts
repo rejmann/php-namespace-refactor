@@ -1,17 +1,16 @@
-import { NamespaceIndex } from '@infra/index/NamespaceIndex';
+import { IndexSyncAdapter } from '@infra/index/IndexSyncAdapter';
 import { inject, injectable } from 'tsyringe';
 import { FileDeleteEvent } from 'vscode';
 
 @injectable()
 export class FileDeletedSubscriber {
   constructor(
-    @inject(NamespaceIndex) private namespaceIndex: NamespaceIndex,
+    @inject(IndexSyncAdapter) private indexSyncAdapter: IndexSyncAdapter,
   ) {}
 
   public async handle(event: FileDeleteEvent): Promise<void> {
     for (const file of event.files) {
-      this.namespaceIndex.removeFile(file.fsPath);
+      this.indexSyncAdapter.onFileRemoved(file.fsPath);
     }
-    await this.namespaceIndex.save();
   }
 }

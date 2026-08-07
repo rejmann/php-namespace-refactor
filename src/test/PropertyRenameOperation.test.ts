@@ -15,6 +15,7 @@ import { FeatureFlagManager } from '../domain/workspace/FeatureFlagManager';
 import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
 import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver';
 import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
+import { BackgroundSaveStrategy, ShowEditorSaveStrategy } from '../infra/vscode/EditApplyStrategy';
 import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
 
@@ -37,7 +38,9 @@ function buildOperation({
     new ComposerAutoloadManager(),
     new FileExtensionResolver(fakePassthroughConfigurationLocator()),
   );
-  const fileEditApplier = new FileEditApplier(fakeFeatureFlagManager(editFilesInBackground));
+  const fileEditApplier = new FileEditApplier(
+    fakeFeatureFlagManager(editFilesInBackground), new BackgroundSaveStrategy(), new ShowEditorSaveStrategy(),
+  );
   const constructorSpanFinder = new ConstructorSpanFinder();
 
   return new PropertyRenameOperation(

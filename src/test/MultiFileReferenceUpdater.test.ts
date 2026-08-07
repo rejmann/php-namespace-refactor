@@ -8,7 +8,10 @@ import * as vscode from 'vscode';
 
 import { PropertyRenameOperation } from '../app/operations/PropertyRenameOperation';
 import { ImportRemover } from '../app/services/remove/ImportRemover';
+import { AffectedFilesResolver } from '../app/services/update/AffectedFilesResolver';
+import { IndexAffectedFilesFinder } from '../app/services/update/IndexAffectedFilesFinder';
 import { MultiFileReferenceUpdater } from '../app/services/update/MultiFileReferenceUpdater';
+import { ScanAffectedFilesFinder } from '../app/services/update/ScanAffectedFilesFinder';
 import { ClassNameBoundaryRegexBuilder } from '../domain/namespace/ClassNameBoundaryRegexBuilder';
 import { UseStatementCreator } from '../domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '../domain/namespace/UseStatementInjector';
@@ -24,8 +27,10 @@ import { WorkspacePathResolver } from '../domain/workspace/WorkspacePathResolver
 import { ComposerAutoloadManager } from '../infra/autoload/ComposerAutoloadManager';
 import { NamespaceIndex } from '../infra/index/NamespaceIndex';
 import { WorkspaceIndex } from '../infra/index/WorkspaceIndex';
+import { BackgroundSaveStrategy, ShowEditorSaveStrategy } from '../infra/vscode/EditApplyStrategy';
 import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
+import { WorkspaceFileReader } from '../infra/vscode/WorkspaceFileReader';
 
 function fakePropertyRenameSettingsResolver(enabled = false): PropertyRenameSettingsResolver {
   return {
@@ -54,7 +59,9 @@ function buildUpdater(
     new ComposerAutoloadManager(),
     new FileExtensionResolver(fakeConfigurationLocator()),
   );
-  const fileEditApplier = new FileEditApplier(fakeFeatureFlagManager(editFilesInBackground));
+  const fileEditApplier = new FileEditApplier(
+    fakeFeatureFlagManager(editFilesInBackground), new BackgroundSaveStrategy(), new ShowEditorSaveStrategy(),
+  );
   const constructorSpanFinder = new ConstructorSpanFinder();
 
   const propertyRenameOperation = new PropertyRenameOperation(
@@ -66,12 +73,18 @@ function buildUpdater(
     constructorSpanFinder,
   );
 
+  const affectedFilesResolver = new AffectedFilesResolver(
+    new IndexAffectedFilesFinder(namespaceIndex),
+    new ScanAffectedFilesFinder(new WorkspaceIndex(fakeConfigurationLocator()), new WorkspaceFileReader()),
+    namespaceIndex,
+  );
+
   return new MultiFileReferenceUpdater(
     workspacePathResolver,
     { execute: async () => {} } as unknown as ImportRemover,
     { single: ({ fullNamespace }: { fullNamespace: string }) => `\nuse ${fullNamespace};` } as UseStatementCreator,
     new WorkspaceIndex(fakeConfigurationLocator()),
-    namespaceIndex,
+    affectedFilesResolver,
     new TextDocumentOpener(),
     new UseStatementLocator(),
     new UseStatementInjector(fileEditApplier),

@@ -1,19 +1,19 @@
 import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
+import { BackgroundSaveStrategy, EditApplyStrategy, ShowEditorSaveStrategy } from '@infra/vscode/EditApplyStrategy';
 import { inject, injectable } from 'tsyringe';
-import { TabInputText, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+import { TabInputText, window, workspace, WorkspaceEdit } from 'vscode';
 
 @injectable()
 export class FileEditApplier {
   constructor(
     @inject(FeatureFlagManager) private featureFlagManager: FeatureFlagManager,
+    @inject(BackgroundSaveStrategy) private backgroundSaveStrategy: BackgroundSaveStrategy,
+    @inject(ShowEditorSaveStrategy) private showEditorSaveStrategy: ShowEditorSaveStrategy,
   ) {}
 
   public async apply(edit: WorkspaceEdit): Promise<boolean> {
-    const editFilesInBackground = this.featureFlagManager.isActive({
-      key: ConfigKeys.EDIT_FILES_IN_BACKGROUND,
-    });
-
+    const strategy = this.resolveStrategy();
     const openFsPaths = this.getOpenFsPaths();
 
     const result = await workspace.applyEdit(edit);
@@ -23,11 +23,7 @@ export class FileEditApplier {
         continue;
       }
 
-      if (editFilesInBackground) {
-        await this.saveInBackground(uri);
-      } else {
-        await window.showTextDocument(uri, { preview: false, preserveFocus: true });
-      }
+      await strategy.apply(uri);
     }
 
     return result;
@@ -43,14 +39,11 @@ export class FileEditApplier {
     );
   }
 
-  /**
-   * Files that weren't already open before the refactor are edited straight
-   * through, without ever surfacing an editor tab: https://github.com/rejmann/php-namespace-refactor/issues/73
-   */
-  private async saveInBackground(uri: Uri): Promise<void> {
-    const document = workspace.textDocuments.find(doc => doc.uri.fsPath === uri.fsPath);
-    if (document?.isDirty) {
-      await document.save();
-    }
+  private resolveStrategy(): EditApplyStrategy {
+    const editFilesInBackground = this.featureFlagManager.isActive({
+      key: ConfigKeys.EDIT_FILES_IN_BACKGROUND,
+    });
+
+    return editFilesInBackground ? this.backgroundSaveStrategy : this.showEditorSaveStrategy;
   }
 }

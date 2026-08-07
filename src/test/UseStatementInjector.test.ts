@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { UseStatementInjector } from '../domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '../domain/namespace/UseStatementLocator';
 import { FeatureFlagManager } from '../domain/workspace/FeatureFlagManager';
+import { BackgroundSaveStrategy, ShowEditorSaveStrategy } from '../infra/vscode/EditApplyStrategy';
 import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 
 function fakeFeatureFlagManager(): FeatureFlagManager {
@@ -37,7 +38,9 @@ suite('UseStatementInjector', () => {
       '<?php\n\nnamespace App\\User;\n\nclass Consumer\n{\n}\n',
     );
 
-    const injector = new UseStatementInjector(new FileEditApplier(fakeFeatureFlagManager()));
+    const injector = new UseStatementInjector(
+      new FileEditApplier(fakeFeatureFlagManager(), new BackgroundSaveStrategy(), new ShowEditorSaveStrategy()),
+    );
     const locator = new UseStatementLocator();
     const document = await vscode.workspace.openTextDocument(uri);
 
@@ -65,7 +68,9 @@ suite('UseStatementInjector', () => {
       '<?php\n\nnamespace App\\User;\n\nclass Consumer\n{\n}\n',
     );
 
-    const injector = new UseStatementInjector(new FileEditApplier(fakeFeatureFlagManager()));
+    const injector = new UseStatementInjector(
+      new FileEditApplier(fakeFeatureFlagManager(), new BackgroundSaveStrategy(), new ShowEditorSaveStrategy()),
+    );
     const locator = new UseStatementLocator();
     const document = await vscode.workspace.openTextDocument(uri);
 
