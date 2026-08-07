@@ -2,20 +2,18 @@
 
 **File:** `src/app/operations/ClassRenameOperation.ts`
 
+> **Not currently wired to any command.** This operation used to run from the extension's own F2 keybinding, which was removed in favor of VS Code's native rename (see [architecture.md](../architecture.md)). The class is kept as a building block — given a document and a new class name, it renames the underlying file — but nothing in `extension.ts` calls it today.
+
 ## Responsibility
 
-Runs when the user presses F2 with the cursor on the class declaration line (`class Foo`, `interface Foo`, `trait Foo`) and types a new name.
+Given the current document and a new class name, renames the underlying file to match (previously triggered when the user pressed F2 on a class declaration line — `class Foo`, `interface Foo`, `trait Foo` — and typed a new name).
 
 ## Flow
 
 ```
-F2 (registered command)
-  → RenameHandler.handle()
-  → RenameFeature.execute()
-  → detects ClassType at the cursor
-  → ClassRenameOperation.execute()  ← here
-  → FileRenameHandler.create()      ← triggers WorkspaceEdit.renameFile()
-  → onDidRenameFiles                ← triggers FileMoveOperation
+ClassRenameOperation.execute()  ← entry point, currently uncalled
+  → FileRenameHandler.create()  ← triggers WorkspaceEdit.renameFile()
+  → onDidRenameFiles            ← triggers FileMoveOperation
 ```
 
 ## What it does
@@ -34,12 +32,7 @@ It then delegates the rename to `FileRenameHandler.create()`, which triggers VS 
 
 ## Difference from a direct Explorer rename
 
-There's no separate `FileRenameOperation` class. When the user renames the file directly through the VS Code Explorer (F2 on the tree item, without going through this extension's command), VS Code fires `onDidRenameFiles` directly — the same event drag-and-drop uses — and the flow lands straight in `FileMoveOperation` (see [file-move.md](./file-move.md)), without going through `ClassRenameOperation`.
-
-Both paths produce the same end result (a same-directory file rename, followed by the namespace/class/reference update), but they differ in origin:
-
-- **F2 inside the file, on `class Foo`/`interface Foo`/`trait Foo`** — triggers `ClassRenameOperation`, which builds the new `Uri` and delegates to `FileRenameHandler.create()`
-- **F2 (or a manual rename) on the Explorer item** — doesn't go through `ClassRenameOperation`; VS Code already fires `onDidRenameFiles` on its own, and `FileMoveOperation` handles it the same way as a drag-and-drop
+There's no separate `FileRenameOperation` class. When the user renames the file directly through the VS Code Explorer, VS Code fires `onDidRenameFiles` directly — the same event drag-and-drop uses — and the flow lands straight in `FileMoveOperation` (see [file-move.md](./file-move.md)), without going through `ClassRenameOperation`. Since nothing currently calls `ClassRenameOperation`, this Explorer-rename path is, in practice, the only one that runs.
 
 ## Dependencies
 

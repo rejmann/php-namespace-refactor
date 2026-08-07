@@ -8,7 +8,6 @@ export const ConfigKeys = {
   REMOVE_UNUSED_IMPORTS: 'removeUnusedImports',
   IGNORED_DIRECTORIES: 'ignoredDirectories',
   ADDITIONAL_EXTENSIONS: 'additionalExtensions',
-  RENAME: 'rename',
   EDIT_FILES_IN_BACKGROUND: 'editFilesInBackground',
 } as const;
 

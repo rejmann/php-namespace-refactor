@@ -10,7 +10,6 @@ All keys are centralized in `ConfigKeys` (`src/domain/workspace/ConfigurationLoc
 | `phpNamespaceRefactor.autoImportNamespace` | `AUTO_IMPORT_NAMESPACE` | `boolean` | `true` | `FileMoveOperation` (decides whether to call `MissingClassImporter`) |
 | `phpNamespaceRefactor.removeUnusedImports` | `REMOVE_UNUSED_IMPORTS` | `boolean` | `true` | `ImportRemover` (returns early when disabled) |
 | `phpNamespaceRefactor.additionalExtensions` | `ADDITIONAL_EXTENSIONS` | `string[]` | `["php"]` | `FileExtensionResolver` and `WorkspaceIndex` |
-| `phpNamespaceRefactor.rename` | `RENAME` | `boolean` | `true` | The `phpNamespaceRefactor.rename` command (`extension.ts`) and the F2 keybinding's `when` clause (`package.json`) |
 | `phpNamespaceRefactor.editFilesInBackground` | `EDIT_FILES_IN_BACKGROUND` | `boolean` | `true` | `FileEditApplier` |
 
 ## How configuration is read
@@ -18,7 +17,7 @@ All keys are centralized in `ConfigKeys` (`src/domain/workspace/ConfigurationLoc
 Two classes access `workspace.getConfiguration('phpNamespaceRefactor')`, each with a distinct purpose:
 
 - **`ConfigurationLocator`** (`src/domain/workspace/ConfigurationLocator.ts`) — generic read, used for settings of any type (`ignoredDirectories`, `additionalExtensions`)
-- **`FeatureFlagManager`** (`src/domain/workspace/FeatureFlagManager.ts`) — specialized `boolean` read, with `defaultValue = true`. Used for every on/off flag (`autoImportNamespace`, `removeUnusedImports`, `rename`, `editFilesInBackground`)
+- **`FeatureFlagManager`** (`src/domain/workspace/FeatureFlagManager.ts`) — specialized `boolean` read, with `defaultValue = true`. Used for every on/off flag (`autoImportNamespace`, `removeUnusedImports`, `editFilesInBackground`)
 
 Neither class caches the `WorkspaceConfiguration` — each instance reads `workspace.getConfiguration()` in its constructor, and since both are `@injectable()` (not singleton), a fresh read happens on every `container.resolve()`. This means a change to the user's configuration is picked up on the next operation, with no need to reload the window.
 
