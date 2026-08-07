@@ -20,11 +20,11 @@ export class NamespaceBatchUpdater {
     @inject(ClassNameUpdater) private classNameUpdater: ClassNameUpdater,
   ) {}
 
-  public async execute({ newUri, oldUri }: Props) {
+  public async execute({ newUri, oldUri }: Props): Promise<Uri[]> {
     const { namespace, fullNamespace } = await this.getNamespace(newUri);
 
     if (!namespace) {
-      return;
+      return [];
     }
 
     const { namespace: old, fullNamespace: oldFullNamespace } = await this.getNamespace(oldUri);
@@ -39,10 +39,10 @@ export class NamespaceBatchUpdater {
     });
 
     if (!isUpdated) {
-      return;
+      return [];
     }
 
-    await this.multiFileReferenceUpdater.execute({
+    return await this.multiFileReferenceUpdater.execute({
       useOldNamespace: oldFullNamespace,
       useNewNamespace: fullNamespace,
       newUri,

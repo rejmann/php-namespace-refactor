@@ -14,7 +14,8 @@ onDidRenameFiles (VS Code event)
   → FileMoveOperation.execute(files)
       → DirectoryMovedFilesResolver.execute()   1. expands directory moves into per-file moves
       → for each .php file:
-          → NamespaceBatchUpdater.execute()      2. updates namespace/class + references
+          → NamespaceBatchUpdater.execute()      2. updates namespace/class + references, folding in
+                                                     (optional) class-typed property renaming
           → MissingClassImporter.execute()       3. (optional) auto-imports classes from the old directory
           → ImportRemover.execute()              4. (optional, checked internally) removes stale imports
 ```
@@ -46,6 +47,8 @@ For each moved file, `src/app/services/NamespaceBatchUpdater.ts`:
 5. If the namespace declaration wasn't found/changed (step 4 returns `false`), the operation stops here — there's nothing to propagate for a file with no `namespace` declaration
 6. Otherwise, calls `MultiFileReferenceUpdater` to propagate the change across the rest of the project
 
+`NamespaceBatchUpdater.execute()` returns the list of files `MultiFileReferenceUpdater` determined were affected (empty when it never ran, e.g. no `namespace` declaration to key off).
+
 #### `MultiFileReferenceUpdater` — how affected files are found
 
 Combines two sources, without relying on either alone:
@@ -58,11 +61,25 @@ The union of both lists is the final set. This means even an empty/stale index n
 For each affected file, it replaces via regex:
 - every occurrence of the old fully-qualified namespace with the new one
 - if the **class name** also changed, every occurrence of the old name with the new one (excluding spans already covered by the namespace substitution, to avoid overlapping ranges)
+- if `renameProperties` resolves to enabled (off by default — see [configuration.md](../configuration.md#phpnamespacerefactorrenameproperties)) and the class was actually renamed, folds in a class-typed constructor property rename for that same file (see below) — into the *same* `WorkspaceEdit`, not a separate later pass
 - if the file had no occurrence of the old namespace at all (i.e. didn't match either case above) but sits in the same directory as the moved file, it tries to insert a new `use` statement
 
-Every edit across every affected file is accumulated into a **single `WorkspaceEdit`** before being applied (`FileEditApplier.apply`), so the whole refactor shows up as one undo-stack entry in VS Code instead of one edit per file — see [issue #72](https://github.com/rejmann/php-namespace-refactor/issues/72).
+The renamed file itself (`newUri`) is excluded from the above (it's the source of the rename, not a consumer), but still gets its own property-rename check afterward — covers the rare case of a class holding a property typed as itself (e.g. a linked-list node).
+
+Every edit across every affected file — namespace, class name, **and** property renaming — is accumulated into a **single `WorkspaceEdit`** before being applied once (`FileEditApplier.apply`), so the whole refactor (including property renaming) shows up as one undo-stack entry in VS Code instead of one edit per file, and each file is only opened/saved once — see [issue #72](https://github.com/rejmann/php-namespace-refactor/issues/72).
 
 At the end, `MultiFileReferenceUpdater` always calls `ImportRemover.execute({ uri: newUri })` for the moved file itself (in addition to the call `FileMoveOperation` already makes in step 4 below — both are no-ops if the flag is disabled or there's nothing to remove).
+
+##### Property renaming (`PropertyRenameOperation`, optional, folded in above)
+
+`PropertyRenameSettingsResolver` reads the raw setting (`boolean | { renameMismatchedNames?: boolean }`) once per `MultiFileReferenceUpdater.execute()` call and turns it into `{ enabled, renameMismatchedNames }`; only `enabled` gates whether this runs at all. Also only acts when the class itself was actually renamed (`oldClassName !== newClassName`); a plain move to a different directory with the same class name is a no-op.
+
+1. Derives the expected old/new property names from the class names (`PropertyNameResolver`, e.g. `Test` → `test`)
+2. Runs for every file `MultiFileReferenceUpdater` already determined was affected (plus the moved file itself) — deliberately **not** an independent workspace-wide scan, so a differently-namespaced class that happens to share a short name is never touched
+3. For each candidate file, `ClassTypedPropertyLocator` looks for the constructor property typed as the renamed class — checking whichever of the old/new class name is actually present in that file's text at this point in the pass (still the old name for files whose class-name replacement is only queued, not yet applied) — promoted or not, readonly or not, confirming a non-promoted parameter by checking for a `$this->x = $x;` assignment in the constructor body (see `ConstructorSpanFinder` for how the constructor's parameter list and body are located via brace/paren matching). The property's own declaration line doesn't need a type hint to be found this way — a legacy `private $x;` typed only via a `@var ClassName` docblock is still matched and renamed, via `PropertyDeclarationPattern`, once the constructor param already confirmed what class it holds
+4. If more than one property shares that type in the same file, it's ambiguous — the file is skipped entirely rather than guessing
+5. If exactly one property is found: it's renamed when its current name already matches the *old* class-name convention, or — only when `renameMismatchedNames` also resolved to `true` — regardless of what it was named before
+6. Renaming rewrites the constructor parameter/property declaration and every `$this->x` usage in that file, added to the same shared `WorkspaceEdit` as the class-name replacement
 
 ### 3. Auto-import of classes from the source directory (`MissingClassImporter`, optional)
 
@@ -78,6 +95,8 @@ When enabled: it collects the class names declared in the other files of the mov
 
 | Flag | Behavior |
 |---|---|
+| `renameProperties` (`true`/`{}`) | Enables property renaming, folded into step 2 (renaming class-typed constructor properties to match the new class name); `true`/`{}` also renames mismatched names by default (see below) |
+| `renameProperties: { renameMismatchedNames: false }` | Opts out of renaming properties whose name doesn't already match the class-name convention (on by default whenever the feature is enabled) |
 | `autoImportNamespace` | Enables step 3 (auto-import of classes from the old directory) |
 | `removeUnusedImports` | Enables the import removal in step 4 (checked inside `ImportRemover`) |
 | `editFilesInBackground` | Doesn't change what's edited, only whether touched files open a tab in the editor or are saved silently — see [configuration.md](../configuration.md) |
@@ -90,6 +109,7 @@ Each file in the batch is processed inside its own `try/catch` in `FileMoveOpera
 
 - `DirectoryMovedFilesResolver` — expands directory moves into per-file moves
 - `NamespaceBatchUpdater` — orchestrates the namespace, class name, and reference update
+- `PropertyRenameOperation` — renames class-typed constructor properties (and their `$this->x` usages) to match a renamed class
 - `MissingClassImporter` — detects and injects missing imports
 - `ImportRemover` — removes unused imports
 - `FeatureFlagManager` — checks which features are enabled in the settings

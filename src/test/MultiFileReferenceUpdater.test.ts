@@ -6,11 +6,17 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
+import { PropertyRenameOperation } from '../app/operations/PropertyRenameOperation';
 import { ImportRemover } from '../app/services/remove/ImportRemover';
 import { MultiFileReferenceUpdater } from '../app/services/update/MultiFileReferenceUpdater';
+import { ClassNameBoundaryRegexBuilder } from '../domain/namespace/ClassNameBoundaryRegexBuilder';
 import { UseStatementCreator } from '../domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '../domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '../domain/namespace/UseStatementLocator';
+import { ClassTypedPropertyLocator } from '../domain/property/ClassTypedPropertyLocator';
+import { ConstructorSpanFinder } from '../domain/property/ConstructorSpanFinder';
+import { PropertyNameResolver } from '../domain/property/PropertyNameResolver';
+import { PropertyRenameSettingsResolver } from '../domain/property/PropertyRenameSettingsResolver';
 import { ConfigurationLocator, Props } from '../domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '../domain/workspace/FeatureFlagManager';
 import { FileExtensionResolver } from '../domain/workspace/FileExtensionResolver';
@@ -20,6 +26,12 @@ import { NamespaceIndex } from '../infra/index/NamespaceIndex';
 import { WorkspaceIndex } from '../infra/index/WorkspaceIndex';
 import { FileEditApplier } from '../infra/vscode/FileEditApplier';
 import { TextDocumentOpener } from '../infra/vscode/TextDocumentOpener';
+
+function fakePropertyRenameSettingsResolver(enabled = false): PropertyRenameSettingsResolver {
+  return {
+    resolve: () => ({ enabled, renameMismatchedNames: false }),
+  } as PropertyRenameSettingsResolver;
+}
 
 function fakeConfigurationLocator(): ConfigurationLocator {
   return {
@@ -33,12 +45,26 @@ function fakeFeatureFlagManager(editFilesInBackground = true): FeatureFlagManage
   } as FeatureFlagManager;
 }
 
-function buildUpdater(namespaceIndex: NamespaceIndex, editFilesInBackground = true): MultiFileReferenceUpdater {
+function buildUpdater(
+  namespaceIndex: NamespaceIndex,
+  editFilesInBackground = true,
+  propertyRenameEnabled = false,
+): MultiFileReferenceUpdater {
   const workspacePathResolver = new WorkspacePathResolver(
     new ComposerAutoloadManager(),
     new FileExtensionResolver(fakeConfigurationLocator()),
   );
   const fileEditApplier = new FileEditApplier(fakeFeatureFlagManager(editFilesInBackground));
+  const constructorSpanFinder = new ConstructorSpanFinder();
+
+  const propertyRenameOperation = new PropertyRenameOperation(
+    workspacePathResolver,
+    new TextDocumentOpener(),
+    fileEditApplier,
+    new ClassTypedPropertyLocator(constructorSpanFinder),
+    new PropertyNameResolver(),
+    constructorSpanFinder,
+  );
 
   return new MultiFileReferenceUpdater(
     workspacePathResolver,
@@ -50,6 +76,9 @@ function buildUpdater(namespaceIndex: NamespaceIndex, editFilesInBackground = tr
     new UseStatementLocator(),
     new UseStatementInjector(fileEditApplier),
     fileEditApplier,
+    new ClassNameBoundaryRegexBuilder(),
+    propertyRenameOperation,
+    fakePropertyRenameSettingsResolver(propertyRenameEnabled),
   );
 }
 
@@ -238,5 +267,175 @@ suite('MultiFileReferenceUpdater', () => {
       `the import line should not be duplicated, got:\n${text}`,
     );
     assert.ok(!/\bprivate Order \$order\b/.test(text), `old bare class name should be gone, got:\n${text}`);
+  });
+
+  test('with property renaming enabled, renames the constructor property in the same pass as the class rename', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'Order.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'PurchaseOrder.php'));
+
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    public function __construct(private Order $order)\n    {\n    }\n\n    public function run(): void\n    {\n        $this->order->run();\n    }\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex, true, true);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\Domain\\PurchaseOrder',
+      newUri,
+      oldUri,
+    });
+
+    const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
+
+    assert.ok(
+      text.includes('private PurchaseOrder $purchaseOrder'),
+      `expected the constructor property to be renamed alongside the class, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('$this->purchaseOrder->run();'),
+      `expected $this-> usages to be renamed, got:\n${text}`,
+    );
+    assert.ok(!/\$order\b/.test(text), `expected no leftover old property name, got:\n${text}`);
+  });
+
+  test('with property renaming enabled, renames a non-promoted property in the same pass as the class rename', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'Order.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'PurchaseOrder.php'));
+
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    private Order $order;\n\n    public function __construct(Order $order)\n    {\n        $this->order = $order;\n    }\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex, true, true);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\Domain\\PurchaseOrder',
+      newUri,
+      oldUri,
+    });
+
+    const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
+
+    assert.ok(
+      text.includes('private PurchaseOrder $purchaseOrder;'),
+      `expected the declared property to be renamed alongside the class, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('__construct(PurchaseOrder $purchaseOrder)'),
+      `expected the constructor parameter to be renamed, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('$this->purchaseOrder = $purchaseOrder;'),
+      `expected the assignment to be renamed, got:\n${text}`,
+    );
+    assert.ok(!/\$order\b/.test(text), `expected no leftover old property name, got:\n${text}`);
+  });
+
+  test('with renameMismatchedNames off, still renames the class name and import even when the property name is left untouched', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'Order.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'PurchaseOrder.php'));
+
+    // "$service" doesn't follow the old class-name convention ("order"), so
+    // with renameMismatchedNames off the property itself must stay
+    // untouched - but that must not stop the class name and import from
+    // being renamed everywhere else in this same file.
+    const consumerContent = '<?php\n\nnamespace App\\Http;\n\nuse App\\Domain\\Order;\n\nclass OrderController\n{\n    public function __construct(private Order $service)\n    {\n    }\n}\n';
+    const consumerUri = await writeTempPhpFile(dir, 'OrderController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    // propertyRenameEnabled=true, renameMismatchedNames defaults to false in fakePropertyRenameSettingsResolver
+    const updater = buildUpdater(namespaceIndex, true, true);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Domain\\Order',
+      useNewNamespace: 'App\\Domain\\PurchaseOrder',
+      newUri,
+      oldUri,
+    });
+
+    const text = (await vscode.workspace.openTextDocument(consumerUri)).getText();
+
+    assert.ok(text.includes('use App\\Domain\\PurchaseOrder;'), `expected the import to be renamed, got:\n${text}`);
+    assert.ok(
+      text.includes('private PurchaseOrder $service'),
+      `expected the class name in the type hint to be renamed while the mismatched property name stays, got:\n${text}`,
+    );
+  });
+
+  /**
+   * A class can share its name with a sibling namespace (e.g. a
+   * RenamedClass.php file next to a RenamedClass/ directory holding
+   * Foo/FormType.php and Bar/FormType.php). Renaming the class
+   * to RenamedClassTest must not corrupt aliased imports that merely
+   * start with the old FQCN but actually point into that sibling namespace.
+   */
+  test('renaming a class does not corrupt aliased imports from a sub-namespace sharing its name', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'php-namespace-refactor-'));
+
+    const oldUri = vscode.Uri.file(path.join(dir, 'RenamedClass.php'));
+    const newUri = vscode.Uri.file(path.join(dir, 'RenamedClassTest.php'));
+
+    const consumerContent = [
+      '<?php',
+      '',
+      'namespace App\\Controller;',
+      '',
+      'use App\\Controller\\RenamedClass;',
+      'use App\\Controller\\RenamedClass\\Foo\\FormType as FooFormType;',
+      'use App\\Controller\\RenamedClass\\Bar\\FormType as BarFormType;',
+      '',
+      'class RenamedClassController',
+      '{',
+      '    private RenamedClass $instance;',
+      '}',
+      '',
+    ].join('\n');
+    const consumerUri = await writeTempPhpFile(dir, 'RenamedClassController.php', consumerContent);
+
+    const namespaceIndex = new NamespaceIndex(os.tmpdir());
+    namespaceIndex.parseAndAdd(consumerUri.fsPath, consumerContent);
+
+    const updater = buildUpdater(namespaceIndex);
+
+    await updater.execute({
+      useOldNamespace: 'App\\Controller\\RenamedClass',
+      useNewNamespace: 'App\\Controller\\RenamedClassTest',
+      newUri,
+      oldUri,
+    });
+
+    const document = await vscode.workspace.openTextDocument(consumerUri);
+    const text = document.getText();
+
+    assert.ok(
+      text.includes('use App\\Controller\\RenamedClassTest;'),
+      `the exact FQCN import should be renamed, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('private RenamedClassTest $instance;'),
+      `the bare class name usage should be renamed, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('use App\\Controller\\RenamedClass\\Foo\\FormType as FooFormType;'),
+      `the aliased sub-namespace import should be left untouched, got:\n${text}`,
+    );
+    assert.ok(
+      text.includes('use App\\Controller\\RenamedClass\\Bar\\FormType as BarFormType;'),
+      `the aliased sub-namespace import should be left untouched, got:\n${text}`,
+    );
   });
 });

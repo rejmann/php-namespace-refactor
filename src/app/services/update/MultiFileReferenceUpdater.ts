@@ -1,7 +1,11 @@
+import { PropertyRenameNames,PropertyRenameOperation } from '@app/operations/PropertyRenameOperation';
 import { ImportRemover } from '@app/services/remove/ImportRemover';
+import { ClassNameBoundaryRegexBuilder } from '@domain/namespace/ClassNameBoundaryRegexBuilder';
+import { NOT_FOLLOWED_BY_NAMESPACE_CHAR } from '@domain/namespace/PhpPatterns';
 import { UseStatementCreator } from '@domain/namespace/UseStatementCreator';
 import { UseStatementInjector } from '@domain/namespace/UseStatementInjector';
 import { UseStatementLocator } from '@domain/namespace/UseStatementLocator';
+import { PropertyRenameSettingsResolver } from '@domain/property/PropertyRenameSettingsResolver';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
 import { NamespaceIndex } from '@infra/index/NamespaceIndex';
 import { WorkspaceIndex } from '@infra/index/WorkspaceIndex';
@@ -34,6 +38,9 @@ export class MultiFileReferenceUpdater {
     @inject(UseStatementLocator) private useStatementLocator: UseStatementLocator,
     @inject(UseStatementInjector) private useStatementInjector: UseStatementInjector,
     @inject(FileEditApplier) private fileEditApplier: FileEditApplier,
+    @inject(ClassNameBoundaryRegexBuilder) private classNameBoundaryRegexBuilder: ClassNameBoundaryRegexBuilder,
+    @inject(PropertyRenameOperation) private propertyRenameOperation: PropertyRenameOperation,
+    @inject(PropertyRenameSettingsResolver) private propertyRenameSettingsResolver: PropertyRenameSettingsResolver,
   ) {}
 
   public async execute({
@@ -41,16 +48,25 @@ export class MultiFileReferenceUpdater {
     useNewNamespace,
     newUri,
     oldUri,
-  }: Props) {
+  }: Props): Promise<Uri[]> {
     const directoryPath = this.workspacePathResolver.extractDirectoryFromPath(oldUri.fsPath);
     const className = this.workspacePathResolver.extractClassNameFromPath(oldUri.fsPath);
     const newClassName = this.workspacePathResolver.extractClassNameFromPath(newUri.fsPath);
     const useImport = this.useStatementCreator.single({ fullNamespace: useNewNamespace });
     const ignoreFile = newUri.fsPath;
-    const namespaceRegex = new RegExp(this.escapeRegex(useOldNamespace), 'g');
+    const namespaceRegex = new RegExp(`${this.escapeRegex(useOldNamespace)}${NOT_FOLLOWED_BY_NAMESPACE_CHAR}`, 'g');
 
     const classNameRegex = className !== newClassName
-      ? new RegExp(`\\b${className}\\b`, 'g')
+      ? this.classNameBoundaryRegexBuilder.execute({ className })
+      : null;
+
+    // Resolved once so property renaming can be folded into the very same
+    // per-file loop (and WorkspaceEdit) as the class-name replacement below,
+    // instead of a second pass that reopens every affected file after this
+    // one has already applied and saved.
+    const propertyRenameSettings = this.propertyRenameSettingsResolver.resolve();
+    const propertyNames = propertyRenameSettings.enabled
+      ? this.propertyRenameOperation.resolveNames(oldUri, newUri)
       : null;
 
     // Files that import/use the old namespace.
@@ -79,6 +95,12 @@ export class MultiFileReferenceUpdater {
         const namespaceMatches = this.addRegexReplacements(edit, file, document, text, namespaceRegex, useNewNamespace);
         if (classNameRegex) {
           this.addRegexReplacements(edit, file, document, text, classNameRegex, newClassName, namespaceMatches);
+        }
+
+        if (propertyNames) {
+          this.propertyRenameOperation.collectEdits(
+            edit, file, document, text, propertyNames, propertyRenameSettings.renameMismatchedNames,
+          );
         }
 
         // A file affected here already references useOldNamespace (that's how it
@@ -110,13 +132,35 @@ export class MultiFileReferenceUpdater {
         } else {
           await this.appendUseStatement(edit, file, document, text, directoryPath, useImport, className);
         }
+
+        if (propertyNames) {
+          this.propertyRenameOperation.collectEdits(
+            edit, file, document, text, propertyNames, propertyRenameSettings.renameMismatchedNames,
+          );
+        }
       } catch (_) {
         return;
       }
     }));
 
+    if (propertyNames) {
+      // The renamed class's own file: covers a class that holds a
+      // self-typed property (e.g. a linked-list node), which is never part
+      // of affectedPaths/sameDirectoryFiles since newUri is always excluded there.
+      try {
+        const { document, text } = await this.textDocumentOpener.execute({ uri: newUri });
+        this.propertyRenameOperation.collectEdits(
+          edit, newUri, document, text, propertyNames, propertyRenameSettings.renameMismatchedNames,
+        );
+      } catch (_) {
+        // ignore
+      }
+    }
+
     await this.fileEditApplier.apply(edit);
     await this.importRemover.execute({ uri: newUri });
+
+    return [...affectedPaths.map(fsPath => Uri.file(fsPath)), ...sameDirectoryFiles];
   }
 
   /**

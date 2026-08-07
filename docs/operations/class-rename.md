@@ -29,6 +29,7 @@ It then delegates the rename to `FileRenameHandler.create()`, which triggers VS 
 - Update the `namespace` declaration in the file
 - Update the class name inside the file (via `ClassNameUpdater`)
 - Update every `use` statement referencing the class throughout the project
+- Optionally, rename class-typed constructor properties (and their `$this->x` usages) in the affected files to match the new class name — only when `renameProperties` is enabled, folded into the same pass as the reference update; see `PropertyRenameOperation` in [file-move.md](./file-move.md#2-namespace-and-reference-update-namespacebatchupdater)
 
 ## Difference from a direct Explorer rename
 

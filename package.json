@@ -2,7 +2,7 @@
   "name": "php-namespace-refactor",
   "displayName": "PHP Namespace Refactor",
   "description": "PHP Namespace Refactor: Extension for Visual Studio Code that automatically refactors namespace and references when moving PHP files between directories.",
-  "version": "1.9.2",
+  "version": "2.0.1",
   "author": {
     "name": "rejman",
     "url": "https://github.com/rejmann"
@@ -90,6 +90,22 @@
           "type": "boolean",
           "default": true,
           "description": "Apply refactor edits to files without opening them, keeping only files that were already open in the editor. Disable to have every edited file opened in the editor as before."
+        },
+        "phpNamespaceRefactor.renameProperties": {
+          "type": [
+            "boolean",
+            "object"
+          ],
+          "default": false,
+          "properties": {
+            "renameMismatchedNames": {
+              "type": "boolean",
+              "default": true,
+              "description": "Also rename properties whose current name doesn't match the class name (e.g. $service for a Test type). Defaults to true whenever renaming is enabled; set to false here to opt out just of this behavior."
+            }
+          },
+          "additionalProperties": false,
+          "description": "Rename constructor-typed properties (promoted or not, readonly or not) - and their $this->x usages - to match the class name when renaming a class. Set to true to enable everything, including renaming mismatched names, or to an object like { \"renameMismatchedNames\": false } to opt out of just that behavior."
         }
       }
     }

@@ -27,6 +27,10 @@ export class FileMoveOperation {
       }
 
       try {
+        // Property renaming for affected files now happens inside
+        // NamespaceBatchUpdater/MultiFileReferenceUpdater, folded into the
+        // same per-file WorkspaceEdit as the class rename itself, rather
+        // than as a separate pass here that re-opened every file again.
         await this.namespaceBatchUpdater.execute({ newUri, oldUri });
 
         if (this.featureFlagManager.isActive({ key: ConfigKeys.AUTO_IMPORT_NAMESPACE })) {
