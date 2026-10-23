@@ -1,3 +1,4 @@
+import { PHP_CLASS_DECLARATION_REGEX } from '@domain/namespace/PhpPatterns';
 import { injectable } from 'tsyringe';
 import { Position, TextDocument } from 'vscode';
 
@@ -22,7 +23,8 @@ export class RenameTypeDetector {
       return NamespaceType;
     }
 
-    if (currentLine.match(/^\s*(?:abstract\s+)?(?:final\s+)?(?:class|interface|trait)\s+/)) {
+    // Same declarations ExtractNameFromCursor reads the name from, enums included.
+    if (PHP_CLASS_DECLARATION_REGEX.test(currentLine)) {
       return ClassType;
     }
 

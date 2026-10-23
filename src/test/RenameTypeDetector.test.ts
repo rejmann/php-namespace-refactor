@@ -64,6 +64,18 @@ suite('RenameTypeDetector', () => {
       assert.strictEqual(result, ClassType);
     });
 
+    /**
+     * Enums were missing here while ExtractNameFromCursor already read their
+     * name, so renaming an enum threw "Type rename not identified".
+     */
+    test('identifies an enum line', async () => {
+      const content = '<?php\nnamespace App;\nenum Status: string {}';
+      const doc = await openDocument(content);
+      const position = new vscode.Position(2, 0);
+      const result = detector.execute({ document: doc, position });
+      assert.strictEqual(result, ClassType);
+    });
+
     test('throws when the cursor is on an unidentifiable line', async () => {
       const content = '<?php\n// some comment\nclass Foo {}';
       const doc = await openDocument(content);
