@@ -7,6 +7,16 @@ const DEFAULT_DIRECTORIES = ['/vendor/', '/var/', '/cache/'];
 
 const SECONDS_IN_AN_HOUR = 60 * 60;
 
+/**
+ * Matches ignored directories against the path relative to the workspace
+ * folder (with a leading `/`), never the absolute path: a project living
+ * under e.g. /var/www would otherwise have every file ignored by `/var/`.
+ */
+export function isIgnoredPath(relativePath: string, ignoredDirectories: string[]): boolean {
+  const candidate = `/${relativePath.replace(/\\/g, '/').replace(/^\/+/, '')}`;
+  return ignoredDirectories.some(dir => candidate.includes(dir));
+}
+
 @injectable()
 export class WorkspaceIndex {
   private cachedFiles: Uri[] | null = null;
@@ -42,10 +52,10 @@ export class WorkspaceIndex {
       defaultValue: DEFAULT_DIRECTORIES,
     });
 
-    const filteredFiles = files.filter(file => ![
-      ...DEFAULT_DIRECTORIES,
-      ...ignoredDirectories,
-    ].some(dir => file.fsPath.includes(dir)));
+    const filteredFiles = files.filter(file => !isIgnoredPath(
+      workspace.asRelativePath(file, false),
+      [...DEFAULT_DIRECTORIES, ...ignoredDirectories],
+    ));
 
     this.cachedFiles = filteredFiles;
     this.cacheTimestamp = now;
