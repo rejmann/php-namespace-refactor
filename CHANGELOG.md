@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.2](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v2.0.1...php-namespace-refactor-v2.0.2) (2026-10-23)
+
+
+### 🐛 Bug Fixes
+
+* **autoload:** resolve psr-4 mappings by the most specific entry ([863920a](https://github.com/rejmann/php-namespace-refactor/commit/863920aca0c33b53a306d24f157099b2b927555f))
+* **import-remover:** only remove same-namespace, non-aliased imports ([dd85558](https://github.com/rejmann/php-namespace-refactor/commit/dd85558795dc7f3a46831260cbefe07da6a386c0))
+* **rename:** allow renaming enums ([ef67dc1](https://github.com/rejmann/php-namespace-refactor/commit/ef67dc15e80ddca5fda037ed87d04addc1b3ca74))
+* **workspace-index:** match ignored directories on the workspace-relative path ([bbbfdfb](https://github.com/rejmann/php-namespace-refactor/commit/bbbfdfbf39bfc85aeaf34dbfdf172bdf8307da34))
+
 ## [2.0.1](https://github.com/rejmann/php-namespace-refactor/compare/php-namespace-refactor-v2.0.0...php-namespace-refactor-v2.0.1) (2026-07-31)
 
 
