@@ -1,5 +1,10 @@
 import { FileExtensionResolver } from '@domain/workspace/FileExtensionResolver';
-import { BACKSLASH_RE, TRAILING_BACKSLASHES_RE } from '@infra/autoload/AutoloadPathResolver';
+import {
+  BACKSLASH_RE,
+  mostSpecificFirst,
+  psr4Entries,
+  TRAILING_BACKSLASHES_RE,
+} from '@infra/autoload/AutoloadPathResolver';
 import { ComposerAutoloadManager } from '@infra/autoload/ComposerAutoloadManager';
 import { WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
 import { basename, dirname } from 'path';
@@ -42,35 +47,28 @@ export class WorkspacePathResolver {
     return lastDotIndex > 0 ? fileName.slice(lastDotIndex) : '';
   }
 
+  /**
+   * Directory where the classes of `namespace` live, from the psr-4 entry
+   * (autoload and autoload-dev together, autoload winning ties) with the
+   * longest prefix that contains it on whole segments: `App` never matches
+   * `Application\Foo`, and `App\Tests\` in autoload-dev beats `App\` in
+   * autoload for `App\Tests\Unit`.
+   */
   public async getDirectoryFromNamespace(namespace: string): Promise<string> {
     const { autoload, autoloadDev } = await this.composerAutoloadManager.execute();
+    const target = namespace.replace(/^\\+/, '').replace(TRAILING_BACKSLASHES_RE, '');
 
-    const workspaceRoot = WORKSPACE_ROOT_PATH;
-
-    for (const currentAutoload of [autoload, autoloadDev]) {
-      if (!currentAutoload || Object.keys(currentAutoload).length === 0) {
+    for (const { prefix, directory } of mostSpecificFirst(psr4Entries([autoload, autoloadDev]), 'prefix')) {
+      if (prefix !== '' && target !== prefix && !target.startsWith(`${prefix}\\`)) {
         continue;
       }
 
-      const sortedPrefixes = Object.keys(currentAutoload).sort((a, b) => b.length - a.length);
+      const relativePath = target
+        .slice(prefix.length)
+        .replace(/^\\+/, '')
+        .replace(BACKSLASH_RE, '/');
 
-      for (const prefix of sortedPrefixes) {
-        const cleanPrefix = prefix.replace(TRAILING_BACKSLASHES_RE, '');
-        if (!namespace.startsWith(cleanPrefix)) {
-          continue;
-        }
-
-        const relativePart = namespace.substring(cleanPrefix.length);
-        const relativePath = relativePart.replace(/^\\+/, '').replace(BACKSLASH_RE, '/');
-
-        const baseDirectory = currentAutoload[prefix].replace(/\/$/, '');
-
-        const fullPath = relativePath
-          ? `${workspaceRoot}/${baseDirectory}/${relativePath}`
-          : `${workspaceRoot}/${baseDirectory}`;
-
-        return fullPath;
-      }
+      return [WORKSPACE_ROOT_PATH, directory, relativePath].filter(Boolean).join('/');
     }
 
     throw new Error(`No autoload mapping found for namespace: ${namespace}`);

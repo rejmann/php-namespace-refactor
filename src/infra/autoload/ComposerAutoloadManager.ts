@@ -2,9 +2,11 @@ import { WORKSPACE_ROOT_PATH } from '@infra/utils/constants';
 import { promises as fs } from 'fs';
 import { injectable } from 'tsyringe';
 
+import type { Psr4Map } from './AutoloadPathResolver';
+
 interface ComposerAutoload {
-  autoload: Record<string, string>;
-  autoloadDev: Record<string, string>;
+  autoload: Psr4Map;
+  autoloadDev: Psr4Map;
 }
 
 const COMPOSER_FILE = 'composer.json';
