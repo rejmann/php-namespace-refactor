@@ -22,24 +22,14 @@ export class NamespaceCreator {
   }
 
   public async execute({ uri }: Props): Promise<Namespace> {
-    const { autoload, autoloadDev } = await this.namespaceAutoloadMapper.execute({
+    const namespace = await this.namespaceAutoloadMapper.execute({
       uri: uri.fsPath
     });
 
     const className = this.workspacePathResolver.extractClassNameFromPath(uri.fsPath);
 
-    for (const currentAutoload of [autoload, autoloadDev]) {
-      if (null === currentAutoload) {
-        continue;
-      }
-
-      return this.create(
-        className,
-        currentAutoload
-      );
-    }
-
-    return this.create(className);
+    // null (no psr-4 mapping) and '' (global namespace) both mean "no namespace".
+    return this.create(className, namespace || undefined);
   }
 
   private create(className: string, namespace?: string): Namespace {

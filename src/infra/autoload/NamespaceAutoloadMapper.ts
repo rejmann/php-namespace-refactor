@@ -16,27 +16,17 @@ export class NamespaceAutoloadMapper {
     @inject(AutoloadPathResolver) private autoloadPathResolver: AutoloadPathResolver,
   ) {}
 
-  public async execute({ uri }: Props) {
+  /**
+   * Namespace of the directory of `uri`, from the most specific psr-4 entry
+   * of autoload and autoload-dev together (autoload wins on ties), or null
+   * when no entry maps it.
+   */
+  public async execute({ uri }: Props): Promise<string | null> {
     const { autoload, autoloadDev } = await this.composerAutoloadManager.execute();
 
-    if (!autoload && !autoloadDev) {
-      return {
-        autoload: null,
-        autoloadDev: null,
-      };
-    }
-
-    const newDir = this.workspacePathResolver.removeWorkspaceRoot(uri);
-
-    return {
-      autoload: await this.autoloadPathResolver.execute({
-        autoload,
-        workspaceRoot: newDir,
-      }),
-      autoloadDev: await this.autoloadPathResolver.execute({
-        autoload: autoloadDev,
-        workspaceRoot: newDir,
-      })
-    };
+    return this.autoloadPathResolver.execute({
+      autoloads: [autoload, autoloadDev],
+      workspaceRoot: this.workspacePathResolver.removeWorkspaceRoot(uri),
+    });
   }
 }

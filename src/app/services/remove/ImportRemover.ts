@@ -1,4 +1,5 @@
 import { NamespaceCreator } from '@domain/namespace/NamespaceCreator';
+import { findRedundantImports } from '@domain/namespace/RedundantImportLocator';
 import { ConfigKeys } from '@domain/workspace/ConfigurationLocator';
 import { FeatureFlagManager } from '@domain/workspace/FeatureFlagManager';
 import { WorkspacePathResolver } from '@domain/workspace/WorkspacePathResolver';
@@ -13,6 +14,7 @@ interface Props {
 
 interface RemoveImportsProps {
   document: TextDocument
+  namespace: string
   fileNames: string[]
 }
 
@@ -31,7 +33,10 @@ export class ImportRemover {
       return;
     }
 
-    const { className } = await this.namespaceCreator.execute({ uri });
+    const { namespace, className } = await this.namespaceCreator.execute({ uri });
+    if (!namespace) {
+      return;
+    }
 
     const directoryPath = this.workspacePathResolver.extractDirectoryFromPath(uri.fsPath);
 
@@ -50,6 +55,7 @@ export class ImportRemover {
       const { document } = await this.textDocumentOpener.execute({ uri });
       await this.removeImports({
         document,
+        namespace,
         fileNames,
       });
     } catch (_) {
@@ -63,6 +69,7 @@ export class ImportRemover {
         const { document } = await this.textDocumentOpener.execute({ uri: file });
         await this.removeImports({
           document,
+          namespace,
           fileNames: [className],
         });
       } catch (_) {
@@ -71,35 +78,24 @@ export class ImportRemover {
     }));
   }
 
-  private async removeImports({ document, fileNames }: RemoveImportsProps) {
-    const text = document.getText();
+  /**
+   * After the move, `document` shares `namespace` with the other files of its
+   * directory, so imports between them are redundant.
+   */
+  private async removeImports({ document, namespace, fileNames }: RemoveImportsProps) {
+    const ranges = findRedundantImports({
+      text: document.getText(),
+      namespace,
+      classNames: fileNames,
+    });
 
-    const edit = new WorkspaceEdit();
-    let isEdit = false;
-
-    const importLines = text.split('\n').filter(line => line.startsWith('use '));
-    for (const line of importLines) {
-      const parts = line.split(' ');
-      if (parts.length < 2) {
-        continue;
-      }
-
-      const importedClass = parts[1].replace(';', '').split('\\').pop() || '';
-      if (!fileNames.includes(importedClass)) {
-        continue;
-      }
-
-      isEdit = true;
-
-      const lineIndex = text.indexOf(line);
-      edit.delete(document.uri, new Range(
-        document.positionAt(lineIndex),
-        document.positionAt((lineIndex + line.length) + 1)
-      ));
+    if (!ranges.length) {
+      return;
     }
 
-    if (false === isEdit) {
-      return;
+    const edit = new WorkspaceEdit();
+    for (const { start, end } of ranges) {
+      edit.delete(document.uri, new Range(document.positionAt(start), document.positionAt(end)));
     }
 
     await this.fileEditApplier.apply(edit);
